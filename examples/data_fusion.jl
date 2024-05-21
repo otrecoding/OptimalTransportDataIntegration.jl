@@ -100,7 +100,9 @@ for epoch in 1:1_000
 end
 
 yb = vec(getindex.(argmax(model(X), dims=1), 1))
-
-mean(ZAtrue .== yb)
 # -
+mean(ZAtrue .== yb)
+
+XYA
+
 
