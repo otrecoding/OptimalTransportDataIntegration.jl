@@ -10,8 +10,8 @@ export DataParameters
     px1c :: Vector{Float64} = [0.5, 0.5]
     px2c :: Vector{Float64} = [0.333, 0.334, 0.333]
     px3c :: Vector{Float64} = [0.25, 0.25, 0.25, 0.25]
-    p :: Float64 =0.6
+    p :: Float64 = 0.6
     aA :: Vector{Float64} = [1, 1, 1, 1, 1, 1]
     aB :: Vector{Float64} = [1, 1, 1, 1, 1, 1]
-    eps :: Float64 = 0
+    eps :: Float64 = 0.0
 end
