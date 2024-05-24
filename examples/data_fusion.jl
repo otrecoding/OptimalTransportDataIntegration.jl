@@ -6,11 +6,11 @@
 #       extension: .jl
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.14.4
+#       jupytext_version: 1.16.2
 #   kernelspec:
-#     display_name: Julia 1.9.3
+#     display_name: Julia 1.10.3
 #     language: julia
-#     name: julia-1.9
+#     name: julia-1.10
 # ---
 
 using OptimalTransportDataIntegration
