@@ -5,8 +5,6 @@ params = DataParameters(nA = 1000, nB = 500)
 
 df = generate_xcat_ycat(params)
 
-# -
-
 outnames = Symbol[]
 res = copy(df)
 for col in ["X1", "X2", "X3"]
@@ -16,30 +14,27 @@ for col in ["X1", "X2", "X3"]
     transform!(res, @. col => ByRow(isequal(cates)) => outname)
 end
 data = res[!, outnames]
+data.database = df.database
+data.Y = df.Y
+data.Z = df.Z
+dba = subset(data, :database => ByRow(==(1)))
+dbb = subset(data, :database => ByRow(==(2)))
 
-dba = data[!, data.database]
+YBtrue = dbb.Y
+ZAtrue = dba.Z
 
-# +
-dbb = data[!, data.database == 2]
+X = Matrix{Int}(data)
+Y = Vector{Int}(df.Y)
+Z = Vector{Int}(df.Z)
+# -
 
-YBtrue = dbb.Y.values
-ZAtrue = dba.Z.values
-
-Xnames = ["X1_1", "X2_1", "X2_2", "X3_1", "X3_2", "X3_3"]
-
-X = Matrix{Int}(data[!, Xnames])
-Y = Vector{Int}(data.Y)
-Z = Vector{Int}(data.Z)
-
+Xnames = [:X1_1,:X2_1,:X2_2, :X3_1, :X3_2, :X3_3]
 XA = dba[!, Xnames]
 XB = dbb[!, Xnames]
 
-YA = pd.get_dummies(dba.Y, dtype=np.int32).values
-ZB = pd.get_dummies(dbb.Z, dtype=np.int32).values
-ZA = pd.get_dummies(dba.Z, dtype=np.int32).values
-YB = pd.get_dummies(dbb.Y, dtype=np.int32).values
-
-return Xnames, X, Y, Z, XA, YA, XB, ZB, YBtrue, ZAtrue
-# -
+YA = one_hot_encoder(dba.Y)
+ZA = one_hot_encoder(dba.Z)
+ZB = one_hot_encoder(dbb.Z)
+YB = one_hot_encoder(dbb.Y)
 
 end
