@@ -14,6 +14,6 @@ module OptimalTransportDataIntegration
 
     include("data_parameters.jl")
     include("generate_xcat_ycat.jl")
-    include("utils.jl")
+    include("one_hot_encoder.jl")
 
 end

@@ -11,3 +11,20 @@ function one_hot_encoder(df :: DataFrame)
     end
     return res[!, outnames]
 end
+
+function one_hot_encoder(x :: AbstractMatrix)
+    res = Vector{Int}[] 
+    for col in eachcol(x)
+        levels = unique(col)
+        for level in levels
+            push!(res, col .== level)
+        end
+    end
+    return stack(res) 
+end
+
+function one_hot_encoder( x :: AbstractVector) :: Matrix{Int}
+
+    (sort(unique(x)) .== permutedims(x))'
+
+end
