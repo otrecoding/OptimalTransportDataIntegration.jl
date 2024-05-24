@@ -1,35 +1,45 @@
-function prep_data(df :: DataFrame)
+# +
+using OptimalTransportDataIntegration
+using DataFrames
+params = DataParameters(nA = 1000, nB = 500)
 
-    outnames = Symbol[]
-    res = copy(df)
-    for col in names(df)
-        cates = sort(unique(df[!, col]))
-        outname = Symbol.(col,"_", cates)
-        push!(outnames, outname...)
-        transform!(res, @. col => ByRow(isequal(cates)) => outname)
-    end
-    data = res[!, outnames]
+df = generate_xcat_ycat(params)
 
-    dba = data[data.database == 1]
-    dbb = data[!, data.database == 2]
+# -
 
-    YBtrue = dbb.Y.values
-    ZAtrue = dba.Z.values
+outnames = Symbol[]
+res = copy(df)
+for col in ["X1", "X2", "X3"]
+    cates = sort(unique(df[!, col]))
+    outname = Symbol.(col,"_", cates)
+    push!(outnames, outname...)
+    transform!(res, @. col => ByRow(isequal(cates)) => outname)
+end
+data = res[!, outnames]
 
-    Xnames = ["X1_1", "X2_1", "X2_2", "X3_1", "X3_2", "X3_3"]
+dba = data[!, data.database]
 
-    X = Matrix{Int}(data[!, Xnames])
-    Y = Vector{Int}(data.Y)
-    Z = Vector{Int}(data.Z)
+# +
+dbb = data[!, data.database == 2]
 
-    XA = dba[!, Xnames]
-    XB = dbb[!, Xnames]
+YBtrue = dbb.Y.values
+ZAtrue = dba.Z.values
 
-    YA = pd.get_dummies(dba.Y, dtype=np.int32).values
-    ZB = pd.get_dummies(dbb.Z, dtype=np.int32).values
-    ZA = pd.get_dummies(dba.Z, dtype=np.int32).values
-    YB = pd.get_dummies(dbb.Y, dtype=np.int32).values
+Xnames = ["X1_1", "X2_1", "X2_2", "X3_1", "X3_2", "X3_3"]
 
-    return Xnames, X, Y, Z, XA, YA, XB, ZB, YBtrue, ZAtrue
+X = Matrix{Int}(data[!, Xnames])
+Y = Vector{Int}(data.Y)
+Z = Vector{Int}(data.Z)
+
+XA = dba[!, Xnames]
+XB = dbb[!, Xnames]
+
+YA = pd.get_dummies(dba.Y, dtype=np.int32).values
+ZB = pd.get_dummies(dbb.Z, dtype=np.int32).values
+ZA = pd.get_dummies(dba.Z, dtype=np.int32).values
+YB = pd.get_dummies(dbb.Y, dtype=np.int32).values
+
+return Xnames, X, Y, Z, XA, YA, XB, ZB, YBtrue, ZAtrue
+# -
 
 end
