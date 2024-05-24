@@ -23,7 +23,7 @@ function one_hot_encoder(x :: AbstractMatrix)
     return stack(res) 
 end
 
-function one_hot_encoder( x :: AbstractVector) :: Matrix{Int}
+function one_hot_encoder( x :: AbstractVector) :: Matrix{Bool}
 
     (sort(unique(x)) .== permutedims(x))'
 
