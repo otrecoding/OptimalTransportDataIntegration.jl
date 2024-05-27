@@ -19,13 +19,13 @@ function generate_xcat_ycat( params )
     X_glob1 = rand(dA, params.nA)
     X_glob2 = rand(dB, params.nB)
     
-    px1cc = cumsum(params.px1c)[1:end-1]
-    px2cc = cumsum(params.px2c)[1:end-1]
-    px3cc = cumsum(params.px3c)[1:end-1]
+    @show px1cc = cumsum(params.px1c)[1:end-1]
+    @show px2cc = cumsum(params.px2c)[1:end-1]
+    @show px3cc = cumsum(params.px3c)[1:end-1]
     
-    qx1c = quantile(Normal(0.0, 1.0), px1cc)
-    qx2c = quantile(Normal(0.0, 1.0), px2cc)
-    qx3c = quantile(Normal(0.0, 1.0), px3cc)
+    @show qx1c = quantile.(Normal(0.0, 1.0), px1cc)
+    @show qx2c = quantile.(Normal(0.0, 1.0), px2cc)
+    @show qx3c = quantile.(Normal(0.0, 1.0), px3cc)
     
     bins11 = vcat(minimum(X_glob1[1,:]) - 100, qx1c, maximum(X_glob1[1,:]) + 100)
     bins12 = vcat(minimum(X_glob1[2,:]) - 100, qx2c, maximum(X_glob1[2,:]) + 100)
@@ -39,7 +39,6 @@ function generate_xcat_ycat( params )
     X22 = digitize(X_glob2[2, :], bins12)
     X23 = digitize(X_glob2[3, :], bins13)
 
-    
     X11c = to_categorical(X11)[2:end,:]
     X21c = to_categorical(X21)[2:end,:]
     X12c = to_categorical(X12)[2:end,:]

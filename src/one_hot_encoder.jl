@@ -4,7 +4,7 @@ function one_hot_encoder(df :: DataFrame)
     outnames = Symbol[]
     res = copy(df)
     for col in names(df)
-        cates = sort(unique(df[!, col]))
+        cates = sort(filter( x -> x !=0, unique(df[!, col])))
         outname = Symbol.(col,"_", cates)
         push!(outnames, outname...)
         transform!(res, @. col => ByRow(isequal(cates)) => outname)
@@ -15,7 +15,7 @@ end
 function one_hot_encoder(x :: AbstractMatrix)
     res = Vector{Int}[] 
     for col in eachcol(x)
-        levels = unique(col)
+        levels = filter( x -> x != 0, sort(unique(col)))
         for level in levels
             push!(res, col .== level)
         end
@@ -25,6 +25,6 @@ end
 
 function one_hot_encoder( x :: AbstractVector) :: Matrix{Bool}
 
-    (sort(unique(x)) .== permutedims(x))'
+    (sort(filter( i -> i != 0, unique(x))) .== permutedims(x))'
 
 end
