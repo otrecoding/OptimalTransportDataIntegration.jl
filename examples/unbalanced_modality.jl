@@ -26,19 +26,19 @@ params = DataParameters(nA = 1000, nB = 500)
 
 #data = generate_xcat_ycat(params)
 data = CSV.read("data.csv", DataFrame)
-# -
 
 onecold(X) = map(argmax, eachrow(X))
 
 Xnames_hot, X_hot, Y, Z, XA_hot, YA, XB_hot, ZB, YB_true, ZA_true = prep_data(data)
 Xnames_hot
+# -
 
 # jdonnées individuelles annexées par i
 
 XA_hot
 
 XA_hot_i = XA_hot
-XB_hot_i  = XB_hot
+XB_hot_i = XB_hot
 yA_i  = onecold(YA)
 zB_i  = onecold(ZB)
 
@@ -63,31 +63,63 @@ instance = OTRecod.Instance( database, X, Y, Z, dist_choice)
 
 # # Compute data for aggregation of the individuals
 
+instance.Z
+
+nbX
+
+# +
+indXA = instance.indXA
+indXB = instance.indXB
+Xobserv = instance.Xobserv
+Yobserv = instance.Yobserv
+Zobserv = instance.Zobserv
+nbX = length(indXA)
+
 estim_XA_YA = Dict([
-        ((x, y), length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / nA) for x = 1:nbX,
-        y in Y
+        ((x, y), length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / params.nA) for x = 1:nbX,
+        y in instance.Y
     ])
+
 estim_XB_ZB = Dict([
-        ((x, z), length(indXB[x][findall(Zobserv[indXB[x].+nA] .== z)]) / nB) for
-        x = 1:nbX, z in Z
+        ((x, z), length(indXB[x][findall(Zobserv[indXB[x] .+ params.nA] .== z)]) / params.nB) for
+        x = 1:nbX, z in instance.Z
     ])       
 
-wa = collect(values(estim_XA_YA))
-wb = collect(values(estim_XB_ZB))        
+# +
+wa = Float64[]
+wb = Float64[]  
+for i in 1:nbX
+    for j in instance.Y
+        wy = estim_XA_YA[(i,j)]
+        wy > 0.0 && push!(wa, wy)
+    end
+    for j in instance.Z
+        wz = estim_XB_ZB[(i,j)]
+        wz > 0.0 && push!(wb, wz)
+    end
+    
+end
+# -
 
-Xvalues = sort(unique(eachrow(one_hot_encoder(X))))
+Xobserv = sort(unique(eachrow(one_hot_encoder(X))))
 Yobserv = sort(unique(instance.Yobserv))
 Zobserv = sort(unique(instance.Zobserv))
-
-wa2 = wa[wa .> 0]
-wb2 = wb[wb .> 0]
-
 
 # +
 import .Iterators: flatten, product
 
-XYA = stack([[x...,y] for (x,y) in product(Xobserv,Yobserv)], dims=1)
-XYB = stack([[x...,y] for (x,y) in product(Xobserv,Zobserv)], dims=1)
+XYA = Vector{Float64}[]
+XZB = Vector{Float64}[]
+for (x,y) in product(Xobserv,Yobserv)
+    push!(XYA, [x; y])
+end
+for (x,z) in product(Xobserv,Zobserv)
+    push!(XZB, [x; z])
+end
+
+# +
+ 
+stack(XZB, dims=1)
 
 # + endofcell="---"
 XYA2 = XYA[wa !=0,:] ### XYA observés
