@@ -63,9 +63,7 @@ instance = OTRecod.Instance( database, X, Y, Z, dist_choice)
 
 # # Compute data for aggregation of the individuals
 
-instance.Z
-
-nbX
+vec([(x,y) for x in 1:4, y in 1:3])
 
 # +
 indXA = instance.indXA
@@ -75,31 +73,12 @@ Yobserv = instance.Yobserv
 Zobserv = instance.Zobserv
 nbX = length(indXA)
 
-estim_XA_YA = Dict([
-        ((x, y), length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / params.nA) for x = 1:nbX,
-        y in instance.Y
-    ])
-
-estim_XB_ZB = Dict([
-        ((x, z), length(indXB[x][findall(Zobserv[indXB[x] .+ params.nA] .== z)]) / params.nB) for
-        x = 1:nbX, z in instance.Z
-    ])       
-
-# +
-wa = Float64[]
-wb = Float64[]  
-for i in 1:nbX
-    for j in instance.Y
-        wy = estim_XA_YA[(i,j)]
-        wy > 0.0 && push!(wa, wy)
-    end
-    for j in instance.Z
-        wz = estim_XB_ZB[(i,j)]
-        wz > 0.0 && push!(wb, wz)
-    end
-    
-end
+wa = vec([length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / params.nA for y in instance.Y, x = 1:nbX
+        ])
+wa
 # -
+
+wb = vec([length(indXB[x][findall(Zobserv[indXB[x] .+ params.nA] .== z)]) / params.nB for z in instance.Z, x = 1:nbX ])       
 
 Xobserv = sort(unique(eachrow(one_hot_encoder(X))))
 Yobserv = sort(unique(instance.Yobserv))
@@ -119,69 +98,93 @@ end
 
 # +
  
-stack(XZB, dims=1)
+length(XYA), length(XZB)
 
-# + endofcell="---"
-XYA2 = XYA[wa !=0,:] ### XYA observés
-XZB2 = XZB[wb !=0,:] ### XZB observés
-
-Y_hot = onehot(Y)
-Z_hot = onehot(Z)
-
-nx= X.shape[1] ## Nb modalités x 
-
-XA_hot = XYA2[:,0:nx] # les x parmi les XYA observés, potentiellement des valeurs repetées 
-XB_hot = XZB2[:,0:nx] # les x dans XZB observés, potentiellement des valeurs repetées 
-yA = XYA2[:,nx]  ## les y  parmi les XYA observés, des valeurs repetées 
-zB = XZB2[:,nx] # les z dans XZB observés, potentiellement des valeurs repetées 
-yA_hot = onehot(yA)
-zB_hot = onehot(zB)
+# +
+XYA2 = XYA[wa .> 0] ### XYA observés
+XZB2 = XZB[wb .> 0] ### XZB observés
+# +
+Y_hot = one_hot_encoder(Y)
+Z_hot = one_hot_encoder(Z)
+# +
+nx = size(X, 2) ## Nb modalités x 
 # -
-# --
+XYA2
 
-# # +
-def OptimalModality(Values,Loss,Weight):
-    """
-    Values: vector of possible values
-    Weight: vector of weights 
-    Loss: matrix of size len(Weight) * len(Values)
-    Returns an argmin over value in Values of the scalar product <Loss[value,],Weight> 
-    """
+# +
+XA_hot = stack([x[1:nx] for x in XYA2]) # les x parmi les XYA observés, potentiellement des valeurs repetées 
+XB_hot = stack([x[1:nx] for x in XZB2]) # les x dans XZB observés, potentiellement des valeurs repetées 
+yA = getindex.(XYA2, nx+1)  ## les y  parmi les XYA observés, des valeurs repetées 
+zB = getindex.(XZB2, nx+1) # les z dans XZB observés, potentiellement des valeurs repetées 
+yA_hot = one_hot_encoder(yA)
+zB_hot = one_hot_encoder(zB)
+# -
+XA_hot
+
+# +
+"""
+- Values: vector of possible values
+- Weight: vector of weights 
+- Loss: matrix of size len(Weight) * len(Values)
+- Returns an argmin over value in Values of the scalar product <Loss[value,],Weight> 
+"""
+function OptimalModality(Values, Loss, Weight)
     
-    CostForEachModality=[]
-    for j in range(0,len(Values)):
+    CostForEachModality=Float64[]
+    for j in eachindex(Values)
         s=0
-        for i in range(0,len(Loss)):
+        for i in eachindex(Loss)
             s+=Loss[i,j]*Weight[i]
-        CostForEachModality.append(s)
-    return(Values[np.argmin(CostForEachModality)])
-
+        end
+        push!(CostForEachModality, s)
+    end
         
-# -
+    return Values[argmin(CostForEachModality)]
 
+end
+        
+# +
 # ## Algorithm
 
 # # +
 # Initialisation 
-nA = XYA2.shape[0] # number of observed different values in A
-nB = XZB2.shape[0] # number of observed different values in B
+nA = size(XYA2, 1) # number of observed different values in A
+nB = size(XZB2, 1) # number of observed different values in B
 nbrvarX = 3
-C0 = cdist(XA_hot, XB_hot, metric="hamming") * nx / nbrvarX
-C = C0 / np.max(C0)
-dimXZB = XZB2.shape[1]
-dimXYA = XYA2.shape[1]
+# -
+using Distances
+C0 = pairwise(Hamming(), XA_hot, XA_hot; dims=2) .* nx ./ nbrvarX
+C = C0 / maximum(C0)
 
-
+# +
+dimXZB = size(XZB2, 2)
+dimXYA = size(XYA2, 2)
+# +
 NumberOfIterations=3
 
-Y =range(yA_hot.shape[1])
-Z =range(zB_hot.shape[1])
-Y_hot = onehot(Y)
-Z_hot = onehot(Z)
-yB_pred = np.zeros((nB))
-zA_pred = np.zeros((nA))
+Y =1:size(yA_hot, 2)
+Z =1:size(zB_hot, 2)
+Y_hot = one_hot_encoder(Y)
+# +
+Z_hot = one_hot_encoder(Z)
+yB_pred = zeros((nB))
+zA_pred = zeros((nA))
+# -
+function loss_crossentropy(Y, F)
+    eps = 1e-12
+    res = zeros(size(Y,1), size(F,1))
+    logF = log.(F .+ eps)
+    for i in axes(Y, 2)
+        res .+= -Y[:, i]' .* logF[:, i]
+    end
+    return res
+end
 
+Y_hot
+
+# +
 Y_loss = loss_crossentropy(yA_hot, Y_hot)
+# + endofcell="--"
 Z_loss= loss_crossentropy(zB_hot, Z_hot) # Zc=onehot(possible values of Z),zB2 onehot(zB), où zB est les z dans XZB observés, potentiellement des valeurs repetées 
 
 for iter in range(NumberOfIterations):
@@ -534,6 +537,6 @@ print(Z_hot)
 np.max(loss_crossentropy(Y_hot, Y_hot))
 
 np.max(loss_crossentropy(Z_hot,Z_hot))
-# ---
+# --
 
 
