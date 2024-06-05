@@ -1,10 +1,6 @@
 using OptimalTransportDataIntegration
 using Test
 
-
-@test true
-
-
 params = DataParameters(nA = 1000, nB = 500)
 
 data = generate_xcat_ycat(params)

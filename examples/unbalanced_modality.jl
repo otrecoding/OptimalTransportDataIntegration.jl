@@ -22,11 +22,12 @@ using OTRecod
 using CSV
 using DataFrames
 
-params = DataParameters(nA = 1000, nB = 500)
+params = DataParameters(nA=1000, nB=1000, mB=[2,0,0], eps=0, p=0.2)
 
 #data = generate_xcat_ycat(params)
 data = CSV.read("data.csv", DataFrame)
 
+# +
 onecold(X) = map(argmax, eachrow(X))
 
 Xnames_hot, X_hot, Y, Z, XA_hot, YA, XB_hot, ZB, YB_true, ZA_true = prep_data(data)
@@ -59,6 +60,7 @@ dist_choice = Hamming()
     
 instance = OTRecod.Instance( database, X, Y, Z, dist_choice)
     
+instance.Y
 # -
 
 # # Compute data for aggregation of the individuals
@@ -99,26 +101,21 @@ end
 # +
  
 length(XYA), length(XZB)
+# -
 
-# +
 XYA2 = XYA[wa .> 0] ### XYA observés
 XZB2 = XZB[wb .> 0] ### XZB observés
-# +
 Y_hot = one_hot_encoder(Y)
 Z_hot = one_hot_encoder(Z)
-# +
 nx = size(X, 2) ## Nb modalités x 
-# -
 XYA2
 
-# +
 XA_hot = stack([x[1:nx] for x in XYA2]) # les x parmi les XYA observés, potentiellement des valeurs repetées 
 XB_hot = stack([x[1:nx] for x in XZB2]) # les x dans XZB observés, potentiellement des valeurs repetées 
 yA = getindex.(XYA2, nx+1)  ## les y  parmi les XYA observés, des valeurs repetées 
 zB = getindex.(XZB2, nx+1) # les z dans XZB observés, potentiellement des valeurs repetées 
 yA_hot = one_hot_encoder(yA)
 zB_hot = one_hot_encoder(zB)
-# -
 XA_hot
 
 # +
@@ -142,7 +139,7 @@ function OptimalModality(Values, Loss, Weight)
     return Values[argmin(CostForEachModality)]
 
 end
-        
+
 # +
 # ## Algorithm
 
@@ -156,7 +153,6 @@ using Distances
 C0 = pairwise(Hamming(), XA_hot, XA_hot; dims=2) .* nx ./ nbrvarX
 C = C0 / maximum(C0)
 
-# +
 dimXZB = size(XZB2, 2)
 dimXYA = size(XYA2, 2)
 # +
@@ -165,11 +161,10 @@ NumberOfIterations=3
 Y =1:size(yA_hot, 2)
 Z =1:size(zB_hot, 2)
 Y_hot = one_hot_encoder(Y)
-# +
+# -
 Z_hot = one_hot_encoder(Z)
 yB_pred = zeros((nB))
 zA_pred = zeros((nA))
-# -
 function loss_crossentropy(Y, F)
     eps = 1e-12
     res = zeros(size(Y,1), size(F,1))
@@ -182,7 +177,6 @@ end
 
 Y_hot
 
-# +
 Y_loss = loss_crossentropy(yA_hot, Y_hot)
 # + endofcell="--"
 Z_loss= loss_crossentropy(zB_hot, Z_hot) # Zc=onehot(possible values of Z),zB2 onehot(zB), où zB est les z dans XZB observés, potentiellement des valeurs repetées 
