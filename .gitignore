@@ -28,3 +28,4 @@ examples/data_fusion.ipynb
 *.pyc
 /examples/statmatchopt
 /examples/otrecod
+examples/unbalanced_modality.ipynb
