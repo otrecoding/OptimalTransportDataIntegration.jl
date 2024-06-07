@@ -14,8 +14,6 @@
 #     name: julia-1.10
 # ---
 
-import Pkg; Pkg.add(url="https://github.com/otrecoding/OTRecod.jl.git")
-
 # +
 using OptimalTransportDataIntegration
 using OTRecod
@@ -51,21 +49,26 @@ XZB_i = hcat(XB_hot_i, zB_i)
 # +
 import Distances: Hamming
 
-X = Matrix(data[!, ["X1", "X2", "X3"]])
+Xhot = one_hot_encoder(Matrix(data[!, ["X1", "X2", "X3"]]))
+
+
+# +
 Y = Vector(data.Y)
 Z = Vector(data.Z)
 database = data.database
 
 dist_choice = Hamming()
     
-instance = OTRecod.Instance( database, X, Y, Z, dist_choice)
+instance = OTRecod.Instance( database, Xhot, Y, Z, dist_choice)
     
-instance.Y
+instance.Y, instance.Z
 # -
 
-# # Compute data for aggregation of the individuals
+instance.indXA[2]
 
-vec([(x,y) for x in 1:4, y in 1:3])
+instance.indXA[1][length(instance.Yobserv[instance.indXA[1]] .== 1)]
+
+# # Compute data for aggregation of the individuals
 
 # +
 indXA = instance.indXA
@@ -75,48 +78,100 @@ Yobserv = instance.Yobserv
 Zobserv = instance.Zobserv
 nbX = length(indXA)
 
-wa = vec([length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / params.nA for y in instance.Y, x = 1:nbX
-        ])
-wa
+wa = vec([length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / params.nA for y in instance.Y, x = 1:nbX])
 # -
 
 wb = vec([length(indXB[x][findall(Zobserv[indXB[x] .+ params.nA] .== z)]) / params.nB for z in instance.Z, x = 1:nbX ])       
 
-Xobserv = sort(unique(eachrow(one_hot_encoder(X))))
+Xvalues = stack(sort(unique(eachrow(one_hot_encoder(instance.Xval)))), dims=1)
+
+
 Yobserv = sort(unique(instance.Yobserv))
 Zobserv = sort(unique(instance.Zobserv))
 
+Xobserv = sort(unique(eachrow(instance.Xobserv)))
+
 # +
-import .Iterators: flatten, product
+import .Iterators: product
 
 XYA = Vector{Float64}[]
 XZB = Vector{Float64}[]
-for (x,y) in product(Xobserv,Yobserv)
-    push!(XYA, [x; y])
+for (y,x) in product(Yobserv,Xobserv)
+    push!(XYA, [x...; y])
 end
-for (x,z) in product(Xobserv,Zobserv)
-    push!(XZB, [x; z])
+for (z,x) in product(Zobserv,Xobserv)
+    push!(XZB, [x...; z])
 end
-
-# +
- 
-length(XYA), length(XZB)
 # -
+
+XYA
+
+XZB
 
 XYA2 = XYA[wa .> 0] ### XYA observés
 XZB2 = XZB[wb .> 0] ### XZB observés
-Y_hot = one_hot_encoder(Y)
-Z_hot = one_hot_encoder(Z)
-nx = size(X, 2) ## Nb modalités x 
-XYA2
 
-XA_hot = stack([x[1:nx] for x in XYA2]) # les x parmi les XYA observés, potentiellement des valeurs repetées 
-XB_hot = stack([x[1:nx] for x in XZB2]) # les x dans XZB observés, potentiellement des valeurs repetées 
+Y_hot = one_hot_encoder(instance.Y)
+
+Z_hot = one_hot_encoder(instance.Z)
+
+nx = size(Xvalues, 2) ## Nb modalités x 
+
+XA_hot = stack([v[1:nx] for v in XYA2], dims=1) # les x parmi les XYA observés, potentiellement des valeurs repetées 
+XB_hot = stack([v[1:nx] for v in XZB2], dims=1) # les x dans XZB observés, potentiellement des valeurs repetées 
+
 yA = getindex.(XYA2, nx+1)  ## les y  parmi les XYA observés, des valeurs repetées 
-zB = getindex.(XZB2, nx+1) # les z dans XZB observés, potentiellement des valeurs repetées 
 yA_hot = one_hot_encoder(yA)
+
+# +
+zB = getindex.(XZB2, nx+1) # les z dans XZB observés, potentiellement des valeurs repetées 
+
 zB_hot = one_hot_encoder(zB)
-XA_hot
+yA_hot
+
+# +
+# ## Algorithm
+
+# # +
+# Initialisation 
+nA = size(XYA2, 1) # number of observed different values in A
+nB = size(XZB2, 1) # number of observed different values in B
+nbrvarX = 3
+# -
+using Distances
+print(nx)
+C0 = pairwise(Hamming(), XA_hot, XB_hot; dims=1) .* nx ./ nbrvarX
+C = C0 / maximum(C0)
+
+@show dimXZB = length(XZB2[1])
+@show dimXYA = length(XYA2[1])
+NumberOfIterations=3
+# ```python
+# def loss_crossentropy(Y, F):
+#     eps = 1e-12
+#     res = np.zeros((Y.shape[0], F.shape[0]))
+#     logF = np.array(K.log(F + eps))
+#     for i in range(Y.shape[1]):
+#         res += -Y[:, i].reshape((Y.shape[0], 1)) * logF[:, i].reshape((1, F.shape[0]))
+#     return res
+# ```
+
+yA
+
+one_hot_encoder(yA)
+
+yB_pred = zeros(nB)
+zA_pred = zeros(nA)
+function loss_crossentropy(Y, F)
+    eps = 1e-12
+    res = zeros(size(Y,1), size(F,1))
+    logF = log.(F .+ eps)
+    for i in axes(Y, 2)
+        res .+= -Y[:, i] .* logF[:, i]'
+    end
+    return res
+end
+Y_loss = loss_crossentropy(yA_hot, Y_hot)
 
 # +
 """
@@ -139,48 +194,15 @@ function OptimalModality(Values, Loss, Weight)
     return Values[argmin(CostForEachModality)]
 
 end
-
-# +
-# ## Algorithm
-
-# # +
-# Initialisation 
-nA = size(XYA2, 1) # number of observed different values in A
-nB = size(XZB2, 1) # number of observed different values in B
-nbrvarX = 3
 # -
-using Distances
-C0 = pairwise(Hamming(), XA_hot, XA_hot; dims=2) .* nx ./ nbrvarX
-C = C0 / maximum(C0)
-
-dimXZB = size(XZB2, 2)
-dimXYA = size(XYA2, 2)
-# +
-NumberOfIterations=3
-
-Y =1:size(yA_hot, 2)
-Z =1:size(zB_hot, 2)
-Y_hot = one_hot_encoder(Y)
-# -
-Z_hot = one_hot_encoder(Z)
-yB_pred = zeros((nB))
-zA_pred = zeros((nA))
-function loss_crossentropy(Y, F)
-    eps = 1e-12
-    res = zeros(size(Y,1), size(F,1))
-    logF = log.(F .+ eps)
-    for i in axes(Y, 2)
-        res .+= -Y[:, i]' .* logF[:, i]
-    end
-    return res
-end
 
 Y_hot
 
+# +
 Y_loss = loss_crossentropy(yA_hot, Y_hot)
-# + endofcell="--"
-Z_loss= loss_crossentropy(zB_hot, Z_hot) # Zc=onehot(possible values of Z),zB2 onehot(zB), où zB est les z dans XZB observés, potentiellement des valeurs repetées 
 
+Z_loss= loss_crossentropy(zB_hot, Z_hot) # Zc=onehot(possible values of Z),zB2 onehot(zB), où zB est les z dans XZB observés, potentiellement des valeurs repetées 
+# + endofcell="--"
 for iter in range(NumberOfIterations):
     ### Optimal Transport
     G = ot.unbalanced.mm_unbalanced(wa2, wb2, C,reg_m=0.1, div='kl') #unbalanced
