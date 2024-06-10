@@ -19,6 +19,9 @@ using OptimalTransportDataIntegration
 using OTRecod
 using CSV
 using DataFrames
+import PythonOT
+import .Iterators: product
+import Distances: pairwise
 
 params = DataParameters(nA=1000, nB=1000, mB=[2,0,0], eps=0, p=0.2)
 
@@ -33,8 +36,6 @@ Xnames_hot
 # -
 
 # jdonnées individuelles annexées par i
-
-XA_hot
 
 XA_hot_i = XA_hot
 XB_hot_i = XB_hot
@@ -64,10 +65,6 @@ instance = OTRecod.Instance( database, Xhot, Y, Z, dist_choice)
 instance.Y, instance.Z
 # -
 
-instance.indXA[2]
-
-instance.indXA[1][length(instance.Yobserv[instance.indXA[1]] .== 1)]
-
 # # Compute data for aggregation of the individuals
 
 # +
@@ -79,9 +76,10 @@ Zobserv = instance.Zobserv
 nbX = length(indXA)
 
 wa = vec([length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / params.nA for y in instance.Y, x = 1:nbX])
+wb = vec([length(indXB[x][findall(Zobserv[indXB[x] .+ params.nA] .== z)]) / params.nB for z in instance.Z, x = 1:nbX ])  
+wa2 = wa[wa .> 0.0]
+wb2 = wb[wb .> 0.0]
 # -
-
-wb = vec([length(indXB[x][findall(Zobserv[indXB[x] .+ params.nA] .== z)]) / params.nB for z in instance.Z, x = 1:nbX ])       
 
 Xvalues = stack(sort(unique(eachrow(one_hot_encoder(instance.Xval)))), dims=1)
 
@@ -92,7 +90,7 @@ Zobserv = sort(unique(instance.Zobserv))
 Xobserv = sort(unique(eachrow(instance.Xobserv)))
 
 # +
-import .Iterators: product
+
 
 XYA = Vector{Float64}[]
 XZB = Vector{Float64}[]
@@ -103,10 +101,6 @@ for (z,x) in product(Zobserv,Xobserv)
     push!(XZB, [x...; z])
 end
 # -
-
-XYA
-
-XZB
 
 XYA2 = XYA[wa .> 0] ### XYA observés
 XZB2 = XZB[wb .> 0] ### XZB observés
@@ -122,43 +116,25 @@ XB_hot = stack([v[1:nx] for v in XZB2], dims=1) # les x dans XZB observés, pote
 
 yA = getindex.(XYA2, nx+1)  ## les y  parmi les XYA observés, des valeurs repetées 
 yA_hot = one_hot_encoder(yA)
-
-# +
 zB = getindex.(XZB2, nx+1) # les z dans XZB observés, potentiellement des valeurs repetées 
-
 zB_hot = one_hot_encoder(zB)
-yA_hot
 
-# +
 # ## Algorithm
-
-# # +
-# Initialisation 
+#
+# ### Initialisation 
+# +
 nA = size(XYA2, 1) # number of observed different values in A
 nB = size(XZB2, 1) # number of observed different values in B
 nbrvarX = 3
-# -
-using Distances
-print(nx)
+
+println(nx)
 C0 = pairwise(Hamming(), XA_hot, XB_hot; dims=1) .* nx ./ nbrvarX
-C = C0 / maximum(C0)
+C = copy(C0 ./ maximum(C0))
 
-@show dimXZB = length(XZB2[1])
-@show dimXYA = length(XYA2[1])
-NumberOfIterations=3
-# ```python
-# def loss_crossentropy(Y, F):
-#     eps = 1e-12
-#     res = np.zeros((Y.shape[0], F.shape[0]))
-#     logF = np.array(K.log(F + eps))
-#     for i in range(Y.shape[1]):
-#         res += -Y[:, i].reshape((Y.shape[0], 1)) * logF[:, i].reshape((1, F.shape[0]))
-#     return res
-# ```
+dimXZB = length(XZB2[1])
+dimXYA = length(XYA2[1])
 
-yA
-
-one_hot_encoder(yA)
+NumberOfIterations = 3
 
 yB_pred = zeros(nB)
 zA_pred = zeros(nA)
@@ -172,92 +148,102 @@ function loss_crossentropy(Y, F)
     return res
 end
 Y_loss = loss_crossentropy(yA_hot, Y_hot)
+Z_loss = loss_crossentropy(zB_hot, Z_hot) 
+# -
+
+G
 
 # +
 """
-- Values: vector of possible values
-- Weight: vector of weights 
-- Loss: matrix of size len(Weight) * len(Values)
-- Returns an argmin over value in Values of the scalar product <Loss[value,],Weight> 
+    optimal_modality(values, loss, weight)
+
+- values: vector of possible values
+- weight: vector of weights 
+- loss: matrix of size len(Weight) * len(Values)
+
+- Returns an argmin over value in values of the scalar product <loss[value,],weight> 
 """
-function OptimalModality(Values, Loss, Weight)
+function optimal_modality(values, loss, weight)
     
-    CostForEachModality=Float64[]
-    for j in eachindex(Values)
+    cost_for_each_modality=Float64[]
+    for j in eachindex(values)
         s=0
-        for i in eachindex(Loss)
-            s+=Loss[i,j]*Weight[i]
+        for i in axes(loss, 1)
+            s += loss[i,j] * weight[i]
         end
-        push!(CostForEachModality, s)
+        push!(cost_for_each_modality, s)
     end
         
-    return Values[argmin(CostForEachModality)]
+    return values[argmin(cost_for_each_modality)]
 
 end
 # -
 
-Y_hot
+# Zc=onehot(possible values of Z),zB2 onehot(zB), où zB est les z dans XZB observés, potentiellement des valeurs repetées 
+
+# ### Optimal Transport
+
+G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div="kl")
+for j in eachindex(yB_pred)
+    yB_pred[j]=optimal_modality(instance.Y, Y_loss, G[:,j])
+end
 
 # +
-Y_loss = loss_crossentropy(yA_hot, Y_hot)
+NumberOfIterations = 10
 
-Z_loss= loss_crossentropy(zB_hot, Z_hot) # Zc=onehot(possible values of Z),zB2 onehot(zB), où zB est les z dans XZB observés, potentiellement des valeurs repetées 
-# + endofcell="--"
-for iter in range(NumberOfIterations):
-    ### Optimal Transport
-    G = ot.unbalanced.mm_unbalanced(wa2, wb2, C,reg_m=0.1, div='kl') #unbalanced
-    # G =ot.unbalanced.mm_unbalanced2(wa2, wb2, C, reg_m=0.1, c=None, reg=0, div='kl')#unbalanced
-    #G = ot.emd(ot.unif(nA), ot.unif(nB), C) #balanced
+for iter in 1:NumberOfIterations
     
-    #if method == "sinkhorn":
-           #G = ot.sinkhorn(ot.unif(nA), ot.unif(nB), C, reg)
-    #if method == "emd":
-            #G = ot.emd(ot.unif(nA), ot.unif(nB), C) #balanced
-    ### Compute best f:XxZ->Y
+    G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div="kl") #unbalanced
+    
 
-    for j in range(nB):
-        yB_pred[j]=OptimalModality(Y,Y_loss,G[:,j])
-    yB_pred_hot = onehot(yB_pred)
-    
+    for j in eachindex(yB_pred)
+         yB_pred[j] = optimal_modality(instance.Y, Y_loss, G[:,j])
+    end
+    yB_pred_hot = one_hot_encoder(yB_pred)
+     
     ### Compute best g: XxY-->Z
-  
-    for i in range(nA):
-        zA_pred[i] = OptimalModality(Z,Z_loss,G[i,:])
-
-    zA_pred_hot = onehot(zA_pred)
-
-    ### Update Cost matrix
-    alpha1=1/np.max(loss_crossentropy(yA_hot, yB_pred_hot))
-    alpha2=1/np.max(loss_crossentropy(zB_hot, zA_pred_hot))
-
-    chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
-    chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot).T
-    fcost = chinge1 + chinge2
-  
-    C = C0 / np.max(C0) + fcost
-
-    #### Predict
-    zA_pred_hot_i=np.zeros((nA_i,len(Z)))
-    for i in range(nA_i):
-         ind = np.where((XYA_i[i,:] == XYA2).all(axis=1))[0][0]
-         zA_pred_hot_i[i,:] = zA_pred_hot[ind,:]
-    yB_pred_hot_i=np.zeros((nB_i,len(Y)))
-    for i in range(nB_i):
-         ind = np.where((XZB_i[i,:] == XZB2).all(axis=1))[0][0]
-         yB_pred_hot_i[i,:] = yB_pred_hot[ind,:]
  
+    for i in eachindex(zA_pred)
+        zA_pred[i] = optimal_modality(instance.Z, Z_loss, G[i,:])
+    end
+# 
+    # zA_pred_hot = onehot(zA_pred)
+# 
+    # ### Update Cost matrix
+    # alpha1=1/np.max(loss_crossentropy(yA_hot, yB_pred_hot))
+    # alpha2=1/np.max(loss_crossentropy(zB_hot, zA_pred_hot))
+# 
+    # chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
+    # chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot).T
+    # fcost = chinge1 + chinge2
+  # 
+    # C = C0 / np.max(C0) + fcost
+# 
+    # #### Predict
+    # zA_pred_hot_i=np.zeros((nA_i,len(Z)))
+    # for i in range(nA_i):
+    #      ind = np.where((XYA_i[i,:] == XYA2).all(axis=1))[0][0]
+    #      zA_pred_hot_i[i,:] = zA_pred_hot[ind,:]
+    # yB_pred_hot_i=np.zeros((nB_i,len(Y)))
+    # for i in range(nB_i):
+    #      ind = np.where((XZB_i[i,:] == XZB2).all(axis=1))[0][0]
+    #      yB_pred_hot_i[i,:] = yB_pred_hot[ind,:]
+ # 
+# 
+    # YB_pred= np.argmax(yB_pred_hot_i, 1) + 1
+    # ZA_pred = np.argmax(zA_pred_hot_i, 1) + 1
+# 
+# 
+    # ### Evaluate 
+# 
+    est = (sum(YB_true .== YB_pred) .+ sum(ZA_true .== ZA_pred)) ./ (nA_i + nB_i)
+    println(est)
+    println(sum(YB_true .== YB_pred)/nB_i)
+    println(sum(ZA_true .== ZA_pred)/nA_i)
 
-    YB_pred= np.argmax(yB_pred_hot_i, 1) + 1
-    ZA_pred = np.argmax(zA_pred_hot_i, 1) + 1
-
-
-    ### Evaluate 
-
-    est = (np.sum(YB_true == YB_pred) + np.sum(ZA_true == ZA_pred)) / (nA_i + nB_i)
-    print(est)
-    print(np.sum(YB_true == YB_pred)/nB_i)
-    print(np.sum(ZA_true == ZA_pred)/nA_i)
-
+end
+                
+# + endofcell="--"
 # -
 
 # ## Monte Carlo Simulations
