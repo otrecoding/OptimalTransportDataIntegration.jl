@@ -27,6 +27,8 @@ params = DataParameters(nA=1000, nB=1000, mB=[2,0,0], eps=0, p=0.2)
 
 #data = generate_xcat_ycat(params)
 data = CSV.read("data.csv", DataFrame)
+dba = subset(data, :database => ByRow(==(1)))
+dbb = subset(data, :database => ByRow(==(2)))
 
 # +
 onecold(X) = map(argmax, eachrow(X))
@@ -37,8 +39,8 @@ Xnames_hot
 
 # jdonnées individuelles annexées par i
 
-XA_hot_i = XA_hot
-XB_hot_i = XB_hot
+XA_hot_i = copy(XA_hot)
+XB_hot_i = copy(XB_hot)
 yA_i  = onecold(YA)
 zB_i  = onecold(ZB)
 
@@ -89,24 +91,20 @@ Zobserv = sort(unique(instance.Zobserv))
 
 Xobserv = sort(unique(eachrow(instance.Xobserv)))
 
-# +
-
-
-XYA = Vector{Float64}[]
-XZB = Vector{Float64}[]
+XYA = Vector{Int}[]
+XZB = Vector{Int}[]
 for (y,x) in product(Yobserv,Xobserv)
     push!(XYA, [x...; y])
 end
 for (z,x) in product(Zobserv,Xobserv)
     push!(XZB, [x...; z])
 end
-# -
 
 XYA2 = XYA[wa .> 0] ### XYA observés
 XZB2 = XZB[wb .> 0] ### XZB observés
 
+# +
 Y_hot = one_hot_encoder(instance.Y)
-
 Z_hot = one_hot_encoder(instance.Z)
 
 nx = size(Xvalues, 2) ## Nb modalités x 
@@ -118,6 +116,7 @@ yA = getindex.(XYA2, nx+1)  ## les y  parmi les XYA observés, des valeurs repet
 yA_hot = one_hot_encoder(yA)
 zB = getindex.(XZB2, nx+1) # les z dans XZB observés, potentiellement des valeurs repetées 
 zB_hot = one_hot_encoder(zB)
+# -
 
 # ## Algorithm
 #
@@ -127,10 +126,6 @@ nA = size(XYA2, 1) # number of observed different values in A
 nB = size(XZB2, 1) # number of observed different values in B
 nbrvarX = 3
 
-println(nx)
-C0 = pairwise(Hamming(), XA_hot, XB_hot; dims=1) .* nx ./ nbrvarX
-C = copy(C0 ./ maximum(C0))
-
 dimXZB = length(XZB2[1])
 dimXYA = length(XYA2[1])
 
@@ -139,9 +134,9 @@ NumberOfIterations = 3
 yB_pred = zeros(nB)
 zA_pred = zeros(nA)
 function loss_crossentropy(Y, F)
-    eps = 1e-12
+    ϵ = 1e-12
     res = zeros(size(Y,1), size(F,1))
-    logF = log.(F .+ eps)
+    logF = log.(F .+ ϵ)
     for i in axes(Y, 2)
         res .+= -Y[:, i] .* logF[:, i]'
     end
@@ -149,9 +144,6 @@ function loss_crossentropy(Y, F)
 end
 Y_loss = loss_crossentropy(yA_hot, Y_hot)
 Z_loss = loss_crossentropy(zB_hot, Z_hot) 
-# -
-
-G
 
 # +
 """
@@ -179,14 +171,34 @@ function optimal_modality(values, loss, weight)
 end
 # -
 
-# Zc=onehot(possible values of Z),zB2 onehot(zB), où zB est les z dans XZB observés, potentiellement des valeurs repetées 
+# Zc = onehot(possible values of Z)
+# zB2 = onehot(zB), où zB est les z dans XZB observés, 
+# potentiellement des valeurs repetées 
 
 # ### Optimal Transport
 
+# +
+C0 = pairwise(Hamming(), XA_hot, XB_hot; dims=1) .* nx ./ nbrvarX
+C = C0 ./ maximum(C0)
 G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div="kl")
 for j in eachindex(yB_pred)
     yB_pred[j]=optimal_modality(instance.Y, Y_loss, G[:,j])
 end
+yB_pred_hot = one_hot_encoder(yB_pred)
+for i in eachindex(zA_pred)
+    zA_pred[i] = optimal_modality(instance.Z, Z_loss, G[i,:])
+end
+zA_pred_hot = one_hot_encoder(zA_pred)
+alpha1 = 1 / maximum(loss_crossentropy(yA_hot, yB_pred_hot))
+alpha2 = 1 / maximum(loss_crossentropy(zB_hot, zA_pred_hot))
+chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
+chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
+fcost = chinge1 .+ chinge2'
+ 
+C .= C0 ./ maximum(C0) .+ fcost 
+
+zA_pred_hot_i = zeros(Int, (nA_i,length(instance.Z)))
+yB_pred_hot_i = zeros(Int, (nB_i,length(instance.Y)))
 
 # +
 NumberOfIterations = 10
@@ -195,10 +207,10 @@ for iter in 1:NumberOfIterations
     
     G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div="kl") #unbalanced
     
-
     for j in eachindex(yB_pred)
          yB_pred[j] = optimal_modality(instance.Y, Y_loss, G[:,j])
     end
+    
     yB_pred_hot = one_hot_encoder(yB_pred)
      
     ### Compute best g: XxY-->Z
@@ -206,43 +218,43 @@ for iter in 1:NumberOfIterations
     for i in eachindex(zA_pred)
         zA_pred[i] = optimal_modality(instance.Z, Z_loss, G[i,:])
     end
-# 
-    # zA_pred_hot = onehot(zA_pred)
-# 
-    # ### Update Cost matrix
-    # alpha1=1/np.max(loss_crossentropy(yA_hot, yB_pred_hot))
-    # alpha2=1/np.max(loss_crossentropy(zB_hot, zA_pred_hot))
-# 
-    # chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
-    # chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot).T
-    # fcost = chinge1 + chinge2
-  # 
-    # C = C0 / np.max(C0) + fcost
-# 
-    # #### Predict
-    # zA_pred_hot_i=np.zeros((nA_i,len(Z)))
-    # for i in range(nA_i):
-    #      ind = np.where((XYA_i[i,:] == XYA2).all(axis=1))[0][0]
-    #      zA_pred_hot_i[i,:] = zA_pred_hot[ind,:]
-    # yB_pred_hot_i=np.zeros((nB_i,len(Y)))
-    # for i in range(nB_i):
-    #      ind = np.where((XZB_i[i,:] == XZB2).all(axis=1))[0][0]
-    #      yB_pred_hot_i[i,:] = yB_pred_hot[ind,:]
- # 
-# 
-    # YB_pred= np.argmax(yB_pred_hot_i, 1) + 1
-    # ZA_pred = np.argmax(zA_pred_hot_i, 1) + 1
-# 
-# 
-    # ### Evaluate 
-# 
+ 
+    zA_pred_hot = one_hot_encoder(zA_pred)
+ 
+    ### Update Cost matrix
+    alpha1 = 1 / maximum(loss_crossentropy(yA_hot, yB_pred_hot))
+    alpha2 = 1 / maximum(loss_crossentropy(zB_hot, zA_pred_hot))
+ 
+    chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
+    chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
+    fcost = chinge1 .+ chinge2'
+ 
+    C .= C0 ./ maximum(C0) .+ fcost
+ 
+    ### Predict
+    
+    for i in axes(XYA_i, 1)
+        ind = findfirst(XYA_i[i,:] == v for v in XYA2)
+        zA_pred_hot_i[i,:] .= zA_pred_hot[ind,:]
+    end
+
+    for i in axes(XZB_i, 1)
+        ind = findfirst(XZB_i[i,:] == v for v in XZB2)
+        yB_pred_hot_i[i,:] .= yB_pred_hot[ind,:]
+    end
+ 
+    YB_pred = onecold(yB_pred_hot_i) 
+    ZA_pred = onecold(zA_pred_hot_i)
+ 
+    ### Evaluate 
+ 
     est = (sum(YB_true .== YB_pred) .+ sum(ZA_true .== ZA_pred)) ./ (nA_i + nB_i)
     println(est)
     println(sum(YB_true .== YB_pred)/nB_i)
     println(sum(ZA_true .== ZA_pred)/nA_i)
 
 end
-                
+
 # + endofcell="--"
 # -
 
