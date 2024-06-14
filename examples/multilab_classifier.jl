@@ -7,11 +7,11 @@
 #       extension: .jl
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.1
+#       jupytext_version: 1.16.2
 #   kernelspec:
-#     display_name: Julia 1.9.3
+#     display_name: Julia 1.10.4
 #     language: julia
-#     name: julia-1.9
+#     name: julia-1.10
 # ---
 
 # +
@@ -54,10 +54,7 @@ Y = hcat(round.(tanh.(0.5 .* X[:,1] + 0.8 .* X[:,2])),
 
 
 # +
-x = Float32.(transpose(X))
-y = Float32.(transpose(Y))
-
-model = Flux.Chain( Flux.Dense(2, 10, Flux.relu), 
+g = Flux.Chain( Flux.Dense(2, 10, Flux.relu), 
                     Flux.Dense(10, 3, x -> (tanh(x) + 1)/2))
 
 loader = Flux.DataLoader((x, y), batchsize=8, shuffle=true)

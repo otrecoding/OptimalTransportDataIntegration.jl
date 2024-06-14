@@ -7,11 +7,11 @@
 #       extension: .jl
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.1
+#       jupytext_version: 1.16.2
 #   kernelspec:
-#     display_name: Julia 1.9.3
+#     display_name: Julia 1.10.4
 #     language: julia
-#     name: julia-1.9
+#     name: julia-1.10
 # ---
 
 # # Flux classifier
@@ -26,7 +26,7 @@ import Flux
 # ## Dataset
 
 # +
-data = DataFrame(CSV.File("dataset.csv"))
+data = DataFrame(CSV.File("data.csv"))
 data.X1_1 = data.X1
 data.X2_1 =to_categorical(data.X2)[2,:]
 data.X2_2 =to_categorical(data.X2)[3,:]
@@ -76,6 +76,8 @@ model = Chain( Dense(nx, 160, relu), Dense(160, ny, relu), softmax)
 ŷ = model(x)
 Flux.crossentropy(ŷ, y)
 
+Flux.binarycrossentropy(ŷ, y)
+
 predict( model, x) = Flux.onecold(model(x))
 accuracy(model, x, y) = mean(predict(model,x) .== y) 
 
@@ -84,14 +86,18 @@ accuracy(model, x, y) = mean(predict(model,x) .== y)
 # Let's train our model using the classic Gradient Descent algorithm. Here we will train the model for a maximum of `100` epochs.
 
 # +
-function train!(model, x, y, epochs = 1000, batchsize = 16)
+model = Flux.Chain( Flux.Dense(nx, 16, Flux.relu), 
+                    Flux.Dense(16, ny, x -> (tanh(x) + 1)/2))
+
+
+function train!(model, x, y, epochs = 1000, batchsize = 8)
     loader = Flux.DataLoader((x, y), batchsize=batchsize, shuffle=true)
     optim = Flux.setup(Flux.Adam(0.01), model)
     @showprogress for epoch in 1:epochs
         for (x, y) in loader
             grads = Flux.gradient(model) do m
                 y_hat = m(x)
-                Flux.binarycrossentropy(y_hat, y)
+                Flux.mse(y_hat, y)
             end
             Flux.update!(optim, model, grads[1])
         end
@@ -104,5 +110,25 @@ train!(model, x, y)
 # Looking at the accuracy
 
 mean(Flux.onecold(model(x)) .== dba.Y)
+
+# +
+
+loader = Flux.DataLoader((x, y), batchsize=8, shuffle=true)
+
+optim = Flux.setup(Flux.Adam(0.01), model)
+
+@showprogress 1 for epoch in 1:1_000
+    for (x, y) in loader
+        grads = Flux.gradient(model) do m
+            y_hat = m(x)
+            Flux.mse(y_hat, y)
+        end
+        Flux.update!(optim, model, grads[1])
+    end
+end
+mean(round.(model(x)) .== y)
+# -
+
+
 
 
