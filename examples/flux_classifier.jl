@@ -39,13 +39,11 @@ dbb = subset(data, :database => ByRow(==(2)))
 
 Xnames = [:X1_1,:X2_1,:X2_2, :X3_1, :X3_2, :X3_3]
 
-XA = dba[!, Xnames]
-XB = dbb[!, Xnames]
+XA = Matrix{Float32}(dba[!, Xnames])
+XB = Matrix{Float32}(dbb[!, Xnames])
 
-YA = to_categorical(dba.Y)
-ZB = to_categorical(dbb.Z)
-ZA = to_categorical(dba.Z)
-YB = to_categorical(dbb.Y)
+YA = Flux.onehotbatch(dba.Y, 1:4)
+ZB = Flux.onehotbatch(dbb.Z, 1:3)
 # -
 
 # Our next step would be to convert this data into a form that can be fed to a machine learning model. The `x` values are arranged in a matrix and should ideally be converted to `Float32` type, but the labels must be one hot encoded.
@@ -63,7 +61,7 @@ import Flux: Chain, Dense, relu, softmax
 nx = size(x, 1)
 ny = size(y, 1)
 
-model = Chain( Dense(nx, 160, relu), Dense(160, ny, relu), softmax)
+model = Chain( Dense(nx, ny))
 # -
 
 # ## Loss and accuracy
@@ -73,11 +71,6 @@ model = Chain( Dense(nx, 160, relu), Dense(160, ny, relu), softmax)
 #
 # Flux provides us with many minimal yet elegant loss functions. The functions present in Flux includes sanity checks, ensures efficient performance, and behaves well with the overall FluxML ecosystem.
 
-ŷ = model(x)
-Flux.crossentropy(ŷ, y)
-
-Flux.binarycrossentropy(ŷ, y)
-
 predict( model, x) = Flux.onecold(model(x))
 accuracy(model, x, y) = mean(predict(model,x) .== y) 
 
@@ -86,10 +79,6 @@ accuracy(model, x, y) = mean(predict(model,x) .== y)
 # Let's train our model using the classic Gradient Descent algorithm. Here we will train the model for a maximum of `100` epochs.
 
 # +
-model = Flux.Chain( Flux.Dense(nx, 16, Flux.relu), 
-                    Flux.Dense(16, ny, x -> (tanh(x) + 1)/2))
-
-
 function train!(model, x, y, epochs = 1000, batchsize = 8)
     loader = Flux.DataLoader((x, y), batchsize=batchsize, shuffle=true)
     optim = Flux.setup(Flux.Adam(0.01), model)
@@ -97,7 +86,7 @@ function train!(model, x, y, epochs = 1000, batchsize = 8)
         for (x, y) in loader
             grads = Flux.gradient(model) do m
                 y_hat = m(x)
-                Flux.mse(y_hat, y)
+                Flux.logitcrossentropy(y_hat, y)
             end
             Flux.update!(optim, model, grads[1])
         end
@@ -111,24 +100,7 @@ train!(model, x, y)
 
 mean(Flux.onecold(model(x)) .== dba.Y)
 
-# +
-
-loader = Flux.DataLoader((x, y), batchsize=8, shuffle=true)
-
-optim = Flux.setup(Flux.Adam(0.01), model)
-
-@showprogress 1 for epoch in 1:1_000
-    for (x, y) in loader
-        grads = Flux.gradient(model) do m
-            y_hat = m(x)
-            Flux.mse(y_hat, y)
-        end
-        Flux.update!(optim, model, grads[1])
-    end
-end
-mean(round.(model(x)) .== y)
-# -
-
+mean(Flux.onecold(model(Matrix{Float32}(XB'))) .== dbb.Y)
 
 
 
