@@ -75,13 +75,8 @@ function unbalanced_modality( data; iterations = 1)
 
     Xnames_hot, X_hot, Y, Z, XA_hot, YA, XB_hot, ZB, YB_true, ZA_true = prep_data(data)
 
-    XA_hot_i = copy(XA_hot)
-    XB_hot_i = copy(XB_hot)
-    yA_i  = onecold(YA)
-    zB_i  = onecold(ZB)
-
-    XYA_i = hcat(XA_hot_i, yA_i)
-    XZB_i = hcat(XB_hot_i, zB_i)
+    XYA_i = hcat(XA_hot, dba.Y)
+    XZB_i = hcat(XB_hot, dbb.Z)
 
     Xhot = one_hot_encoder(Matrix(data[!, ["X1", "X2", "X3"]]))
 
@@ -93,7 +88,6 @@ function unbalanced_modality( data; iterations = 1)
     
     instance = OTRecod.Instance( database, Xhot, Y, Z, dist_choice)
     
-
     # Compute data for aggregation of the individuals
 
     indXA = instance.indXA
@@ -112,10 +106,10 @@ function unbalanced_modality( data; iterations = 1)
     Zobserv = sort(unique(instance.Zobserv))
 
     XYA = Vector{Int}[]
-    XZB = Vector{Int}[]
     for (y,x) in product(Yobserv,Xobserv)
         push!(XYA, [x...; y])
     end
+    XZB = Vector{Int}[]
     for (z,x) in product(Zobserv,Xobserv)
         push!(XZB, [x...; z])
     end
@@ -129,16 +123,12 @@ function unbalanced_modality( data; iterations = 1)
     nx = size(Xvalues, 2) ## Nb modalités x 
 
     XA_hot = stack([v[1:nx] for v in XYA2], dims=1) # les x parmi les XYA observés, potentiellement des valeurs repetées 
-    XB_hot = stack([v[1:nx] for v in XZB2], dims=1) # les x dans XZB observés, potentiellement des valeurs repetées 
+    XB_hot = stack([v[1:nx] for v in XZB2], dims=1) # les x parmi les XZB observés, potentiellement des valeurs repetées 
 
-    yA = getindex.(XYA2, nx+1)  ## les y  parmi les XYA observés, des valeurs repetées 
+    yA = getindex.(XYA2, nx+1) # les y  parmi les XYA observés, des valeurs repetées 
     yA_hot = one_hot_encoder(yA)
     zB = getindex.(XZB2, nx+1) # les z dans XZB observés, potentiellement des valeurs repetées 
     zB_hot = one_hot_encoder(zB)
-
-    # ## Algorithm
-    #
-    # ### Initialisation 
 
     nbrvarX = 3
 
