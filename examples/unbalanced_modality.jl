@@ -24,8 +24,8 @@ import .Iterators: product
 import Distances: pairwise
 import Distances: Hamming
 import Flux
+using ProgressMeter
 
-params = DataParameters(nA=1000, nB=1000, mB=[2,0,0], eps=0, p=0.2)
 
 
 onecold(X) = map(argmax, eachrow(X))
@@ -65,10 +65,13 @@ function optimal_modality(values, loss, weight)
 end
 
 # +
-function unbalanced_modality( data )
+function unbalanced_modality( data; iterations = 1)
     
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
+
+    nA = size(dba, 1)
+    nB = size(dbb, 1)
 
     Xnames_hot, X_hot, Y, Z, XA_hot, YA, XB_hot, ZB, YB_true, ZA_true = prep_data(data)
 
@@ -98,13 +101,10 @@ function unbalanced_modality( data )
 
     indXA = instance.indXA
     indXB = instance.indXB
-    Xobserv = instance.Xobserv
-    Yobserv = instance.Yobserv
-    Zobserv = instance.Zobserv
     nbX = length(indXA)
 
-    wa = vec([length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / params.nA for y in instance.Y, x = 1:nbX])
-    wb = vec([length(indXB[x][findall(Zobserv[indXB[x] .+ params.nA] .== z)]) / params.nB for z in instance.Z, x = 1:nbX ])  
+    wa = vec([length(indXA[x][findall(instance.Yobserv[indXA[x]] .== y)]) / nA for y in instance.Y, x = 1:nbX])
+    wb = vec([length(indXB[x][findall(instance.Zobserv[indXB[x] .+ nA] .== z)]) / nB for z in instance.Z, x = 1:nbX ])  
     wa2 = wa[wa .> 0.0]
     wb2 = wb[wb .> 0.0]
 
@@ -164,9 +164,9 @@ function unbalanced_modality( data )
     zA_pred_hot_i = zeros(Int, (nA_i,length(instance.Z)))
     yB_pred_hot_i = zeros(Int, (nB_i,length(instance.Y)))
 
-    NumberOfIterations = 10
+    est = 0.0
 
-    for iter in 1:NumberOfIterations
+    for iter in 1:iterations
     
         G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div="kl") #unbalanced
     
@@ -208,15 +208,26 @@ function unbalanced_modality( data )
         ### Evaluate 
  
         est = (sum(YB_true .== YB_pred) .+ sum(ZA_true .== ZA_pred)) ./ (nA_i + nB_i)
-        println(est)
+
     end
+
+    return est
 
 end
 # -
 
-#data = generate_xcat_ycat(params)
-data = CSV.read("data.csv", DataFrame)
-unbalanced_modality(data)
+function run_simulations( simulations )
 
+    params = DataParameters(nA=1000, nB=1000, mB=[2,0,0], eps=0, p=0.2)
+    prediction_quality = Float64[]
+    simulations = 100
+    for i in 1:simulations
+       data = generate_xcat_ycat(params)
+       push!(prediction_quality, unbalanced_modality(data))
+    end
 
+    prediction_quality
 
+end
+
+run_simulations( 100 )

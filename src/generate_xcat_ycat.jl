@@ -19,13 +19,13 @@ function generate_xcat_ycat( params )
     X_glob1 = rand(dA, params.nA)
     X_glob2 = rand(dB, params.nB)
     
-    @show px1cc = cumsum(params.px1c)[1:end-1]
-    @show px2cc = cumsum(params.px2c)[1:end-1]
-    @show px3cc = cumsum(params.px3c)[1:end-1]
+    px1cc = cumsum(params.px1c)[1:end-1]
+    px2cc = cumsum(params.px2c)[1:end-1]
+    px3cc = cumsum(params.px3c)[1:end-1]
     
-    @show qx1c = quantile.(Normal(0.0, 1.0), px1cc)
-    @show qx2c = quantile.(Normal(0.0, 1.0), px2cc)
-    @show qx3c = quantile.(Normal(0.0, 1.0), px3cc)
+    qx1c = quantile.(Normal(0.0, 1.0), px1cc)
+    qx2c = quantile.(Normal(0.0, 1.0), px2cc)
+    qx3c = quantile.(Normal(0.0, 1.0), px3cc)
     
     bins11 = vcat(minimum(X_glob1[1,:]) - 100, qx1c, maximum(X_glob1[1,:]) + 100)
     bins12 = vcat(minimum(X_glob1[2,:]) - 100, qx2c, maximum(X_glob1[2,:]) + 100)
