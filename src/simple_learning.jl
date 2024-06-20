@@ -33,31 +33,33 @@ function simple_learning( data; hidden_layer_size = 10,  learning_rate = 0.01, b
 
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
-    YB = dbb.Y
-    ZA = dba.Z
-    
+
     XA = onehot(Matrix(dba[!, [:X1, :X2, :X3]]))
     XB = onehot(Matrix(dbb[!, [:X1, :X2, :X3]]))
     
     YA = Flux.onehotbatch(dba.Y, 1:4)
     ZB = Flux.onehotbatch(dbb.Z, 1:3)
     
-    dimX = size(XA, 1)
-    dimY = size(YA, 1)
-    dimZ = size(ZB, 1)
+    dimXA = size(XA, 1)
+    dimXB = size(XB, 1)
+    dimYA = size(YA, 1)
+    dimZB = size(ZB, 1)
     
     nA = size(XA, 2)
     nB = size(XB, 2)
     
-    modelXYA = Chain(Dense(dimX, hidden_layer_size),  Dense(hidden_layer_size, dimY))
-    modelXZB = Chain(Dense(dimX, hidden_layer_size),  Dense(hidden_layer_size, dimZ))
+    modelXYA = Chain(Dense(dimXA, hidden_layer_size),  Dense(hidden_layer_size, dimYA))
+    modelXZB = Chain(Dense(dimXB, hidden_layer_size),  Dense(hidden_layer_size, dimZB))
+
+    YB = Flux.onecold(modelXYA(XB))
+    ZA = Flux.onecold(modelXZB(XA))
     
-    la = train!(modelXYA, XA, YA)
-    lb = train!(modelXZB, XB, ZB)
+    train!(modelXYA, XA, YA, learning_rate = learning_rate, batchsize = batchsize, epochs = epochs)
+    train!(modelXZB, XB, ZB, learning_rate = learning_rate, batchsize = batchsize, epochs = epochs)
+   
+    YB .= Flux.onecold(modelXYA(XB))
+    ZA .= Flux.onecold(modelXZB(XA))
     
-    YBpred = Flux.onecold(modelXYA(XB))
-    ZApred = Flux.onecold(modelXZB(XA))
-    
-    (sum(YB .== YBpred) + sum(ZA .== ZApred)) / (nA + nB)
+    (sum(dbb.Y .== YB) + sum(dba.Z .== ZA)) / (nA + nB)
     
 end
