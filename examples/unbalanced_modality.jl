@@ -75,13 +75,10 @@ function unbalanced_modality( data; iterations = 1)
 
     Xnames_hot, X_hot, Y, Z, XA_hot, YA, XB_hot, ZB, YB_true, ZA_true = prep_data(data)
 
-
     XA_hot_i = copy(XA_hot)
     XB_hot_i = copy(XB_hot)
     yA_i  = onecold(YA)
     zB_i  = onecold(ZB)
-
-    nA_i, nB_i  = size(XA_hot_i, 1), size(XB_hot_i, 1)
 
     XYA_i = hcat(XA_hot_i, yA_i)
     XZB_i = hcat(XB_hot_i, zB_i)
@@ -143,15 +140,13 @@ function unbalanced_modality( data; iterations = 1)
     #
     # ### Initialisation 
 
-    nA = size(XYA2, 1) # number of observed different values in A
-    nB = size(XZB2, 1) # number of observed different values in B
     nbrvarX = 3
 
     dimXZB = length(XZB2[1])
     dimXYA = length(XYA2[1])
 
-    yB_pred = zeros(nB)
-    zA_pred = zeros(nA)
+    yB_pred = zeros(size(XZB2, 1)) # number of observed different values in B
+    zA_pred = zeros(size(XYA2, 1)) # number of observed different values in A
     
     Y_loss = loss_crossentropy(yA_hot, Y_hot)
     Z_loss = loss_crossentropy(zB_hot, Z_hot) 
@@ -161,8 +156,8 @@ function unbalanced_modality( data; iterations = 1)
     C0 = pairwise(Hamming(), XA_hot, XB_hot; dims=1) .* nx ./ nbrvarX
     C = C0 ./ maximum(C0)
 
-    zA_pred_hot_i = zeros(Int, (nA_i,length(instance.Z)))
-    yB_pred_hot_i = zeros(Int, (nB_i,length(instance.Y)))
+    zA_pred_hot_i = zeros(Int, (nA,length(instance.Z)))
+    yB_pred_hot_i = zeros(Int, (nB,length(instance.Y)))
 
     est = 0.0
 
@@ -207,7 +202,7 @@ function unbalanced_modality( data; iterations = 1)
  
         ### Evaluate 
  
-        est = (sum(YB_true .== YB_pred) .+ sum(ZA_true .== ZA_pred)) ./ (nA_i + nB_i)
+        est = (sum(YB_true .== YB_pred) .+ sum(ZA_true .== ZA_pred)) ./ (nA + nB)
 
     end
 
