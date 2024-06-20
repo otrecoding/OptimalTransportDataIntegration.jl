@@ -16,5 +16,7 @@ module OptimalTransportDataIntegration
     include("generate_xcat_ycat.jl")
     include("one_hot_encoder.jl")
     include("prep_data.jl")
+    include("unbalanced_modality.jl")
+    include("otjoint.jl")
 
 end

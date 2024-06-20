@@ -1,32 +1,8 @@
-# -*- coding: utf-8 -*-
-# ---
-# jupyter:
-#   jupytext:
-#     formats: ipynb,jl:light
-#     text_representation:
-#       extension: .jl
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.16.2
-#   kernelspec:
-#     display_name: Julia 1.10.4
-#     language: julia
-#     name: julia-1.10
-# ---
-
-# +
 using OptimalTransportDataIntegration
 using OTRecod
-using CSV
-using DataFrames
 import PythonOT
 import .Iterators: product
-import Distances: pairwise
-import Distances: Hamming
-import Flux
-using ProgressMeter
-
-
+import Distances: pairwise, Hamming
 
 onecold(X) = map(argmax, eachrow(X))
     
@@ -64,29 +40,38 @@ function optimal_modality(values, loss, weight)
 
 end
 
-# +
 function unbalanced_modality( data; iterations = 1)
     
+    database = data.database
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
     nA = size(dba, 1)
     nB = size(dbb, 1)
 
-    Xnames_hot, X_hot, Y, Z, XA_hot, YA, XB_hot, ZB, YB_true, ZA_true = prep_data(data)
+    YB_true = dbb.Y
+    ZA_true = dba.Z
+    
+    Xnames = ["X1", "X2", "X3"]
+    XA = one_hot_encoder(Matrix(dba[!, Xnames]))
+    XB = one_hot_encoder(Matrix(dbb[!, Xnames]))
 
-    XYA_i = hcat(XA_hot, dba.Y)
-    XZB_i = hcat(XB_hot, dbb.Z)
+    XYA_i = hcat(XA, dba.Y)
+    XZB_i = hcat(XB, dbb.Z)
 
-    Xhot = one_hot_encoder(Matrix(data[!, ["X1", "X2", "X3"]]))
-
+    X = vcat(XA, XB)
     Y = Vector(data.Y)
     Z = Vector(data.Z)
-    database = data.database
 
-    dist_choice = Hamming()
+    instance = OTRecod.Instance( database, X, Y, Z, Hamming())
+
+    lambda_reg = 0.392
+    maxrelax = 0.714
+    percent_closest = 0.2
     
-    instance = OTRecod.Instance( database, Xhot, Y, Z, dist_choice)
+    sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
+    OTRecod.compute_pred_error!(sol, instance, false)
+
     
     # Compute data for aggregation of the individuals
 
@@ -114,20 +99,20 @@ function unbalanced_modality( data; iterations = 1)
         push!(XZB, [x...; z])
     end
 
-    XYA2 = XYA[wa .> 0] ### XYA observés
-    XZB2 = XZB[wb .> 0] ### XZB observés
+    XYA2 = XYA[wa .> 0] # XYA observés
+    XZB2 = XZB[wb .> 0] # XZB observés
 
     Y_hot = one_hot_encoder(instance.Y)
     Z_hot = one_hot_encoder(instance.Z)
 
-    nx = size(Xvalues, 2) ## Nb modalités x 
+    nx = size(Xvalues, 2) # Nb modalités x 
 
     XA_hot = stack([v[1:nx] for v in XYA2], dims=1) # les x parmi les XYA observés, potentiellement des valeurs repetées 
     XB_hot = stack([v[1:nx] for v in XZB2], dims=1) # les x parmi les XZB observés, potentiellement des valeurs repetées 
 
-    yA = getindex.(XYA2, nx+1) # les y  parmi les XYA observés, des valeurs repetées 
+    yA = getindex.(XYA2, nx+1) # les y parmi les XYA observés, potentiellement des valeurs repetées 
     yA_hot = one_hot_encoder(yA)
-    zB = getindex.(XZB2, nx+1) # les z dans XZB observés, potentiellement des valeurs repetées 
+    zB = getindex.(XZB2, nx+1) # les z parmi les XZB observés, potentiellement des valeurs repetées 
     zB_hot = one_hot_encoder(zB)
 
     nbrvarX = 3
@@ -156,7 +141,7 @@ function unbalanced_modality( data; iterations = 1)
         G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div="kl") #unbalanced
     
         for j in eachindex(yB_pred)
-             yB_pred[j] = optimal_modality(instance.Y, Y_loss, G[:,j])
+            yB_pred[j] = optimal_modality(instance.Y, Y_loss, G[:,j])
         end
         for i in eachindex(zA_pred)
             zA_pred[i] = optimal_modality(instance.Z, Z_loss, G[i,:])
@@ -199,20 +184,3 @@ function unbalanced_modality( data; iterations = 1)
     return est
 
 end
-# -
-
-function run_simulations( simulations )
-
-    params = DataParameters(nA=1000, nB=1000, mB=[2,0,0], eps=0, p=0.2)
-    prediction_quality = Float64[]
-    simulations = 100
-    for i in 1:simulations
-       data = generate_xcat_ycat(params)
-       push!(prediction_quality, unbalanced_modality(data))
-    end
-
-    prediction_quality
-
-end
-
-run_simulations( 100 )
