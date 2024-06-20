@@ -18,5 +18,6 @@ module OptimalTransportDataIntegration
     include("prep_data.jl")
     include("unbalanced_modality.jl")
     include("otjoint.jl")
+    include("simple_learning.jl")
 
 end

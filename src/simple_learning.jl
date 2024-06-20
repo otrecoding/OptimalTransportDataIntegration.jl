@@ -1,24 +1,3 @@
-# -*- coding: utf-8 -*-
-# ---
-# jupyter:
-#   jupytext:
-#     formats: ipynb,jl:light
-#     text_representation:
-#       extension: .jl
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.16.2
-#   kernelspec:
-#     display_name: Julia 1.10.4
-#     language: julia
-#     name: julia-1.10
-# ---
-
-# # Simple learning
-# +
-using OptimalTransportDataIntegration
-using CSV
-using DataFrames
 import Flux
 import Flux: Chain, Dense
 
@@ -33,8 +12,6 @@ function onehot(x :: AbstractMatrix)
     return stack(res, dims=1) 
 end
 
-
-# +
 function train!(model, x, y; learning_rate = 0.01, batchsize=512, epochs = 500)
     
     loader = Flux.DataLoader((x, y), batchsize=batchsize, shuffle=true)
@@ -51,7 +28,7 @@ function train!(model, x, y; learning_rate = 0.01, batchsize=512, epochs = 500)
     end
         
 end
-# +
+
 function simple_learning( data; hidden_layer_size = 10,  learning_rate = 0.01, batchsize=512, epochs = 500)
 
     dba = subset(data, :database => ByRow(==(1)))
@@ -74,8 +51,6 @@ function simple_learning( data; hidden_layer_size = 10,  learning_rate = 0.01, b
     
     modelXYA = Chain(Dense(dimX, hidden_layer_size),  Dense(hidden_layer_size, dimY))
     modelXZB = Chain(Dense(dimX, hidden_layer_size),  Dense(hidden_layer_size, dimZ))
-    modelXYA = Chain(Dense(dimX, dimY))
-    modelXZB = Chain(Dense(dimX, dimZ))
     
     la = train!(modelXYA, XA, YA)
     lb = train!(modelXZB, XB, ZB)
@@ -86,11 +61,3 @@ function simple_learning( data; hidden_layer_size = 10,  learning_rate = 0.01, b
     (sum(YB .== YBpred) + sum(ZA .== ZApred)) / (nA + nB)
     
 end
-
-data = CSV.read(joinpath(@__DIR__, "data.csv"), DataFrame)
-
-
-simple_learning( data, hidden_layer_size = i )
-
-
-

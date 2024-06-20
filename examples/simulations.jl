@@ -1,5 +1,5 @@
 using  OptimalTransportDataIntegration
-import OptimalTransportDataIntegration: unbalanced_modality, otjoint
+import OptimalTransportDataIntegration: unbalanced_modality, otjoint, simple_learning
 
 using ProgressMeter
 
@@ -13,8 +13,9 @@ function run_simulations( simulations )
       
        err1 = unbalanced_modality(data)
        err2 = otjoint( data; lambda_reg = 0.392, maxrelax = 0.714, percent_closest = 0.2)
+       err3 = simple_learning( data; hidden_layer_size = 10,  learning_rate = 0.01, batchsize=512, epochs = 500)
 
-       push!(prediction_quality, (err1, err2))
+       push!(prediction_quality, (err1, err2, err3))
 
     end
 
