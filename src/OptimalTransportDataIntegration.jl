@@ -1,8 +1,9 @@
 module OptimalTransportDataIntegration
 
+    using Distributions
     using DocStringExtensions
     using Parameters
-    using Distributions
+    using Printf
     
     export digitize
     
@@ -16,8 +17,15 @@ module OptimalTransportDataIntegration
     include("generate_xcat_ycat.jl")
     include("one_hot_encoder.jl")
     include("prep_data.jl")
-    include("unbalanced_modality.jl")
+
+    include("instance.jl")
+    include("solution.jl")
+    include("average_distance_closest.jl")
+
+    include("pred_error.jl")
     include("otjoint.jl")
+    include("ot_joint.jl")
+    include("unbalanced_modality.jl")
     include("simple_learning.jl")
 
 end

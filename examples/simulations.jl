@@ -1,11 +1,12 @@
-using  OptimalTransportDataIntegration
+using OptimalTransportDataIntegration
 using DataFrames
 
 using JSON, CSV
 
 # +
 
-data = CSV.read("tab_otjoint_00_00.csv", DataFrame) # generated with Python code
+csv_file = joinpath(@__DIR__, "tab_otjoint_00_00.csv")
+data = CSV.read(csv_file, DataFrame) # generated with Python code
 @time OptimalTransportDataIntegration.unbalanced_modality(data)
 # -
 
@@ -34,17 +35,20 @@ function read_params( jsonfile )
     
     DataParameters(;params...)
 end
-read_params( "tab_otjoint_00_00.json")    
+json_file = joinpath(@__DIR__,  "tab_otjoint_00_00.json")
+read_params(json_file)    
 
 @time OptimalTransportDataIntegration.unbalanced_modality(data)
 
-data = generate_xcat_ycat(read_params( "tab_otjoint_00_00.json") )
+data = generate_xcat_ycat(read_params(json_file))
+
 @time OptimalTransportDataIntegration.unbalanced_modality(data)
 
-data = CSV.read("tab_otjoint_00_00.csv", DataFrame) # generated with Python code
+data = CSV.read(csv_file, DataFrame) # generated with Python code
 @time OptimalTransportDataIntegration.otjoint( data; lambda_reg = 0.0, maxrelax = 0.0, percent_closest = 0.2)
 
-data = generate_xcat_ycat(read_params( "tab_otjoint_00_00.json") )
+data = generate_xcat_ycat(read_params( json_file ))
+
 @time OptimalTransportDataIntegration.otjoint( data; lambda_reg = 0.0, maxrelax = 0.0, percent_closest = 0.2)
 
 @time OptimalTransportDataIntegration.otjoint( data; lambda_reg = 0.7, maxrelax = 0.4, percent_closest = 0.2)

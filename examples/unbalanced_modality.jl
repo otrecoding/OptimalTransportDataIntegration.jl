@@ -16,7 +16,7 @@
 
 # +
 using OptimalTransportDataIntegration
-using OTRecod
+import OptimalTransportDataIntegration: Instance
 using CSV
 using DataFrames
 import PythonOT
@@ -26,7 +26,7 @@ import Distances: pairwise
 params = DataParameters(nA=1000, nB=1000, mB=[2,0,0], eps=0, p=0.2)
 
 #data = generate_xcat_ycat(params)
-data = CSV.read("data.csv", DataFrame)
+data = CSV.read(joinpath(@__DIR__, "data.csv"), DataFrame)
 dba = subset(data, :database => ByRow(==(1)))
 dbb = subset(data, :database => ByRow(==(2)))
 
@@ -62,7 +62,7 @@ database = data.database
 
 dist_choice = Hamming()
     
-instance = OTRecod.Instance( database, Xhot, Y, Z, dist_choice)
+instance = Instance( database, Xhot, Y, Z, dist_choice)
     
 instance.Y, instance.Z
 # -

@@ -1,5 +1,4 @@
 using OptimalTransportDataIntegration
-using OTRecod
 import PythonOT
 import .Iterators: product
 import Distances: pairwise, Hamming
@@ -63,14 +62,14 @@ function unbalanced_modality( data; iterations = 1)
     Y = Vector(data.Y)
     Z = Vector(data.Z)
 
-    instance = OTRecod.Instance( database, X, Y, Z, Hamming())
+    instance = Instance( database, X, Y, Z, Hamming())
 
     lambda_reg = 0.392
     maxrelax = 0.714
     percent_closest = 0.2
     
     sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
-    OTRecod.compute_pred_error!(sol, instance, false)
+    compute_pred_error!(sol, instance, false)
 
     
     # Compute data for aggregation of the individuals

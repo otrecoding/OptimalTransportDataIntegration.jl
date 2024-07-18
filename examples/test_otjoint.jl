@@ -1,13 +1,14 @@
-using OTRecod
+using OptimalTransportDataIntegration
 using DataFrames
 using CSV
 using Distances
 using JSON
 
-files = readdir(joinpath(@__DIR__, "datasets"), join = true) 
+files = readdir(joinpath(@__DIR__), join = true) 
 json_files = sort(filter( endswith("json"), files))
 csv_files = sort(filter( endswith("csv"), files))
 
+# +
 function test_ot_joint( csv_file )
 
     data = DataFrame(CSV.File(csv_file))
@@ -26,11 +27,11 @@ function test_ot_joint( csv_file )
     percent_closest = 0.2
     
     sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
-    OTRecod.compute_pred_error!(sol, instance, false)
+    compute_pred_error!(sol, instance, false)
     return sol.errorpredavg
 
 end
-
+# -
 
 errorpredavg = Float64[]
 p = Float64[]
@@ -39,6 +40,7 @@ nA = Int[]
 nB = Int[]
 mB = Vector{Float64}[]
 
+# +
 for (csv_file, json_file) in zip(csv_files, json_files)
     
     params = JSON.parsefile(json_file)
@@ -53,7 +55,10 @@ for (csv_file, json_file) in zip(csv_files, json_files)
     println("p = $(p[end]), eps = $(eps[end]), mB = $(mB[end]), est = $(1 - errorpredavg[end])")
 
 end
+# -
 
 df = DataFrame( nA = nA, nB = nB, mB = mB, eps = eps, p = p, errorpred = errorpredavg ) 
 
 CSV.write(joinpath("results_M5max.csv"), df)
+
+
