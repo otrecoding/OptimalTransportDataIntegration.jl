@@ -1,6 +1,11 @@
+using Aqua
 using OptimalTransportDataIntegration
 import OptimalTransportDataIntegration: unbalanced_modality, otjoint, simple_learning
 using Test
+
+@testset "Aqua.jl" begin
+    Aqua.test_deps_compat(OptimalTransportDataIntegration)
+end
 
 params = DataParameters(nA = 1000, nB = 500)
 
