@@ -163,12 +163,16 @@ function unbalanced_modality( data; iterations = 1)
     
         for i in axes(XYA_i, 1)
             ind = findfirst(XYA_i[i,:] == v for v in XYA2)
-            zA_pred_hot_i[i,:] .= zA_pred_hot[ind,:]
+            if !isnothing(ind) 
+                zA_pred_hot_i[i,:] .= zA_pred_hot[ind,:]
+            end
         end
 
         for i in axes(XZB_i, 1)
             ind = findfirst(XZB_i[i,:] == v for v in XZB2)
-            yB_pred_hot_i[i,:] .= yB_pred_hot[ind,:]
+            if !isnothing(ind) 
+                yB_pred_hot_i[i,:] .= yB_pred_hot[ind,:]
+            end
         end
  
         YB_pred = onecold(yB_pred_hot_i) 

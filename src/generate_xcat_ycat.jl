@@ -3,15 +3,7 @@ using DataFrames
 
 export generate_xcat_ycat
 
-"""
-$(SIGNATURES)
-
-Function to generate data where X and (Y,Z) are categoricals
-
-the function return a Dataframe with X1, X2, X3, Y, Z and the database id.
-
-"""
-function generate_xcat_ycat( params )
+function generate_XY(params, bins11, bins12, bins13)
 
     dA = MvNormal(params.mA, params.covA)    
     dB = MvNormal(params.mB, params.covB)    
@@ -53,6 +45,12 @@ function generate_xcat_ycat( params )
     Y1 = vcat(X11c, X12c, X13c)' * params.aA
     Y2 = vcat(X21c, X22c, X23c)' * params.aB
 
+    X1, X2, X3, Y1, Y2
+
+end
+
+function generate_YZ(params, Y1, Y2)
+
     p = params.p
 
     py = [
@@ -67,14 +65,14 @@ function generate_xcat_ycat( params )
         p^3 / 4
     ]
 
+    Y = collect(0:(params.nA-1))
+    Z = collect(0:(params.nB-1))
+
     U = rand(Multinomial(1, py), params.nA)
     V = rand(Multinomial(1, py), params.nB)
 
     UU = vec(sum(U .* collect(0:8), dims=1))
     VV = vec(sum(V .* collect(0:8), dims=1))
-
-    Y = collect(0:(params.nA-1))
-    Z = collect(0:(params.nB-1))
 
     Y[UU .== 0] .= Y1[UU .== 0]
     Y[UU .== 1] .= Y1[UU .== 1] .- 1
@@ -100,24 +98,81 @@ function generate_xcat_ycat( params )
     Z[Z .> 3] .= 3
     Z[Z .< 0] .= 0
 
+    return Y, Z
+
+end
+
+function generate_dataframe( params, bins11, bins12, bins13, binsY11, binsY22)
+
+    X1, X2, X3, Y1, Y2 = generate_XY(params, bins11, bins12, bins13)
+    Y, Z = generate_YZ( params, Y1, Y2)
+
+    Y11 = digitize(Y, binsY11)
+    Y12 = digitize(Y, binsY22)
+
+    binsY11eps = binsY11 .+ params.eps
+    binsY22eps = binsY22 .+ params.eps
+
+    Y21 = digitize(Z, binsY11eps)
+    Y22 = digitize(Z, binsY22eps)
+    
+    df = DataFrame(hcat(X1, X2, X3) .- 1, [:X1, :X2, :X3])
+    df.Y = vcat(Y11, Y21)
+    df.Z = vcat(Y12, Y22)
+    df.database = vcat(fill(1,params.nA), fill(2, params.nB))
+
+    return df
+
+end
+
+
+"""
+$(SIGNATURES)
+
+Function to generate data where X and (Y,Z) are categoricals
+
+the function return a Dataframe with X1, X2, X3, Y, Z and the database id.
+
+"""
+function generate_xcat_ycat( params :: DataParameters )
+
+    dA = MvNormal(params.mA, params.covA)    
+
+    XA = rand(dA, params.nA)
+    
+    px1cc = cumsum(params.px1c)[1:end-1]
+    px2cc = cumsum(params.px2c)[1:end-1]
+    px3cc = cumsum(params.px3c)[1:end-1]
+    
+    qx1c = quantile.(Normal(0.0, 1.0), px1cc)
+    qx2c = quantile.(Normal(0.0, 1.0), px2cc)
+    qx3c = quantile.(Normal(0.0, 1.0), px3cc)
+    
+    bins11 = vcat(minimum(XA[1,:]) - 100, qx1c, maximum(XA[1,:]) + 100)
+    bins12 = vcat(minimum(XA[2,:]) - 100, qx2c, maximum(XA[2,:]) + 100)
+    bins13 = vcat(minimum(XA[3,:]) - 100, qx3c, maximum(XA[3,:]) + 100)
+    
+    X1, X2, X3, Y1, Y2 = generate_XY(params, bins11, bins12, bins13)
+
+    Y, Z = generate_YZ( params, Y1, Y2)
     b11 = quantile(Y, [0.25, 0.5, 0.75])
     b22 = quantile(Z, [1 / 3, 2 / 3])
 
     binsY11 = vcat(minimum(Y) - 100, b11, maximum(Y) + 100)
     binsY22 = vcat(minimum(Z) - 100, b22, maximum(Z) + 100)
     
-    Y11 = digitize(Y, binsY11)
-    Y12 = digitize(Y, binsY22)
-    binsY11eps = binsY11 .+ params.eps
-    Y21 = digitize(Z, binsY11eps)
-    binsY22eps = binsY22 .+ params.eps
-    Y22 = digitize(Z, binsY22eps)
-    
-    data = DataFrame(hcat(X1, X2, X3) .- 1, [:X1, :X2, :X3])
-    data.Y = vcat(Y11, Y21)
-    data.Z = vcat(Y12, Y22)
-    data.database = vcat(fill(1,params.nA), fill(2, params.nB))
-    data
+    df = generate_dataframe( params, bins11, bins12, bins13, binsY11, binsY22)
+
+    my = length(unique(df.Y))
+    if my < 4 
+        @warn "Number of modality in Y $my < 4"
+    end
+    mz = length(unique(df.Z))
+    if mz < 3 
+        @warn "Number of modality in Z $mz < 3"
+    end
+
+    return df
 
 end
 

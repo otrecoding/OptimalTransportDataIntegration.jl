@@ -24,9 +24,4 @@ docs/site/
 Manifest.toml
 *.swp
 /examples/.ipynb_checkpoints
-examples/data_fusion.ipynb
 *.pyc
-/examples/statmatchopt
-/examples/otrecod
-examples/unbalanced_modality.ipynb
-examples/unbalanced_modality.ipynb

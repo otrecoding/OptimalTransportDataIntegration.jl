@@ -1,53 +1,24 @@
 using OptimalTransportDataIntegration
 using DataFrames
-
 using JSON, CSV
-
-# +
 
 csv_file = joinpath(@__DIR__, "tab_otjoint_00_00.csv")
 data = CSV.read(csv_file, DataFrame) # generated with Python code
 @time OptimalTransportDataIntegration.unbalanced_modality(data)
-# -
-
-function read_params( jsonfile )
-    
-    data = JSON.parsefile(jsonfile)
-    
-    params = Dict()
-    
-    params[:nA] = Int(data["nA"])
-    params[:nB] = Int(data["nB"])
-    
-    params[:aA] = Float64.(data["aA"])
-    params[:aB] = Float64.(data["aB"])
-    
-    params[:mA] = vec(Float64.(data["mA"]))
-    params[:mB] = vec(Float64.(data["mB"]))
-    
-    params[:covA] = stack([Float64.(x) for x in data["covA"]])
-    params[:covB] = stack([Float64.(x) for x in data["covB"]])
-  
-    params[:px1c] = Float64.(data["px1c"])
-    params[:px2c] = Float64.(data["px2c"])
-    params[:px3c] = Float64.(data["px3c"])
-    params[:p] = Float64(data["p"])
-    
-    DataParameters(;params...)
-end
-json_file = joinpath(@__DIR__,  "tab_otjoint_00_00.json")
-read_params(json_file)    
 
 @time OptimalTransportDataIntegration.unbalanced_modality(data)
 
-data = generate_xcat_ycat(read_params(json_file))
+json_file = joinpath(@__DIR__,  "tab_otjoint_00_00.json")
+read_params(json_file)    
+
+unique(data.Y), unique(data.Z)
 
 @time OptimalTransportDataIntegration.unbalanced_modality(data)
 
 data = CSV.read(csv_file, DataFrame) # generated with Python code
 @time OptimalTransportDataIntegration.otjoint( data; lambda_reg = 0.0, maxrelax = 0.0, percent_closest = 0.2)
 
-data = generate_xcat_ycat(read_params( json_file ))
+data = generate_xcat_ycat(read_params(json_file))
 
 @time OptimalTransportDataIntegration.otjoint( data; lambda_reg = 0.0, maxrelax = 0.0, percent_closest = 0.2)
 

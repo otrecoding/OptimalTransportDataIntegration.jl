@@ -233,9 +233,7 @@ for iter in 1:NumberOfIterations
     ### Evaluate 
  
     est = (sum(YB_true .== YB_pred) .+ sum(ZA_true .== ZA_pred)) ./ (nA_i + nB_i)
-    println(est)
-    println(sum(YB_true .== YB_pred)/nB_i)
-    println(sum(ZA_true .== ZA_pred)/nA_i)
+    println(est, " ", sum(YB_true .== YB_pred)/nB_i, " ", sum(ZA_true .== ZA_pred)/nA_i)
 
 end
 # -

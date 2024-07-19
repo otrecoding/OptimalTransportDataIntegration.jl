@@ -86,15 +86,13 @@ struct Instance
         Xval = collect(stack(sort(unique(eachrow(Xobserv))))')
 
         # aggregate both bases
-        x = zeros(size(Xval, 2), 1)
         for i = 1:size(Xval, 1)
             nbX = nbX + 1
-            fill!(x, 0)
-            x[:, 1] .= Xval[i, :]
-            distA = pairwise(distance, x, transpose(Xobserv[A, :]), dims = 2)
-            distB = pairwise(distance, x, transpose(Xobserv[B.+nA, :]), dims = 2)
-            indXA[nbX] = findall(distA[1, :] .< 0.1)
-            indXB[nbX] = findall(distB[1, :] .< 0.1)
+            x = view(Xval,i, :)
+            distA = vec(pairwise(distance, x[:,:], transpose(Xobserv[A, :]), dims = 2))
+            distB = vec(pairwise(distance, x[:,:], transpose(Xobserv[B.+nA, :]), dims = 2))
+            indXA[nbX] = findall(distA .< 0.1)
+            indXB[nbX] = findall(distB .< 0.1)
         end
 
         new(
