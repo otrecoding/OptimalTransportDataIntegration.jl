@@ -7,11 +7,11 @@
 #       extension: .jl
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.15.1
+#       jupytext_version: 1.16.2
 #   kernelspec:
-#     display_name: Julia 1.9.3
+#     display_name: Julia 1.10.4
 #     language: julia
-#     name: julia-1.9
+#     name: julia-1.10
 # ---
 
 # # Flux classifier
@@ -26,7 +26,7 @@ import Flux
 # ## Dataset
 
 # +
-data = DataFrame(CSV.File("dataset.csv"))
+data = DataFrame(CSV.File("data.csv"))
 data.X1_1 = data.X1
 data.X2_1 =to_categorical(data.X2)[2,:]
 data.X2_2 =to_categorical(data.X2)[3,:]
@@ -39,13 +39,11 @@ dbb = subset(data, :database => ByRow(==(2)))
 
 Xnames = [:X1_1,:X2_1,:X2_2, :X3_1, :X3_2, :X3_3]
 
-XA = dba[!, Xnames]
-XB = dbb[!, Xnames]
+XA = Matrix{Float32}(dba[!, Xnames])
+XB = Matrix{Float32}(dbb[!, Xnames])
 
-YA = to_categorical(dba.Y)
-ZB = to_categorical(dbb.Z)
-ZA = to_categorical(dba.Z)
-YB = to_categorical(dbb.Y)
+YA = Flux.onehotbatch(dba.Y, 1:4)
+ZB = Flux.onehotbatch(dbb.Z, 1:3)
 # -
 
 # Our next step would be to convert this data into a form that can be fed to a machine learning model. The `x` values are arranged in a matrix and should ideally be converted to `Float32` type, but the labels must be one hot encoded.
@@ -63,7 +61,7 @@ import Flux: Chain, Dense, relu, softmax
 nx = size(x, 1)
 ny = size(y, 1)
 
-model = Chain( Dense(nx, 160, relu), Dense(160, ny, relu), softmax)
+model = Chain( Dense(nx, ny))
 # -
 
 # ## Loss and accuracy
@@ -73,9 +71,6 @@ model = Chain( Dense(nx, 160, relu), Dense(160, ny, relu), softmax)
 #
 # Flux provides us with many minimal yet elegant loss functions. The functions present in Flux includes sanity checks, ensures efficient performance, and behaves well with the overall FluxML ecosystem.
 
-ŷ = model(x)
-Flux.crossentropy(ŷ, y)
-
 predict( model, x) = Flux.onecold(model(x))
 accuracy(model, x, y) = mean(predict(model,x) .== y) 
 
@@ -84,14 +79,14 @@ accuracy(model, x, y) = mean(predict(model,x) .== y)
 # Let's train our model using the classic Gradient Descent algorithm. Here we will train the model for a maximum of `100` epochs.
 
 # +
-function train!(model, x, y, epochs = 1000, batchsize = 16)
+function train!(model, x, y, epochs = 1000, batchsize = 8)
     loader = Flux.DataLoader((x, y), batchsize=batchsize, shuffle=true)
     optim = Flux.setup(Flux.Adam(0.01), model)
     @showprogress for epoch in 1:epochs
         for (x, y) in loader
             grads = Flux.gradient(model) do m
                 y_hat = m(x)
-                Flux.binarycrossentropy(y_hat, y)
+                Flux.logitcrossentropy(y_hat, y)
             end
             Flux.update!(optim, model, grads[1])
         end
@@ -104,5 +99,8 @@ train!(model, x, y)
 # Looking at the accuracy
 
 mean(Flux.onecold(model(x)) .== dba.Y)
+
+mean(Flux.onecold(model(Matrix{Float32}(XB'))) .== dbb.Y)
+
 
 

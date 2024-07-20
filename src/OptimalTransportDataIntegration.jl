@@ -1,8 +1,9 @@
 module OptimalTransportDataIntegration
 
+    using Distributions
     using DocStringExtensions
     using Parameters
-    using Distributions
+    using Printf
     
     export digitize
     
@@ -12,8 +13,22 @@ module OptimalTransportDataIntegration
     
     to_categorical(x) = sort(unique(x)) .== permutedims(x)
 
+    # Data generation functions
     include("data_parameters.jl")
     include("generate_xcat_ycat.jl")
-    include("utils.jl")
+    include("one_hot_encoder.jl")
+    include("prep_data.jl")
+
+    # OTRecod functions
+    include("instance.jl")
+    include("solution.jl")
+    include("average_distance_closest.jl")
+    include("pred_error.jl")
+    include("otjoint.jl")
+    include("ot_joint.jl")
+
+    # Data integration functions
+    include("unbalanced_modality.jl")
+    include("simple_learning.jl")
 
 end

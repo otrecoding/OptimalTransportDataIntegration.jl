@@ -1,2 +1,4 @@
 # OptimalTransportDataIntegration.jl
- Data integration using optimal transport theory
+
+Data integration using optimal transport theory
+
