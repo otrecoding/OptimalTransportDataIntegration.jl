@@ -26,6 +26,7 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
+      - run: julia -e 'import Pkg; Pkg.add("PyCall")'
       - uses: julia-actions/cache@v2
         with:
           cache-packages: "false" # Weird interaction with PyCall settings?
