@@ -73,7 +73,7 @@ instance = Instance( database, Xhot, Y, Ylevels, Z, Zlevels, dist_choice)
 instance.Ylevels, instance.Zlevels
 # -
 
-unique(instance.Zobserv)
+sort(unique(instance.Yobserv)), sort(unique(instance.Zobserv)
 
 # # Compute data for aggregation of the individuals
 
@@ -235,7 +235,7 @@ for iter in 1:NumberOfIterations
     for i in axes(XYA_i, 1)
         ind = findfirst(XYA_i[i,:] == v for v in XYA2)
         if isnothing(ind)
-            zA_pred_hot_i[i,:]
+            zA_pred_hot_i[i,:] .= 0
         else
             zA_pred_hot_i[i,:] .= zA_pred_hot[ind,:]
         end
@@ -261,8 +261,4 @@ for iter in 1:NumberOfIterations
 
 end
 # -
-@which onecold
-
-
-
 
