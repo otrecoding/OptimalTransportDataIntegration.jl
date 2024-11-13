@@ -25,8 +25,8 @@ import Distances: pairwise
 
 params = DataParameters(nA=1000, nB=1000, mB=[2,0,0], eps=0, p=0.2)
 params = DataParameters(nA=1000, nB=1000, mB=[0, 0, 0], eps=0.00, p=0.2)
-# data = generate_xcat_ycat(params)
-data = CSV.read(joinpath(@__DIR__, "data.csv"), DataFrame)
+data = generate_xcat_ycat(params)
+# data = CSV.read(joinpath(@__DIR__, "data.csv"), DataFrame)
 @show sort(unique(data.Y)), sort(unique(data.Z))
 
 dba = subset(data, :database => ByRow(==(1)))
@@ -73,7 +73,7 @@ instance = Instance( database, Xhot, Y, Ylevels, Z, Zlevels, dist_choice)
 instance.Ylevels, instance.Zlevels
 # -
 
-sort(unique(instance.Yobserv)), sort(unique(instance.Zobserv)
+sort(unique(instance.Yobserv)), sort(unique(instance.Zobserv))
 
 # # Compute data for aggregation of the individuals
 
