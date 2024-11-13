@@ -2,22 +2,24 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: ipynb,jl:light
+#     formats: jl,ipynb
 #     text_representation:
 #       extension: .jl
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.2
+#       jupytext_version: 1.16.4
 #   kernelspec:
-#     display_name: Julia 1.10.4
+#     display_name: Julia 1.11.1
 #     language: julia
-#     name: julia-1.10
+#     name: julia-1.11
 # ---
 
 # # Flux classifier
 #
 # The following page contains a step-by-step walkthrough of a classifier implementation in Julia using Flux. 
 # Let's start by importing the required Julia packages.
+
+import Pkg; Pkg.add("Flux")
 
 using Statistics, DataFrames, CSV, ProgressMeter
 using OptimalTransportDataIntegration
@@ -101,6 +103,8 @@ train!(model, x, y)
 mean(Flux.onecold(model(x)) .== dba.Y)
 
 mean(Flux.onecold(model(Matrix{Float32}(XB'))) .== dbb.Y)
+
+
 
 
 

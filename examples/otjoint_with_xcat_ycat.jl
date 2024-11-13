@@ -1,16 +1,16 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: ipynb,jl:light
+#     formats: jl,ipynb
 #     text_representation:
 #       extension: .jl
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.2
+#       jupytext_version: 1.16.4
 #   kernelspec:
-#     display_name: Julia 1.10.4
+#     display_name: Julia 1.11.1
 #     language: julia
-#     name: julia-1.10
+#     name: julia-1.11
 # ---
 
 # +
@@ -30,8 +30,11 @@ Z = Vector(data.Z)
 database = data.database
 
 dist_choice = Hamming()
+
+Ylevels = 1:4
+Zlevels = 1:3
     
-instance = Instance( database, X, Y, Z, dist_choice)
+instance = Instance( database, X, Y, Ylevels, Z, Zlevels, dist_choice)
     
 lambda_reg = 0.392
 maxrelax = 0.714

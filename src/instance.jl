@@ -19,23 +19,24 @@ struct Instance
 
     nA::Int64
     nB::Int64
-    Xobserv::Array{Float64,2}
-    Yobserv::Array{Int64,1}
-    Zobserv::Array{Int64,1}
-    D::Array{Float64,2}
-    Xval::Array{Float64,2}
-    Y::Array{Int64,1}
-    Z::Array{Int64,1}
-    indY::Dict{Int64,Array{Int64,1}}
-    indZ::Dict{Int64,Array{Int64,1}}
-    indXA::Dict{Int64,Array{Int64}}
-    indXB::Dict{Int64,Array{Int64}}
-    DA::Array{Float64,2}
-    DB::Array{Float64,2}
+    Xobserv::Matrix{Float64}
+    Yobserv::Vector{Int64}
+    Zobserv::Vector{Int64}
+    D::Matrix{Float64}
+    Xval::Matrix{Float64}
+    Ylevels::Vector{Int64}
+    Zlevels::Vector{Int64}
+    indY::Dict{Int64,Vector{Int64}}
+    indZ::Dict{Int64,Vector{Int64}}
+    indXA::Dict{Int64,Vector{Int64}}
+    indXB::Dict{Int64,Vector{Int64}}
+    DA::Matrix{Float64}
+    DB::Matrix{Float64}
 
 
     function Instance(base::AbstractVector, X::AbstractMatrix, 
-                      Y::AbstractVector, Z::AbstractVector,
+                      Y::AbstractVector, Ylevels::AbstractVector,
+                      Z::AbstractVector, Zlevels::AbstractVector,
                       distance::Distances.Metric)
 
         indA = findall(base .== 1)
@@ -51,17 +52,23 @@ struct Instance
         indA = 1:nA
         indB = nA+1:nA+nB
 
-        # Modify Y and Z so that they go from 1 to the number of modalities
-        Y = sort(unique(Yobserv[Yobserv.!=-1]))
         Z = sort(unique(Zobserv[Zobserv.!=-1]))
         for i = eachindex(Y)
             Yobserv[Yobserv.==Y[i]] .= i
         end
         Y = [i for i = 1:length(Y)]
         for i = eachindex(Z)
-            Zobserv[Zobserv.==Z[i]] .= i
-        end
-        Z = [i for i = 1:length(Z)]
+        # # Modify Y and Z so that they go from 1 to the number of modalities
+        # Y = sort(unique(Yobserv[Yobserv.!=-1]))
+        # Z = sort(unique(Zobserv[Zobserv.!=-1]))
+        # for i = eachindex(Y)
+        #     Yobserv[Yobserv.==Y[i]] .= i
+        # end
+        # Y = [i for i = 1:length(Y)]
+        # for i = eachindex(Z)
+        #     Zobserv[Zobserv.==Z[i]] .= i
+        # end
+        # Z = [i for i = 1:length(Z)]
 
         # list the distinct modalities in A and B
         indY = Dict((m, findall(Yobserv[1:nA] .== m)) for m in Y)
@@ -86,7 +93,7 @@ struct Instance
         Xval = collect(stack(sort(unique(eachrow(Xobserv))))')
 
         # aggregate both bases
-        for i = 1:size(Xval, 1)
+        for i = axes(Xval, 1)
             nbX = nbX + 1
             x = view(Xval,i, :)
             distA = vec(pairwise(distance, x[:,:], transpose(Xobserv[A, :]), dims = 2))
@@ -103,8 +110,8 @@ struct Instance
             Zobserv,
             D,
             Xval,
-            Y,
-            Z,
+            Ylevels,
+            Zlevels,
             indY,
             indZ,
             indXA,

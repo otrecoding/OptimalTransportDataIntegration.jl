@@ -15,8 +15,8 @@ function compute_pred_error!(
 
     A = 1:inst.nA
     B = 1:inst.nB
-    Y = inst.Y
-    Z = inst.Z
+    Y = inst.Ylevels
+    Z = inst.Zlevels
     indXA = inst.indXA
     indXB = inst.indXB
     nbX = length(indXA)

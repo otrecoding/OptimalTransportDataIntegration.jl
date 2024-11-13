@@ -20,8 +20,8 @@ function avg_distance_closest(
 )
 
     # indices of individuals of base A with given outcomes in base B (and reciprocally)
-    indZinA = Dict((z, findall(inst.Zobserv[1:inst.nA] .== z)) for z in inst.Z)
-    indYinB = Dict((m, findall(inst.Yobserv[inst.nA+1:end] .== y)) for y in inst.Y)
+    indZinA = Dict((z, findall(inst.Zobserv[1:inst.nA] .== z)) for z in inst.Zlevels)
+    indYinB = Dict((m, findall(inst.Yobserv[inst.nA+1:end] .== y)) for y in inst.Ylevels)
 
     ind1 =
         base1 == baseA ? (outcome == baseA ? inst.indY[m1] : indZinA[m1]) :
@@ -72,8 +72,8 @@ function average_distance_to_closest(inst::Instance, percent_closest::Float64)
     # Redefine A and B for the model
     A = 1:inst.nA
     B = 1:inst.nB
-    Y = inst.Y
-    Z = inst.Z
+    Y = inst.Ylevels
+    Z = inst.Zlevels
     indY = inst.indY
     indZ = inst.indZ
 

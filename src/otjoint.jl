@@ -8,7 +8,10 @@ function otjoint( data; lambda_reg = 0.392, maxrelax = 0.714, percent_closest = 
     Y = Vector(data.Y)
     Z = Vector(data.Z)
 
-    instance = Instance( database, X, Y, Z, Hamming())
+    Ylevels = sort(unique(Y))
+    Zlevels = sort(unique(Z))
+
+    instance = Instance( database, X, Y, Ylevels, Z, Zlevels, Hamming())
 
     sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
     compute_pred_error!(sol, instance, false)

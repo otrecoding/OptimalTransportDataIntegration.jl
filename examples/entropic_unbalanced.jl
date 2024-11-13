@@ -1,20 +1,23 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: ipynb,jl
 #     text_representation:
 #       extension: .jl
 #       format_name: light
 #       format_version: '1.5'
-#       jupytext_version: 1.16.1
+#       jupytext_version: 1.16.4
 #   kernelspec:
-#     display_name: Julia 1.10.3
+#     display_name: Julia 1.11.1
 #     language: julia
-#     name: julia-1.10
+#     name: julia-1.11
 # ---
 
 # # 2D examples of exact and entropic unbalanced optimal transport
 #
 # https://pythonot.github.io/master/auto_examples/unbalanced-partial/plot_unbalanced_OT.html
+
+import Pkg; Pkg.add("PyPlot")
 
 # +
 using LinearAlgebra
@@ -86,5 +89,7 @@ PyPlot.scatter(xs[:, 1], xs[:, 2], c = "C0", s=vec(sum(P, dims=2)) )
 PyPlot.scatter(xt[:, 1], xt[:, 2], c = "C1", s=vec(sum(P, dims=1)) )
 
 PyPlot.imshow(P, cmap="jet")
+
+
 
 

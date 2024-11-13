@@ -1,3 +1,15 @@
+# ---
+# jupyter:
+#   jupytext:
+#     cell_metadata_filter: -all
+#     formats: ipynb,jl
+#     text_representation:
+#       extension: .jl
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.16.4
+# ---
+
 using OTRecod
 using DataFrames
 using CSV
@@ -34,7 +46,7 @@ function hyperparam(subdir, csv_files, maxrelax, lambda_reg)
     end
 
     return prederrors
-        
+
 end
 
 maxrelax = collect(0:0.1:2)

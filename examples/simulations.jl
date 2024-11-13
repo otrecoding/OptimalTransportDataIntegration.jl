@@ -1,3 +1,15 @@
+# ---
+# jupyter:
+#   jupytext:
+#     cell_metadata_filter: -all
+#     formats: ipynb,jl
+#     text_representation:
+#       extension: .jl
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.16.4
+# ---
+
 using OptimalTransportDataIntegration
 using DataFrames
 using JSON, CSV
