@@ -52,27 +52,21 @@ struct Instance
         indA = 1:nA
         indB = nA+1:nA+nB
 
-        Z = sort(unique(Zobserv[Zobserv.!=-1]))
-        for i = eachindex(Y)
-            Yobserv[Yobserv.==Y[i]] .= i
-        end
-        Y = [i for i = 1:length(Y)]
-        for i = eachindex(Z)
-        # # Modify Y and Z so that they go from 1 to the number of modalities
-        # Y = sort(unique(Yobserv[Yobserv.!=-1]))
-        # Z = sort(unique(Zobserv[Zobserv.!=-1]))
-        # for i = eachindex(Y)
-        #     Yobserv[Yobserv.==Y[i]] .= i
-        # end
-        # Y = [i for i = 1:length(Y)]
-        # for i = eachindex(Z)
-        #     Zobserv[Zobserv.==Z[i]] .= i
-        # end
-        # Z = [i for i = 1:length(Z)]
+        #PN  # Modify Y and Z so that they go from 1 to the number of modalities
+        #PN  Y = sort(unique(Yobserv[Yobserv.!=-1]))
+        #PN  Z = sort(unique(Zobserv[Zobserv.!=-1]))
+        #PN  for i = eachindex(Y)
+        #PN      Yobserv[Yobserv.==Y[i]] .= i
+        #PN  end
+        #PN  Y = [i for i = 1:length(Y)]
+        #PN  for i = eachindex(Z)
+        #PN      Zobserv[Zobserv.==Z[i]] .= i
+        #PN  end
+        #PN  Z = [i for i = 1:length(Z)]
 
         # list the distinct modalities in A and B
-        indY = Dict((m, findall(Yobserv[1:nA] .== m)) for m in Y)
-        indZ = Dict((m, findall(Zobserv[nA+1:end] .== m)) for m in Z)
+        indY = Dict((m, findall(Yobserv[1:nA] .== m)) for m in Ylevels)
+        indZ = Dict((m, findall(Zobserv[nA+1:end] .== m)) for m in Zlevels)
 
         # compute the distance between pairs of individuals in different bases
         # devectorize all the computations to go about twice faster
