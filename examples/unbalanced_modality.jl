@@ -2,7 +2,7 @@
 # ---
 # jupyter:
 #   jupytext:
-#     formats: jl,ipynb
+#     formats: jl:light,ipynb
 #     text_representation:
 #       extension: .jl
 #       format_name: light
@@ -21,92 +21,75 @@ using CSV
 using DataFrames
 import PythonOT
 import .Iterators: product
-import Distances: pairwise
+import Distances: pairwise, Hamming
 
-params = DataParameters(nA=1000, nB=1000, mB=[2,0,0], eps=0, p=0.2)
-params = DataParameters(nA=1000, nB=1000, mB=[0, 0, 0], eps=0.00, p=0.2)
-data = generate_xcat_ycat(params)
-# data = CSV.read(joinpath(@__DIR__, "data.csv"), DataFrame)
+# params = DataParameters(nA=1000, nB=1000, mB=[2,0,0], eps=0.0, p=0.2)
+params = DataParameters(nA=1000, nB=1000, mB=[0, 0, 0], eps=0.0, p=0.2)
+# data = generate_xcat_ycat(params)
+data = CSV.read(joinpath(@__DIR__, "data_bad.csv"), DataFrame)
 @show sort(unique(data.Y)), sort(unique(data.Z))
-
-dba = subset(data, :database => ByRow(==(1)))
-dbb = subset(data, :database => ByRow(==(2)))
 
 onecold(X) = map(argmax, eachrow(X))
 
 Xnames_hot, X_hot, Y, Z, XA_hot, YA, XB_hot, ZB, YB_true, ZA_true = prep_data(data)
-Xnames_hot
-# -
 
-# jdonnées individuelles annexées par i
+# données individuelles annexées par i
 
-# +
 XA_hot_i = copy(XA_hot)
 XB_hot_i = copy(XB_hot)
 yA_i  = onecold(YA)
 zB_i  = onecold(ZB)
 
 nA_i, nB_i  = size(XA_hot_i, 1), size(XB_hot_i, 1)
-# -
 
 XYA_i = hcat(XA_hot_i, yA_i)
 XZB_i = hcat(XB_hot_i, zB_i)
 
-# +
-import Distances: Hamming
-
 Xhot = one_hot_encoder(Matrix(data[!, ["X1", "X2", "X3"]]))
 
-
-# +
 Y = Vector(data.Y)
 Z = Vector(data.Z)
 database = data.database
 
 dist_choice = Hamming()
 
+Xlevels = Vector{Int}[]
+for i in (0,1), j in (0,1,2), k in (0,1,2,3)
+    push!(Xlevels, [i; j == 1; j == 2; k == 1; k == 2; k == 3])
+end
+@show Xlevels
 Ylevels = collect(1:4)
 Zlevels = collect(1:3)
     
 instance = Instance( database, Xhot, Y, Ylevels, Z, Zlevels, dist_choice)
     
-instance.Ylevels, instance.Zlevels
+sort(unique(Y)), sort(unique(Z))
 # -
-
-sort(unique(instance.Yobserv)), sort(unique(instance.Zobserv))
 
 # # Compute data for aggregation of the individuals
 
-# +
 indXA = instance.indXA
 indXB = instance.indXB
-Xobserv = instance.Xobserv
-Yobserv = instance.Yobserv
-Zobserv = instance.Zobserv
+
+# +
 nbX = length(indXA)
 
-wa = vec([length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / params.nA for y in instance.Ylevels, x = 1:nbX])
-wb = vec([length(indXB[x][findall(Zobserv[indXB[x] .+ params.nA] .== z)]) / params.nB for z in instance.Zlevels, x = 1:nbX ])  
+wa = vec([length(indXA[x][findall(Y[indXA[x]] .== y)]) / params.nA for y in Ylevels, x = 1:nbX])
+wb = vec([length(indXB[x][findall(Z[indXB[x] .+ params.nA] .== z)]) / params.nB for z in Zlevels, x = 1:nbX ])  
 wa2 = wa[wa .> 0.0]
 wb2 = wb[wb .> 0.0]
 # -
 
 Xvalues = stack(sort(unique(eachrow(one_hot_encoder(instance.Xval)))), dims=1)
 
-
-instance.Yobserv
-
-Yobserv = collect(1:4) # sort(unique(instance.Yobserv))
-Zobserv = collect(1:3) # sort(unique(instance.Zobserv))
-
-Xobserv = sort(unique(eachrow(instance.Xobserv)))
+@show length(sort(Xlevels))
 
 XYA = Vector{Int}[]
 XZB = Vector{Int}[]
-for (y,x) in product(Yobserv,Xobserv)
+for (y,x) in product(Ylevels,Xlevels)
     push!(XYA, [x...; y])
 end
-for (z,x) in product(Zobserv,Xobserv)
+for (z,x) in product(Zlevels,Xlevels)
     push!(XZB, [x...; z])
 end
 
@@ -114,8 +97,8 @@ XYA2 = XYA[wa .> 0] ### XYA observés
 XZB2 = XZB[wb .> 0] ### XZB observés
 
 # +
-Y_hot = one_hot_encoder(instance.Ylevels)
-Z_hot = one_hot_encoder(instance.Zlevels)
+Y_hot = one_hot_encoder(Ylevels)
+Z_hot = one_hot_encoder(Zlevels)
 
 nx = size(Xvalues, 2) ## Nb modalités x 
 
@@ -123,9 +106,9 @@ XA_hot = stack([v[1:nx] for v in XYA2], dims=1) # les x parmi les XYA observés,
 XB_hot = stack([v[1:nx] for v in XZB2], dims=1) # les x dans XZB observés, potentiellement des valeurs repetées 
 
 yA = getindex.(XYA2, nx+1)  ## les y  parmi les XYA observés, des valeurs repetées 
-yA_hot = one_hot_encoder(yA, instance.Ylevels)
+yA_hot = one_hot_encoder(yA, Ylevels)
 zB = getindex.(XZB2, nx+1) # les z dans XZB observés, potentiellement des valeurs repetées 
-zB_hot = one_hot_encoder(zB, instance.Zlevels)
+zB_hot = one_hot_encoder(zB, Zlevels)
 
 # +
 # ## Algorithm
@@ -191,8 +174,8 @@ end
 C0 = pairwise(Hamming(), XA_hot, XB_hot; dims=1) .* nx ./ nbrvarX
 C = C0 ./ maximum(C0)
 
-zA_pred_hot_i = zeros(Int, (nA_i,length(instance.Zlevels)))
-yB_pred_hot_i = zeros(Int, (nB_i,length(instance.Ylevels)))
+zA_pred_hot_i = zeros(Int, (nA_i,length(Zlevels)))
+yB_pred_hot_i = zeros(Int, (nB_i,length(Ylevels)))
 
 # +
 NumberOfIterations = 10
@@ -203,20 +186,20 @@ for iter in 1:NumberOfIterations
     
 
     for j in eachindex(yB_pred)
-         yB_pred[j] = optimal_modality(instance.Ylevels, Y_loss, G[:,j])
+         yB_pred[j] = optimal_modality(Ylevels, Y_loss, G[:,j])
     end
 
     
-    yB_pred_hot = one_hot_encoder(yB_pred, instance.Ylevels)
+    yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
      
     ### Compute best g: XxY-->Z
  
     for i in eachindex(zA_pred)
-        zA_pred[i] = optimal_modality(instance.Zlevels, Z_loss, G[i,:])
+        zA_pred[i] = optimal_modality(Zlevels, Z_loss, G[i,:])
     end
  
 
-    zA_pred_hot = one_hot_encoder(zA_pred, instance.Zlevels)
+    zA_pred_hot = one_hot_encoder(zA_pred, Zlevels)
  
     ### Update Cost matrix
     alpha1 = 1 / maximum(loss_crossentropy(yA_hot, yB_pred_hot))
@@ -243,7 +226,7 @@ for iter in 1:NumberOfIterations
 
     for i in axes(XZB_i, 1)
         ind = findfirst(XZB_i[i,:] == v for v in XZB2)
-        if isnothing(ind) 
+        if isnothing(ind)
             yB_pred_hot_i[i,:] .= 0
         else
             yB_pred_hot_i[i,:] .= yB_pred_hot[ind,:]
@@ -261,4 +244,6 @@ for iter in 1:NumberOfIterations
 
 end
 # -
+
+
 

@@ -19,13 +19,8 @@ struct Instance
 
     nA::Int64
     nB::Int64
-    Xobserv::Matrix{Float64}
-    Yobserv::Vector{Int64}
-    Zobserv::Vector{Int64}
     D::Matrix{Float64}
     Xval::Matrix{Float64}
-    Ylevels::Vector{Int64}
-    Zlevels::Vector{Int64}
     indY::Dict{Int64,Vector{Int64}}
     indZ::Dict{Int64,Vector{Int64}}
     indXA::Dict{Int64,Vector{Int64}}
@@ -45,34 +40,15 @@ struct Instance
         nA = length(indA)
         nB = length(indB)
 
-        # modify order so that base A comes first and then base B
-        Xobserv = [X[indA, :]; X[indB, :]]
-        Yobserv = [Y[indA]; Y[indB]]
-        Zobserv = [Z[indA]; Z[indB]]
-        indA = 1:nA
-        indB = nA+1:nA+nB
-
-        #PN  # Modify Y and Z so that they go from 1 to the number of modalities
-        #PN  Y = sort(unique(Yobserv[Yobserv.!=-1]))
-        #PN  Z = sort(unique(Zobserv[Zobserv.!=-1]))
-        #PN  for i = eachindex(Y)
-        #PN      Yobserv[Yobserv.==Y[i]] .= i
-        #PN  end
-        #PN  Y = [i for i = 1:length(Y)]
-        #PN  for i = eachindex(Z)
-        #PN      Zobserv[Zobserv.==Z[i]] .= i
-        #PN  end
-        #PN  Z = [i for i = 1:length(Z)]
-
         # list the distinct modalities in A and B
-        indY = Dict((m, findall(Yobserv[1:nA] .== m)) for m in Ylevels)
-        indZ = Dict((m, findall(Zobserv[nA+1:end] .== m)) for m in Zlevels)
+        indY = Dict((m, findall(Y[indA] .== m)) for m in Ylevels)
+        indZ = Dict((m, findall(Z[indB] .== m)) for m in Zlevels)
 
         # compute the distance between pairs of individuals in different bases
         # devectorize all the computations to go about twice faster
         # only compute norm 1 here
-        a = transpose(Xobserv[indA, :])
-        b = transpose(Xobserv[indB, :])
+        a = X[indA, :]'
+        b = X[indB, :]'
 
         D = pairwise(distance, a, b, dims = 2)
         DA = pairwise(distance, a, a, dims = 2)
@@ -84,14 +60,14 @@ struct Instance
         nbX = 0
         indXA = Dict{Int64,Array{Int64}}()
         indXB = Dict{Int64,Array{Int64}}()
-        Xval = collect(stack(sort(unique(eachrow(Xobserv))))')
+        Xval = collect(stack(sort(unique(eachrow(X))))')
 
         # aggregate both bases
         for i = axes(Xval, 1)
             nbX = nbX + 1
             x = view(Xval,i, :)
-            distA = vec(pairwise(distance, x[:,:], transpose(Xobserv[A, :]), dims = 2))
-            distB = vec(pairwise(distance, x[:,:], transpose(Xobserv[B.+nA, :]), dims = 2))
+            distA = vec(pairwise(distance, x[:,:], X[A, :]', dims = 2))
+            distB = vec(pairwise(distance, x[:,:], X[B.+nA, :]', dims = 2))
             indXA[nbX] = findall(distA .< 0.1)
             indXB[nbX] = findall(distB .< 0.1)
         end
@@ -99,13 +75,8 @@ struct Instance
         new(
             nA,
             nB,
-            Xobserv,
-            Yobserv,
-            Zobserv,
             D,
             Xval,
-            Ylevels,
-            Zlevels,
             indY,
             indZ,
             indXA,
@@ -113,73 +84,6 @@ struct Instance
             DA,
             DB,
         )
-    end
-
-    function Instance(
-        data_file::String,
-        norme::Int64,
-        observed::Array{Int64,1} = Array{Int64,1}(),
-    )
-
-        distance = Cityblock() # WeightedCityblock([1.0, 2.0, 3.0])
-
-        if norme == 2
-            distance = Euclidean()
-        elseif norme == 0
-            distance = Hamming() #WeightedHamming([2.0, 1.0])  #Hamming(); ##
-        end
-
-        data = readdlm(data_file, ' ')
-
-        # number of covariables
-        nbcvar = size(data, 2) - 3
-        if isempty(observed)
-            observed = Array(4:(4+nbcvar-1))
-        else
-            observed = observed .+ 3
-        end
-
-        # recover the sets of individuals in base 1 and 2
-        base = data[2:end, 1]
-
-        # recover the input data
-        X = Matrix{Float64}(data[2:end, observed])
-        Y = Vector{Float64}(data[2:end, 2])
-        Z = Vector{Float64}(data[2:end, 3])
-
-        return Instance(base, X, Y, Z, distance)
-
-    end
-
-    """
-    $(SIGNATURES)
-
-    - df : dataframe with column names : ident, covariables, outcomes
-    - distance : Cityblock(), Euclidean() or Hamming()
-    """
-    function Instance(
-        df::DataFrame,
-        covariables::Vector{Symbol},
-        outcomes::Vector{Symbol},
-        distance::Distances.Metric,
-    )
-
-        # number of covariables
-        nbcvar = length(covariables)
-
-        # recover the sets of individuals in base 1 and 2
-        base = df.ident
-
-        # recover the input data
-
-        nobs = size(df, 1)
-
-        X = Matrix(df[!, covariables])
-        Y = convert(Array, df.Y1)
-        Z = convert(Array, df.Y2)
-
-        return Instance(base, X, Y, Z, distance)
-
     end
 
 end
