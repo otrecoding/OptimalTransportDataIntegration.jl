@@ -78,6 +78,7 @@ wa = vec([length(indXA[x][findall(Y[indXA[x]] .== y)]) / params.nA for y in Ylev
 wb = vec([length(indXB[x][findall(Z[indXB[x] .+ params.nA] .== z)]) / params.nB for z in Zlevels, x = 1:nbX ])  
 wa2 = wa[wa .> 0.0]
 wb2 = wb[wb .> 0.0]
+wb2
 # -
 
 Xvalues = stack(sort(unique(eachrow(one_hot_encoder(instance.Xval)))), dims=1)
