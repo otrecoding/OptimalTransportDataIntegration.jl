@@ -23,6 +23,9 @@ import PythonOT
 import .Iterators: product
 import Distances: pairwise, Hamming
 
+
+function main()
+
 # params = DataParameters(nA=1000, nB=1000, mB=[2,0,0], eps=0.0, p=0.2)
 params = DataParameters(nA=1000, nB=1000, mB=[0, 0, 0], eps=0.0, p=0.2)
 # data = generate_xcat_ycat(params)
@@ -31,14 +34,14 @@ data = CSV.read(joinpath(@__DIR__, "data_bad.csv"), DataFrame)
 
 onecold(X) = map(argmax, eachrow(X))
 
-Xnames_hot, X_hot, Y, Z, XA_hot, YA, XB_hot, ZB, YB_true, ZA_true = prep_data(data)
+Xnames_hot, X_hot, Y_hot, Z_hot, XA_hot, YA_hot, XB_hot, ZB_hot, YB_true, ZA_true = prep_data(data)
 
 # données individuelles annexées par i
 
 XA_hot_i = copy(XA_hot)
 XB_hot_i = copy(XB_hot)
-yA_i  = onecold(YA)
-zB_i  = onecold(ZB)
+yA_i  = onecold(YA_hot)
+zB_i  = onecold(ZB_hot)
 
 nA_i, nB_i  = size(XA_hot_i, 1), size(XB_hot_i, 1)
 
@@ -57,31 +60,35 @@ Xlevels = Vector{Int}[]
 for i in (0,1), j in (0,1,2), k in (0,1,2,3)
     push!(Xlevels, [i; j == 1; j == 2; k == 1; k == 2; k == 3])
 end
-@show Xlevels
 Ylevels = collect(1:4)
 Zlevels = collect(1:3)
     
-instance = Instance( database, Xhot, Y, Ylevels, Z, Zlevels, dist_choice)
-    
-sort(unique(Y)), sort(unique(Z))
-# -
-
 # # Compute data for aggregation of the individuals
+
+instance  = Instance( database, Xhot, Y, Ylevels, Z, Zlevels, dist_choice)
 
 indXA = instance.indXA
 indXB = instance.indXB
+
+@show sort(unique(Y)), sort(unique(Z))
+
+# -
+
 
 # +
 nbX = length(indXA)
 
 wa = vec([length(indXA[x][findall(Y[indXA[x]] .== y)]) / params.nA for y in Ylevels, x = 1:nbX])
-wb = vec([length(indXB[x][findall(Z[indXB[x] .+ params.nA] .== z)]) / params.nB for z in Zlevels, x = 1:nbX ])  
-wa2 = wa[wa .> 0.0]
-wb2 = wb[wb .> 0.0]
-wb2
+wb = vec([length(indXB[x][findall(Z[indXB[x] .+ params.nA] .== z)]) / params.nB for z in Zlevels, x = 1:nbX ])
+
+@show wa 
+@show wb 
+
+wa2 = filter(>(0), wa)
+wb2 = filter(>(0), wb)
+
 # -
 
-Xvalues = stack(sort(unique(eachrow(one_hot_encoder(instance.Xval)))), dims=1)
 
 @show length(sort(Xlevels))
 
@@ -101,7 +108,7 @@ XZB2 = XZB[wb .> 0] ### XZB observés
 Y_hot = one_hot_encoder(Ylevels)
 Z_hot = one_hot_encoder(Zlevels)
 
-nx = size(Xvalues, 2) ## Nb modalités x 
+nx = size(instance.Xobserv, 2) ## Nb modalités x 
 
 XA_hot = stack([v[1:nx] for v in XYA2], dims=1) # les x parmi les XYA observés, potentiellement des valeurs repetées 
 XB_hot = stack([v[1:nx] for v in XZB2], dims=1) # les x dans XZB observés, potentiellement des valeurs repetées 
@@ -247,4 +254,7 @@ end
 # -
 
 
+end
+
+@time main()
 

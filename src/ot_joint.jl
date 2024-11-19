@@ -39,8 +39,8 @@ function ot_joint(
     nB = inst.nB
     A = 1:nA
     B = 1:nB
-    Ylevels = inst.Ylevels
-    Zlevels = inst.Zlevels
+    Ylevels = sort(unique(inst.Yobserv))
+    Zlevels = sort(unique(inst.Zobserv))
     indY = inst.indY
     indZ = inst.indZ
     Xobserv = inst.Xobserv

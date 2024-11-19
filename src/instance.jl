@@ -11,7 +11,7 @@ $(TYPEDSIGNATURES)
 Definition and initialization of an Instance structure
 
 - datafile : file name
-- norme    : ( 1 : Cityblock, 2 : Euclidean, 3 : Hamming )
+- distance : ∈ ( Cityblock, Euclidean, Hamming )
 - indXA    : indexes of subjects of A with given X value
 - indXB    : indexes of subjects of B with given X value
 """
@@ -20,7 +20,12 @@ struct Instance
     nA::Int64
     nB::Int64
     D::Matrix{Float64}
-    Xval::Matrix{Float64}
+    Xobserv::Matrix{Int}
+    Yobserv::Vector{Int}
+    Zobserv::Vector{Int}
+    Xlevels::Vector{Vector{Int}}
+    Ylevels::Vector{Int}
+    Zlevels::Vector{Int}
     indY::Dict{Int64,Vector{Int64}}
     indZ::Dict{Int64,Vector{Int64}}
     indXA::Dict{Int64,Vector{Int64}}
@@ -37,6 +42,10 @@ struct Instance
         indA = findall(base .== 1)
         indB = findall(base .== 2)
 
+        Xobserv = vcat(X[indA, :], X[indB, :])
+        Yobserv = vcat(Y[indA], Y[indB])
+        Zobserv = vcat(Z[indA], Z[indB])
+
         nA = length(indA)
         nB = length(indB)
 
@@ -45,8 +54,7 @@ struct Instance
         indZ = Dict((m, findall(Z[indB] .== m)) for m in Zlevels)
 
         # compute the distance between pairs of individuals in different bases
-        # devectorize all the computations to go about twice faster
-        # only compute norm 1 here
+        # devectorize all the computations to go about twice faster only compute norm 1 here
         a = X[indA, :]'
         b = X[indB, :]'
 
@@ -55,19 +63,16 @@ struct Instance
         DB = pairwise(distance, b, b, dims = 2)
 
         # Compute the indexes of individuals with same covariates
-        A = 1:nA
-        B = 1:nB
-        nbX = 0
         indXA = Dict{Int64,Array{Int64}}()
         indXB = Dict{Int64,Array{Int64}}()
-        Xval = collect(stack(sort(unique(eachrow(X))))')
+        Xlevels = sort(unique(eachrow(X)))
 
+        nbX = 0
         # aggregate both bases
-        for i = axes(Xval, 1)
+        for x in Xlevels
             nbX = nbX + 1
-            x = view(Xval,i, :)
-            distA = vec(pairwise(distance, x[:,:], X[A, :]', dims = 2))
-            distB = vec(pairwise(distance, x[:,:], X[B.+nA, :]', dims = 2))
+            distA = vec(pairwise(distance, x[:,:], a, dims = 2))
+            distB = vec(pairwise(distance, x[:,:], b, dims = 2))
             indXA[nbX] = findall(distA .< 0.1)
             indXB[nbX] = findall(distB .< 0.1)
         end
@@ -76,7 +81,12 @@ struct Instance
             nA,
             nB,
             D,
-            Xval,
+            Xobserv,
+            Yobserv,
+            Zobserv,
+            Xlevels,
+            Ylevels,
+            Zlevels,
             indY,
             indZ,
             indXA,
