@@ -28,6 +28,7 @@ function main(params, data)
 
     onecold(X) = map(argmax, eachrow(X))
 
+
     base = data.database
 
     indA = findall(base .== 1)
@@ -47,15 +48,19 @@ function main(params, data)
 
     XA_hot = X[indA, :]
     XB_hot = X[indB, :]
-    YA_hot = one_hot_encoder(YA)
-    ZA_hot = one_hot_encoder(ZA)
-    YB_hot = one_hot_encoder(YB)
-    ZB_hot = one_hot_encoder(ZB)
+
+    Ylevels = collect(1:4)
+    Zlevels = collect(1:3)
+
+    YA_hot = one_hot_encoder(YA, Ylevels)
+    ZA_hot = one_hot_encoder(ZA, Zlevels)
+    YB_hot = one_hot_encoder(YB, Ylevels)
+    ZB_hot = one_hot_encoder(ZB, Zlevels)
 
     XA_hot_i = copy(XA_hot)
     XB_hot_i = copy(XB_hot)
-    yA_i = onecold(YA_hot)
-    zB_i = onecold(ZB_hot)
+    yA_i = YA
+    zB_i = ZB
 
     nA_i, nB_i = size(XA_hot_i, 1), size(XB_hot_i, 1)
 
@@ -70,12 +75,6 @@ function main(params, data)
 
     distance = Hamming()
 
-    Xlevels = Vector{Int}[]
-    for i in (0, 1), j in (0, 1, 2), k in (0, 1, 2, 3)
-        push!(Xlevels, [i; j == 1; j == 2; k == 1; k == 2; k == 3])
-    end
-    Ylevels = collect(1:4)
-    Zlevels = collect(1:3)
 
     # Compute data for aggregation of the individuals
 
