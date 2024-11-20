@@ -34,10 +34,15 @@ struct Instance
     DB::Matrix{Float64}
 
 
-    function Instance(base::AbstractVector, X::AbstractMatrix, 
-                      Y::AbstractVector, Ylevels::AbstractVector,
-                      Z::AbstractVector, Zlevels::AbstractVector,
-                      distance::Distances.Metric)
+    function Instance(
+        base::AbstractVector,
+        X::AbstractMatrix,
+        Y::AbstractVector,
+        Ylevels::AbstractVector,
+        Z::AbstractVector,
+        Zlevels::AbstractVector,
+        distance::Distances.Metric,
+    )
 
         indA = findall(base .== 1)
         indB = findall(base .== 2)
@@ -71,8 +76,8 @@ struct Instance
         # aggregate both bases
         for x in Xlevels
             nbX = nbX + 1
-            distA = vec(pairwise(distance, x[:,:], a, dims = 2))
-            distB = vec(pairwise(distance, x[:,:], b, dims = 2))
+            distA = vec(pairwise(distance, x[:, :], a, dims = 2))
+            distB = vec(pairwise(distance, x[:, :], b, dims = 2))
             indXA[nbX] = findall(distA .< 0.1)
             indXB[nbX] = findall(distB .< 0.1)
         end

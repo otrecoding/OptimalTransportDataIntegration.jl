@@ -33,14 +33,13 @@ dist_choice = Hamming()
 
 Ylevels = 1:4
 Zlevels = 1:3
-    
-instance = Instance( database, X, Y, Ylevels, Z, Zlevels, dist_choice)
-    
+
+instance = Instance(database, X, Y, Ylevels, Z, Zlevels, dist_choice)
+
 lambda_reg = 0.392
 maxrelax = 0.714
 percent_closest = 0.2
-    
+
 sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
 compute_pred_error!(sol, instance, false)
 # -
-

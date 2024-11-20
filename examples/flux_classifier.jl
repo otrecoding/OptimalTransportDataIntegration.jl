@@ -19,7 +19,8 @@
 # The following page contains a step-by-step walkthrough of a classifier implementation in Julia using Flux. 
 # Let's start by importing the required Julia packages.
 
-import Pkg; Pkg.add("Flux")
+import Pkg;
+Pkg.add("Flux");
 
 using Statistics, DataFrames, CSV, ProgressMeter
 using OptimalTransportDataIntegration
@@ -30,16 +31,16 @@ import Flux
 # +
 data = DataFrame(CSV.File("data.csv"))
 data.X1_1 = data.X1
-data.X2_1 =to_categorical(data.X2)[2,:]
-data.X2_2 =to_categorical(data.X2)[3,:]
-data.X3_1 =to_categorical(data.X3)[2,:]
-data.X3_2 =to_categorical(data.X3)[3,:]
-data.X3_3 =to_categorical(data.X3)[4,:]
+data.X2_1 = to_categorical(data.X2)[2, :]
+data.X2_2 = to_categorical(data.X2)[3, :]
+data.X3_1 = to_categorical(data.X3)[2, :]
+data.X3_2 = to_categorical(data.X3)[3, :]
+data.X3_3 = to_categorical(data.X3)[4, :]
 
 dba = subset(data, :database => ByRow(==(1)))
 dbb = subset(data, :database => ByRow(==(2)))
 
-Xnames = [:X1_1,:X2_1,:X2_2, :X3_1, :X3_2, :X3_3]
+Xnames = [:X1_1, :X2_1, :X2_2, :X3_1, :X3_2, :X3_3]
 
 XA = Matrix{Float32}(dba[!, Xnames])
 XB = Matrix{Float32}(dbb[!, Xnames])
@@ -50,7 +51,7 @@ ZB = Flux.onehotbatch(dbb.Z, 1:3)
 
 # Our next step would be to convert this data into a form that can be fed to a machine learning model. The `x` values are arranged in a matrix and should ideally be converted to `Float32` type, but the labels must be one hot encoded.
 
-x = Float32.(Matrix(XA)') 
+x = Float32.(Matrix(XA)')
 
 y = YA
 
@@ -63,7 +64,7 @@ import Flux: Chain, Dense, relu, softmax
 nx = size(x, 1)
 ny = size(y, 1)
 
-model = Chain( Dense(nx, ny))
+model = Chain(Dense(nx, ny))
 # -
 
 # ## Loss and accuracy
@@ -73,8 +74,8 @@ model = Chain( Dense(nx, ny))
 #
 # Flux provides us with many minimal yet elegant loss functions. The functions present in Flux includes sanity checks, ensures efficient performance, and behaves well with the overall FluxML ecosystem.
 
-predict( model, x) = Flux.onecold(model(x))
-accuracy(model, x, y) = mean(predict(model,x) .== y) 
+predict(model, x) = Flux.onecold(model(x))
+accuracy(model, x, y) = mean(predict(model, x) .== y)
 
 # ## Training the model
 #
@@ -82,9 +83,9 @@ accuracy(model, x, y) = mean(predict(model,x) .== y)
 
 # +
 function train!(model, x, y, epochs = 1000, batchsize = 8)
-    loader = Flux.DataLoader((x, y), batchsize=batchsize, shuffle=true)
+    loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
     optim = Flux.setup(Flux.Adam(0.01), model)
-    @showprogress for epoch in 1:epochs
+    @showprogress for epoch = 1:epochs
         for (x, y) in loader
             grads = Flux.gradient(model) do m
                 y_hat = m(x)
@@ -103,8 +104,3 @@ train!(model, x, y)
 mean(Flux.onecold(model(x)) .== dba.Y)
 
 mean(Flux.onecold(model(Matrix{Float32}(XB'))) .== dbb.Y)
-
-
-
-
-

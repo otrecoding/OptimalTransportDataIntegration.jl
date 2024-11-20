@@ -17,7 +17,8 @@
 #
 # https://pythonot.github.io/master/auto_examples/unbalanced-partial/plot_unbalanced_OT.html
 
-import Pkg; Pkg.add("PyPlot")
+import Pkg;
+Pkg.add("PyPlot");
 
 # +
 using LinearAlgebra
@@ -41,7 +42,7 @@ cov_s = [1 0; 0 1]
 # -
 
 mu_t = [4, 4]
-cov_t = [1 -.8; -.8 1]
+cov_t = [1 -0.8; -0.8 1]
 
 xs = make_2D_samples_gauss(n, mu_s, cov_s)
 xt = make_2D_samples_gauss(n, mu_t, cov_t)
@@ -60,7 +61,7 @@ a, b = ones(n) ./ n, ones(n) ./ n  # uniform distribution on samples
 # +
 
 # loss matrix
-M = pairwise(SqEuclidean(), xs, xt, dims=1)
+M = pairwise(SqEuclidean(), xs, xt, dims = 1)
 M ./= maximum(M)
 # -
 
@@ -70,7 +71,7 @@ M ./= maximum(M)
 reg_m_kl = 0.05
 reg_m_l2 = 5
 
-P = PythonOT.mm_unbalanced(a, b, M, reg_m_kl, div="kl")
+P = PythonOT.mm_unbalanced(a, b, M, reg_m_kl, div = "kl")
 # -
 
 # ## Plot the results
@@ -78,18 +79,19 @@ P = PythonOT.mm_unbalanced(a, b, M, reg_m_kl, div="kl")
 if sum(P) > 0
     P .= P ./ maximum(P)
 end
-for i in axes(P, 1), j in axes(P,2)
+for i in axes(P, 1), j in axes(P, 2)
     if P[i, j] > 0
-        PyPlot.plot([xs[i, 1], xt[j, 1]], [xs[i, 2], xt[j, 2]], color="C2", alpha=P[i, j] * 0.3)
+        PyPlot.plot(
+            [xs[i, 1], xt[j, 1]],
+            [xs[i, 2], xt[j, 2]],
+            color = "C2",
+            alpha = P[i, j] * 0.3,
+        )
     end
 end
-PyPlot.scatter(xs[:,1], xs[:,2], c = "C0")
-PyPlot.scatter(xt[:,1], xt[:,2], c = "C1")
-PyPlot.scatter(xs[:, 1], xs[:, 2], c = "C0", s=vec(sum(P, dims=2)) )
-PyPlot.scatter(xt[:, 1], xt[:, 2], c = "C1", s=vec(sum(P, dims=1)) )
+PyPlot.scatter(xs[:, 1], xs[:, 2], c = "C0")
+PyPlot.scatter(xt[:, 1], xt[:, 2], c = "C1")
+PyPlot.scatter(xs[:, 1], xs[:, 2], c = "C0", s = vec(sum(P, dims = 2)))
+PyPlot.scatter(xt[:, 1], xt[:, 2], c = "C1", s = vec(sum(P, dims = 1)))
 
-PyPlot.imshow(P, cmap="jet")
-
-
-
-
+PyPlot.imshow(P, cmap = "jet")
