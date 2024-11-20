@@ -23,42 +23,41 @@ import PythonOT
 import .Iterators: product
 import Distances: pairwise, Hamming
 
-    onecold(X) = map(argmax, eachrow(X))
+onecold(X) = map(argmax, eachrow(X))
 
-    function loss_crossentropy(Y, F)
-        ϵ = 1e-12
-        res = zeros(size(Y, 1), size(F, 1))
-        logF = log.(F .+ ϵ)
-        for i in axes(Y, 2)
-            res .+= -Y[:, i] .* logF[:, i]'
+function loss_crossentropy(Y, F)
+    ϵ = 1e-12
+    res = zeros(size(Y, 1), size(F, 1))
+    logF = log.(F .+ ϵ)
+    for i in axes(Y, 2)
+        res .+= -Y[:, i] .* logF[:, i]'
+    end
+    return res
+end
+
+"""
+    optimal_modality(values, loss, weight)
+
+- values: vector of possible values
+- weight: vector of weights 
+- loss: matrix of size len(Weight) * len(Values)
+
+- Returns an argmin over value in values of the scalar product <loss[value,],weight> 
+"""
+function optimal_modality(values, loss, weight)
+
+    cost_for_each_modality = Float64[]
+    for j in eachindex(values)
+        s = 0
+        for i in axes(loss, 1)
+            s += loss[i, j] * weight[i]
         end
-        return res
+        push!(cost_for_each_modality, s)
     end
 
-    # +
-    """
-        optimal_modality(values, loss, weight)
+    return values[argmin(cost_for_each_modality)]
 
-    - values: vector of possible values
-    - weight: vector of weights 
-    - loss: matrix of size len(Weight) * len(Values)
-
-    - Returns an argmin over value in values of the scalar product <loss[value,],weight> 
-    """
-    function optimal_modality(values, loss, weight)
-
-        cost_for_each_modality = Float64[]
-        for j in eachindex(values)
-            s = 0
-            for i in axes(loss, 1)
-                s += loss[i, j] * weight[i]
-            end
-            push!(cost_for_each_modality, s)
-        end
-
-        return values[argmin(cost_for_each_modality)]
-
-    end
+end
 
 function unbalanced_modality(params, data)
 
@@ -92,15 +91,10 @@ function unbalanced_modality(params, data)
     YB_hot = one_hot_encoder(YB, Ylevels)
     ZB_hot = one_hot_encoder(ZB, Zlevels)
 
-    XA_hot_i = copy(XA_hot)
-    XB_hot_i = copy(XB_hot)
-    yA_i = YA
-    zB_i = ZB
+    nA_i, nB_i = size(XA_hot, 1), size(XB_hot, 1)
 
-    nA_i, nB_i = size(XA_hot_i, 1), size(XB_hot_i, 1)
-
-    XYA_i = hcat(XA_hot_i, yA_i)
-    XZB_i = hcat(XB_hot_i, zB_i)
+    XYA = hcat(XA_hot, YA)
+    XZB = hcat(XB_hot, ZB)
 
     Xhot = one_hot_encoder(Matrix(data[!, ["X1", "X2", "X3"]]))
 
@@ -150,17 +144,18 @@ function unbalanced_modality(params, data)
     wa2 = filter(>(0), wa)
     wb2 = filter(>(0), wb)
 
-    XYA = Vector{Int}[]
-    XZB = Vector{Int}[]
+    XYA2 = Vector{Int}[]
+    XZB2 = Vector{Int}[]
+    i = 0
     for (y, x) in product(Ylevels, Xlevels)
-        push!(XYA, [x...; y])
+        i += 1
+        wa[i] > 0 && push!(XYA2, [x...; y])
     end
+    i = 0
     for (z, x) in product(Zlevels, Xlevels)
-        push!(XZB, [x...; z])
+        i += 1
+        wb[i] > 0 && push!(XZB2, [x...; z])
     end
-
-    XYA2 = XYA[wa.>0] ### XYA observés
-    XZB2 = XZB[wb.>0] ### XZB observés
 
     # +
     Ylevels_hot = one_hot_encoder(Ylevels)
@@ -179,9 +174,9 @@ function unbalanced_modality(params, data)
     zB_hot = one_hot_encoder(zB, Zlevels)
 
     # Algorithm
-    
+
     ## Initialisation 
-    
+
     @show nA = size(XYA2, 1) # number of observed different values in A
     @show nB = size(XZB2, 1) # number of observed different values in B
     nbrvarX = 3
@@ -210,9 +205,8 @@ function unbalanced_modality(params, data)
         G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div = "kl") #unbalanced
 
         for j in eachindex(yB_pred)
-            yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G,:, j))
+            yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G, :, j))
         end
-
 
         yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
 
@@ -221,7 +215,6 @@ function unbalanced_modality(params, data)
         for i in eachindex(zA_pred)
             zA_pred[i] = optimal_modality(Zlevels, Zloss, G[i, :])
         end
-
 
         zA_pred_hot = one_hot_encoder(zA_pred, Zlevels)
 
@@ -237,16 +230,15 @@ function unbalanced_modality(params, data)
 
         ### Predict
 
-        for i in axes(XYA_i, 1)
-            ind = findfirst(XYA_i[i, :] == v for v in XYA2)
+        for i in axes(XYA, 1)
+            ind = findfirst(XYA[i, :] == v for v in XYA2)
             zA_pred_hot_i[i, :] .= zA_pred_hot[ind, :]
         end
 
-        for i in axes(XZB_i, 1)
-            ind = findfirst(XZB_i[i, :] == v for v in XZB2)
+        for i in axes(XZB, 1)
+            ind = findfirst(XZB[i, :] == v for v in XZB2)
             yB_pred_hot_i[i, :] .= yB_pred_hot[ind, :]
         end
-
 
         YBpred = onecold(yB_pred_hot_i)
         ZApred = onecold(zA_pred_hot_i)
