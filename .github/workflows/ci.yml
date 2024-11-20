@@ -1,0 +1,61 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: [v*]
+
+jobs:
+  test:
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+    runs-on: ${{ matrix.os }}
+    env:
+      PYTHON: '' # always use Conda.jl, even on Linux where `python`/`python3` is in the PATH
+    strategy:
+      fail-fast: false
+      matrix:
+        version:
+          - '1'
+        os:
+          - ubuntu-latest
+          - macOS-latest
+          - windows-latest
+        arch:
+          - x64
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.version }}
+          arch: ${{ matrix.arch }}
+      - run: julia -e 'import Pkg; Pkg.add("PyCall")'
+      - uses: julia-actions/cache@v2
+        with:
+          cache-packages: "false" # Weird interaction with PyCall settings?
+      - uses: julia-actions/julia-buildpkg@latest
+      - name: Install POT
+        run: |
+          using PyCall: Conda
+          Conda.add("nomkl") # Work around https://github.com/JuliaPy/PyPlot.jl/issues/315
+          Conda.add("pot"; channel="conda-forge")
+
+          # Workaround for https://github.com/JuliaPy/PyCall.jl/issues/999: Use conda's version of the library
+          if !Sys.iswindows()
+            open(ENV["GITHUB_ENV"], "a") do io
+              println(io, "LD_PRELOAD=", joinpath(Conda.ROOTENV, "lib", "libstdc++.so.6"))
+            end
+          end
+        shell: julia --project=. --color=yes {0}
+
+      - uses: julia-actions/julia-runtest@latest
+
+  Documenter:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: julia-actions/julia-buildpkg@latest
+      - uses: julia-actions/julia-docdeploy@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
