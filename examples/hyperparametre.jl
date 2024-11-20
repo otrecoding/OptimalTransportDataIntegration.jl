@@ -1,3 +1,15 @@
+# ---
+# jupyter:
+#   jupytext:
+#     cell_metadata_filter: -all
+#     formats: ipynb,jl
+#     text_representation:
+#       extension: .jl
+#       format_name: light
+#       format_version: '1.5'
+#       jupytext_version: 1.16.4
+# ---
+
 using OTRecod
 using DataFrames
 using CSV
@@ -10,16 +22,16 @@ function hyperparam(subdir, csv_files, maxrelax, lambda_reg)
     prederrors = Float64[]
 
     for csv_file in csv_files
-    	@show csv_file
+        @show csv_file
         data = DataFrame(CSV.File(joinpath(subdir, csv_file)))
-        
+
         X = Matrix(data[!, ["X1", "X2", "X3"]])
         Y = Vector(data.Y)
         Z = Vector(data.Z)
         database = data.database
-        
-        instance = Instance( database, X, Y, Z, Hamming())
-        
+
+        instance = Instance(database, X, Y, Z, Hamming())
+
         percent_closest = 0.2
 
         for m in maxrelax, l in lambda_reg
@@ -34,21 +46,21 @@ function hyperparam(subdir, csv_files, maxrelax, lambda_reg)
     end
 
     return prederrors
-        
+
 end
 
 maxrelax = collect(0:0.1:2)
 lambda_reg = collect(0:0.1:1)
 
 subdir = joinpath(@__DIR__, "datasets")
-csv_files = filter( endswith("csv"), readdir(subdir, join = true))
+csv_files = filter(endswith("csv"), readdir(subdir, join = true))
 
-function compute_p_and_m( csv_files)
+function compute_p_and_m(csv_files)
     pmax = 0
     mmax = 0
     for csv_file in csv_files
-        pmax = max(pmax, parse(Int,split(csv_file, '_')[3]) + 1)
-        mmax = max(mmax, parse(Int,split(csv_file, '_')[4][1:2]) + 1)
+        pmax = max(pmax, parse(Int, split(csv_file, '_')[3]) + 1)
+        mmax = max(mmax, parse(Int, split(csv_file, '_')[4][1:2]) + 1)
     end
     pmax, mmax
 end
@@ -63,17 +75,17 @@ end
 k = 0
 errors = zeros(length(maxrelax), length(lambda_reg), pmax)
 for csv_file in csv_files
-    p = parse(Int,split(csv_file, '_')[3]) + 1
+    p = parse(Int, split(csv_file, '_')[3]) + 1
     for i in eachindex(maxrelax), j in eachindex(lambda_reg)
         global k
         k += 1
-        errors[i,j,p] += results[k] / mmax
+        errors[i, j, p] += results[k] / mmax
     end
 end
 
 @show pmax
-for p in 1:pmax
-    x = errors[:,:,p]
+for p = 1:pmax
+    x = errors[:, :, p]
     i, j = Tuple(findmin(x)[2])
     println(" maxrelax = $(maxrelax[i]) lambda_reg = $(lambda_reg[j])")
 end

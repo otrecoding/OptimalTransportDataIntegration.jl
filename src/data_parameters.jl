@@ -5,34 +5,34 @@ export save_params
 
 @with_kw struct DataParameters
 
-    nA :: Int = 1000
-    nB :: Int = 1000
-    mA :: Vector{Int} = [0, 0, 0]
-    mB :: Vector{Int} = [0, 0, 0]
-    covA :: Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
-    covB :: Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
-    px1c :: Vector{Float64} = [0.5, 0.5]
-    px2c :: Vector{Float64} = [0.333, 0.334, 0.333]
-    px3c :: Vector{Float64} = [0.25, 0.25, 0.25, 0.25]
-    p :: Float64 = 0.6
-    aA :: Vector{Int} = [1, 1, 1, 1, 1, 1]
-    aB :: Vector{Int} = [1, 1, 1, 1, 1, 1]
-    eps :: Float64 = 0.0
+    nA::Int = 1000
+    nB::Int = 1000
+    mA::Vector{Int} = [0, 0, 0]
+    mB::Vector{Int} = [0, 0, 0]
+    covA::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
+    covB::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
+    px1c::Vector{Float64} = [0.5, 0.5]
+    px2c::Vector{Float64} = [0.333, 0.334, 0.333]
+    px3c::Vector{Float64} = [0.25, 0.25, 0.25, 0.25]
+    p::Float64 = 0.6
+    aA::Vector{Int} = [1, 1, 1, 1, 1, 1]
+    aB::Vector{Int} = [1, 1, 1, 1, 1, 1]
+    eps::Float64 = 0.0
 end
 
-function read_params( jsonfile :: AbstractString )
+function read_params(jsonfile::AbstractString)
 
     data = JSON.parsefile(jsonfile)
-    
+
     nA = Int(data["nA"])
     nB = Int(data["nB"])
-    
+
     aA = Int.(data["aA"])
     aB = Int.(data["aB"])
-    
+
     mA = vec(Int.(data["mA"]))
     mB = vec(Int.(data["mB"]))
-    
+
     covA = stack([Float64.(x) for x in data["covA"]])
     covB = stack([Float64.(x) for x in data["covB"]])
 
@@ -41,14 +41,17 @@ function read_params( jsonfile :: AbstractString )
     px3c = Float64.(data["px3c"])
     p = Float64(data["p"])
     eps = Float64(data["eps"])
-    
+
     DataParameters(nA, nB, mA, mB, covA, covB, px1c, px2c, px3c, p, aA, aB, eps)
 
 end
 
-function save_params( jsonfile :: AbstractString, params :: DataParameters )
+function save_params(jsonfile::AbstractString, params::DataParameters)
 
-    data = Dict(fieldnames(DataParameters) .=> getfield.(Ref(params), fieldnames(DataParameters)))
+    data = Dict(
+        fieldnames(DataParameters) .=>
+            getfield.(Ref(params), fieldnames(DataParameters)),
+    )
 
     open(jsonfile, "w") do io
         JSON.print(io, data)
