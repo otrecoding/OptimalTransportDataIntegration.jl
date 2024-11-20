@@ -91,8 +91,6 @@ function unbalanced_modality(params, data)
     YB_hot = one_hot_encoder(YB, Ylevels)
     ZB_hot = one_hot_encoder(ZB, Zlevels)
 
-    nA_i, nB_i = size(XA_hot, 1), size(XB_hot, 1)
-
     XYA = hcat(XA_hot, YA)
     XZB = hcat(XB_hot, ZB)
 
@@ -122,27 +120,20 @@ function unbalanced_modality(params, data)
     indXB = Dict{Int64,Array{Int64}}()
     Xlevels = sort(unique(eachrow(Xhot)))
 
-    nbX = 0
-    for x in Xlevels
-        nbX = nbX + 1
+    for (i, x) in enumerate(Xlevels)
         distA = vec(pairwise(distance, x[:, :], XA', dims = 2))
         distB = vec(pairwise(distance, x[:, :], XB', dims = 2))
-        indXA[nbX] = findall(distA .< 0.1)
-        indXB[nbX] = findall(distB .< 0.1)
+        indXA[i] = findall(distA .< 0.1)
+        indXB[i] = findall(distB .< 0.1)
     end
 
     nbX = length(indXA)
 
-    wa = vec([
-        length(indXA[x][findall(Y[indXA[x]] .== y)]) / params.nA for y in Ylevels, x = 1:nbX
-    ])
-    wb = vec([
-        length(indXB[x][findall(Z[indXB[x].+params.nA] .== z)]) / params.nB for
-        z in Zlevels, x = 1:nbX
-    ])
+    wa = vec([sum(indXA[x][YA[indXA[x]].==y]) for y in Ylevels, x = 1:nbX])
+    wb = vec([sum(indXB[x][ZB[indXB[x]].==z]) for z in Zlevels, x = 1:nbX])
 
-    wa2 = filter(>(0), wa)
-    wb2 = filter(>(0), wb)
+    wa2 = filter(>(0), wa) ./ nA
+    wb2 = filter(>(0), wb) ./ nB
 
     XYA2 = Vector{Int}[]
     XZB2 = Vector{Int}[]
@@ -177,15 +168,12 @@ function unbalanced_modality(params, data)
 
     ## Initialisation 
 
-    @show nA = size(XYA2, 1) # number of observed different values in A
-    @show nB = size(XZB2, 1) # number of observed different values in B
+    yB_pred = zeros(size(XZB2, 1)) # number of observed different values in A
+    zA_pred = zeros(size(XYA2, 1)) # number of observed different values in B
     nbrvarX = 3
 
     dimXZB = length(XZB2[1])
     dimXYA = length(XYA2[1])
-
-    yB_pred = zeros(nB)
-    zA_pred = zeros(nA)
 
     Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
     Zloss = loss_crossentropy(zB_hot, Zlevels_hot)
@@ -195,27 +183,24 @@ function unbalanced_modality(params, data)
     C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1) .* nx ./ nbrvarX
     C = C0 ./ maximum(C0)
 
-    zA_pred_hot_i = zeros(Int, (nA_i, length(Zlevels)))
-    yB_pred_hot_i = zeros(Int, (nB_i, length(Ylevels)))
+    zA_pred_hot_i = zeros(Int, (nA, length(Zlevels)))
+    yB_pred_hot_i = zeros(Int, (nB, length(Ylevels)))
 
     NumberOfIterations = 10
 
     for iter = 1:NumberOfIterations
 
-        G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div = "kl") #unbalanced
+        G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div = "kl") 
 
         for j in eachindex(yB_pred)
             yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G, :, j))
         end
 
-        yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
-
-        ### Compute best g: XxY-->Z
-
         for i in eachindex(zA_pred)
             zA_pred[i] = optimal_modality(Zlevels, Zloss, G[i, :])
         end
 
+        yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
         zA_pred_hot = one_hot_encoder(zA_pred, Zlevels)
 
         ### Update Cost matrix
@@ -245,12 +230,14 @@ function unbalanced_modality(params, data)
 
         ### Evaluate 
 
-        est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA_i + nB_i)
-        println("est $(sum(YB .== YBpred)/nB_i) $(sum(ZA .== ZApred)/nA_i)")
+        println("est $(sum(YB .== YBpred)/nB) $(sum(ZA .== ZApred)/nA)")
 
     end
-    # -
 
+    YBpred = onecold(yB_pred_hot_i)
+    ZApred = onecold(zA_pred_hot_i)
+    
+    (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
 
 end
 
