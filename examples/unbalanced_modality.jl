@@ -72,16 +72,13 @@ function unbalanced_modality(params, data)
     Y = Vector{Int}(data.Y)
     Z = Vector{Int}(data.Z)
 
-    YA = Y[indA]
-    YB = Y[indB]
-    ZA = Z[indA]
-    ZB = Z[indB]
+    YA = view(Y,indA)
+    YB = view(Y,indB)
+    ZA = view(Z,indA)
+    ZB = view(Z,indB)
 
-    XA = X[indA, :]
-    XB = X[indB, :]
-
-    XA_hot = X[indA, :]
-    XB_hot = X[indB, :]
+    XA = view(X,indA, :)
+    XB = view(X,indB, :)
 
     Ylevels = collect(1:4)
     Zlevels = collect(1:3)
@@ -91,22 +88,12 @@ function unbalanced_modality(params, data)
     YB_hot = one_hot_encoder(YB, Ylevels)
     ZB_hot = one_hot_encoder(ZB, Zlevels)
 
-    XYA = hcat(XA_hot, YA)
-    XZB = hcat(XB_hot, ZB)
-
-    Xhot = one_hot_encoder(Matrix(data[!, ["X1", "X2", "X3"]]))
-
-    Y = Vector(data.Y)
-    Z = Vector(data.Z)
-    base = data.database
+    XYA = hcat(XA, YA)
+    XZB = hcat(XB, ZB)
 
     distance = Hamming()
 
     # Compute data for aggregation of the individuals
-
-    Xobserv = vcat(Xhot[indA, :], Xhot[indB, :])
-    Yobserv = vcat(YA, YB)
-    Zobserv = vcat(ZA, ZB)
 
     nA = length(indA)
     nB = length(indB)
@@ -118,7 +105,7 @@ function unbalanced_modality(params, data)
     # Compute the indexes of individuals with same covariates
     indXA = Dict{Int64,Array{Int64}}()
     indXB = Dict{Int64,Array{Int64}}()
-    Xlevels = sort(unique(eachrow(Xhot)))
+    Xlevels = sort(unique(eachrow(X)))
 
     for (i, x) in enumerate(Xlevels)
         distA = vec(pairwise(distance, x[:, :], XA', dims = 2))
@@ -152,7 +139,7 @@ function unbalanced_modality(params, data)
     Ylevels_hot = one_hot_encoder(Ylevels)
     Zlevels_hot = one_hot_encoder(Zlevels)
 
-    nx = size(Xobserv, 2) ## Nb modalités x 
+    nx = size(X, 2) ## Nb modalités x 
 
     # les x parmi les XYA observés, potentiellement des valeurs repetées 
     XA_hot = stack([v[1:nx] for v in XYA2], dims = 1)
