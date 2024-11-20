@@ -24,20 +24,33 @@ import .Iterators: product
 import Distances: pairwise, Hamming
 
 
-function main()
-
-    # params = DataParameters(nA=1000, nB=1000, mB=[2,0,0], eps=0.0, p=0.2)
-    params = DataParameters(nA = 1000, nB = 1000, mB = [0, 0, 0], eps = 0.0, p = 0.2)
-    # data = generate_xcat_ycat(params)
-    data = CSV.read(joinpath(@__DIR__, "data_bad.csv"), DataFrame)
-    @show sort(unique(data.Y)), sort(unique(data.Z))
+function main(params, data)
 
     onecold(X) = map(argmax, eachrow(X))
 
-    Xnames_hot, X_hot, Y_hot, Z_hot, XA_hot, YA_hot, XB_hot, ZB_hot, YB_true, ZA_true =
-        prep_data(data)
+    base = data.database
 
-    # données individuelles annexées par i
+    indA = findall(base .== 1)
+    indB = findall(base .== 2)
+
+    X = Matrix{Int}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
+    Y = Vector{Int}(data.Y)
+    Z = Vector{Int}(data.Z)
+
+    YA = Y[indA]
+    YB = Y[indB]
+    ZA = Z[indA]
+    ZB = Z[indB]
+
+    XA = X[indA, :]
+    XB = X[indB, :]
+
+    XA_hot = X[indA, :]
+    XB_hot = X[indB, :]
+    YA_hot = one_hot_encoder(YA)
+    ZA_hot = one_hot_encoder(ZA)
+    YB_hot = one_hot_encoder(YB)
+    ZB_hot = one_hot_encoder(ZB)
 
     XA_hot_i = copy(XA_hot)
     XB_hot_i = copy(XB_hot)
@@ -53,9 +66,9 @@ function main()
 
     Y = Vector(data.Y)
     Z = Vector(data.Z)
-    database = data.database
+    base = data.database
 
-    dist_choice = Hamming()
+    distance = Hamming()
 
     Xlevels = Vector{Int}[]
     for i in (0, 1), j in (0, 1, 2), k in (0, 1, 2, 3)
@@ -64,19 +77,42 @@ function main()
     Ylevels = collect(1:4)
     Zlevels = collect(1:3)
 
-    # # Compute data for aggregation of the individuals
+    # Compute data for aggregation of the individuals
 
-    instance = Instance(database, Xhot, Y, Ylevels, Z, Zlevels, dist_choice)
 
-    indXA = instance.indXA
-    indXB = instance.indXB
+    Xobserv = vcat(Xhot[indA, :], Xhot[indB, :])
+    Yobserv = vcat(Y[indA], Y[indB])
+    Zobserv = vcat(Z[indA], Z[indB])
+
+    nA = length(indA)
+    nB = length(indB)
+
+    # list the distinct modalities in A and B
+    indY = Dict((m, findall(Y[indA] .== m)) for m in Ylevels)
+    indZ = Dict((m, findall(Z[indB] .== m)) for m in Zlevels)
+
+    # compute the distance between pairs of individuals in different bases
+    # devectorize all the computations to go about twice faster only compute norm 1 here
+    a = Xhot[indA, :]'
+    b = Xhot[indB, :]'
+
+    # Compute the indexes of individuals with same covariates
+    indXA = Dict{Int64,Array{Int64}}()
+    indXB = Dict{Int64,Array{Int64}}()
+    Xlevels = sort(unique(eachrow(Xhot)))
+
+    nbX = 0
+    # aggregate both bases
+    for x in Xlevels
+        nbX = nbX + 1
+        distA = vec(pairwise(distance, x[:, :], a, dims = 2))
+        distB = vec(pairwise(distance, x[:, :], b, dims = 2))
+        indXA[nbX] = findall(distA .< 0.1)
+        indXB[nbX] = findall(distB .< 0.1)
+    end
 
     @show sort(unique(Y)), sort(unique(Z))
 
-    # -
-
-
-    # +
     nbX = length(indXA)
 
     wa = vec([
@@ -114,14 +150,18 @@ function main()
     Y_hot = one_hot_encoder(Ylevels)
     Z_hot = one_hot_encoder(Zlevels)
 
-    nx = size(instance.Xobserv, 2) ## Nb modalités x 
+    nx = size(Xobserv, 2) ## Nb modalités x 
 
-    XA_hot = stack([v[1:nx] for v in XYA2], dims = 1) # les x parmi les XYA observés, potentiellement des valeurs repetées 
-    XB_hot = stack([v[1:nx] for v in XZB2], dims = 1) # les x dans XZB observés, potentiellement des valeurs repetées 
+    # les x parmi les XYA observés, potentiellement des valeurs repetées 
+    XA_hot = stack([v[1:nx] for v in XYA2], dims = 1)
+    # les x dans XZB observés, potentiellement des valeurs repetées 
+    XB_hot = stack([v[1:nx] for v in XZB2], dims = 1)
 
     yA = getindex.(XYA2, nx + 1)  ## les y  parmi les XYA observés, des valeurs repetées 
+    @show yA
     yA_hot = one_hot_encoder(yA, Ylevels)
     zB = getindex.(XZB2, nx + 1) # les z dans XZB observés, potentiellement des valeurs repetées 
+    @show zB
     zB_hot = one_hot_encoder(zB, Zlevels)
 
     # +
@@ -198,7 +238,6 @@ function main()
 
         G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div = "kl") #unbalanced
 
-
         for j in eachindex(yB_pred)
             yB_pred[j] = optimal_modality(Ylevels, Y_loss, G[:, j])
         end
@@ -248,13 +287,13 @@ function main()
         end
 
 
-        YB_pred = onecold(yB_pred_hot_i)
-        ZA_pred = onecold(zA_pred_hot_i)
+        YBpred = onecold(yB_pred_hot_i)
+        ZApred = onecold(zA_pred_hot_i)
 
         ### Evaluate 
 
-        est = (sum(YB_true .== YB_pred) .+ sum(ZA_true .== ZA_pred)) ./ (nA_i + nB_i)
-        println("est $(sum(YB_true .== YB_pred)/nB_i) $(sum(ZA_true .== ZA_pred)/nA_i)")
+        est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA_i + nB_i)
+        println("est $(sum(YB .== YBpred)/nB_i) $(sum(ZA .== ZApred)/nA_i)")
 
     end
     # -
@@ -262,4 +301,14 @@ function main()
 
 end
 
-@time main()
+params = DataParameters(nA = 1000, nB = 1000, mB = [2, 0, 0], eps = 0.0, p = 0.2)
+# data = generate_xcat_ycat(params)
+data = CSV.read(joinpath(@__DIR__, "data_good.csv"), DataFrame)
+@show sort(unique(data.Y)), sort(unique(data.Z))
+@time main(params, data)
+
+params = DataParameters(nA = 1000, nB = 1000, mB = [0, 0, 0], eps = 0.0, p = 0.2)
+data = CSV.read(joinpath(@__DIR__, "data_bad.csv"), DataFrame)
+@show sort(unique(data.Y)), sort(unique(data.Z))
+
+@time main(params, data)
