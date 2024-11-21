@@ -42,7 +42,7 @@ end
 
 export unbalanced_modality
 
-function unbalanced_modality(data; iterations = 1)
+function unbalanced_modality(data; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
 
     T = Int32
 
@@ -55,16 +55,13 @@ function unbalanced_modality(data; iterations = 1)
     Y = Vector{T}(data.Y)
     Z = Vector{T}(data.Z)
 
-    YA = view(Y,indA)
-    YB = view(Y,indB)
-    ZA = view(Z,indA)
-    ZB = view(Z,indB)
+    YA = view(Y, indA)
+    YB = view(Y, indB)
+    ZA = view(Z, indA)
+    ZB = view(Z, indB)
 
-    XA = view(X,indA, :)
-    XB = view(X,indB, :)
-
-    Ylevels = collect(1:4)
-    Zlevels = collect(1:3)
+    XA = view(X, indA, :)
+    XB = view(X, indB, :)
 
     YA_hot = one_hot_encoder(YA, Ylevels)
     ZA_hot = one_hot_encoder(ZA, Zlevels)
@@ -140,7 +137,7 @@ function unbalanced_modality(data; iterations = 1)
 
     yB_pred = zeros(size(XZB2, 1)) # number of observed different values in A
     zA_pred = zeros(size(XYA2, 1)) # number of observed different values in B
-    nbrvarX = 3
+    nbrvarX = size(data, 2) - 3 # size of data less Y, Z and database id
 
     dimXZB = length(XZB2[1])
     dimXYA = length(XYA2[1])
@@ -160,13 +157,14 @@ function unbalanced_modality(data; iterations = 1)
 
     for iter = 1:iterations
 
-        G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div = "kl") 
+        G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div = "kl")
 
         for j in eachindex(yB_pred)
             yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G, :, j))
         end
 
         for i in eachindex(zA_pred)
+            zA_pred[i] = optimal_modality(Zlevels, Zloss, view(G, i, :))
             zA_pred[i] = optimal_modality(Zlevels, Zloss, view(G,i, :))
         end
 
