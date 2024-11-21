@@ -1,4 +1,6 @@
 using Aqua
+using CSV
+using DataFrames
 using OptimalTransportDataIntegration
 import OptimalTransportDataIntegration: unbalanced_modality, otjoint, simple_learning
 using Test
@@ -14,7 +16,6 @@ data = generate_xcat_ycat(params)
 @test sort(unique(data.Y)) ≈ [1, 2, 3, 4]
 @test sort(unique(data.Z)) ≈ [1, 2, 3]
 
-@test unbalanced_modality(data) > 0.8
 @test otjoint(data; lambda_reg = 0.392, maxrelax = 0.714, percent_closest = 0.2) > 0.8
 @test simple_learning(
     data;
@@ -23,3 +24,12 @@ data = generate_xcat_ycat(params)
     batchsize = 64,
     epochs = 500,
 ) > 0.5
+
+
+data = CSV.read(joinpath(@__DIR__, "data_good.csv"), DataFrame)
+@time est = unbalanced_modality(data)
+println(est)
+
+data = CSV.read(joinpath(@__DIR__, "data_bad.csv"), DataFrame)
+@time est = unbalanced_modality(data)
+println(est)

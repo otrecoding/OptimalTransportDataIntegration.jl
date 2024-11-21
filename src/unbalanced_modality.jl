@@ -1,4 +1,5 @@
-using OptimalTransportDataIntegration
+using CSV
+using DataFrames
 import PythonOT
 import .Iterators: product
 import Distances: pairwise, Hamming
@@ -39,121 +40,138 @@ function optimal_modality(values, loss, weight)
 
 end
 
+export unbalanced_modality
+
 function unbalanced_modality(data; iterations = 1)
 
-    database = data.database
-    dba = subset(data, :database => ByRow(==(1)))
-    dbb = subset(data, :database => ByRow(==(2)))
+    T = Int32
 
-    nA = size(dba, 1)
-    nB = size(dbb, 1)
+    base = data.database
 
-    YB_true = dbb.Y
-    ZA_true = dba.Z
+    indA = findall(base .== 1)
+    indB = findall(base .== 2)
 
-    Xnames = ["X1", "X2", "X3"]
-    XA = one_hot_encoder(Matrix(dba[!, Xnames]))
-    XB = one_hot_encoder(Matrix(dbb[!, Xnames]))
+    X = Matrix{T}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
+    Y = Vector{T}(data.Y)
+    Z = Vector{T}(data.Z)
 
-    XYA_i = hcat(XA, dba.Y)
-    XZB_i = hcat(XB, dbb.Z)
+    YA = view(Y,indA)
+    YB = view(Y,indB)
+    ZA = view(Z,indA)
+    ZB = view(Z,indB)
 
-    X = vcat(XA, XB)
-    Y = Vector(data.Y)
-    Z = Vector(data.Z)
+    XA = view(X,indA, :)
+    XB = view(X,indB, :)
 
-    instance = Instance(database, X, Y, Z, Hamming())
+    Ylevels = collect(1:4)
+    Zlevels = collect(1:3)
 
-    lambda_reg = 0.392
-    maxrelax = 0.714
-    percent_closest = 0.2
+    YA_hot = one_hot_encoder(YA, Ylevels)
+    ZA_hot = one_hot_encoder(ZA, Zlevels)
+    YB_hot = one_hot_encoder(YB, Ylevels)
+    ZB_hot = one_hot_encoder(ZB, Zlevels)
 
-    sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
-    compute_pred_error!(sol, instance, false)
+    XYA = hcat(XA, YA)
+    XZB = hcat(XB, ZB)
 
+    distance = Hamming()
 
     # Compute data for aggregation of the individuals
 
-    indXA = instance.indXA
-    indXB = instance.indXB
+    nA = length(indA)
+    nB = length(indB)
+
+    # list the distinct modalities in A and B
+    indY = Dict((m, findall(YA .== m)) for m in Ylevels)
+    indZ = Dict((m, findall(ZB .== m)) for m in Zlevels)
+
+    # Compute the indexes of individuals with same covariates
+    indXA = Dict{T,Array{T}}()
+    indXB = Dict{T,Array{T}}()
+    Xlevels = sort(unique(eachrow(X)))
+
+    for (i, x) in enumerate(Xlevels)
+        distA = vec(pairwise(distance, x[:, :], XA', dims = 2))
+        distB = vec(pairwise(distance, x[:, :], XB', dims = 2))
+        indXA[i] = findall(distA .< 0.1)
+        indXB[i] = findall(distB .< 0.1)
+    end
+
     nbX = length(indXA)
 
-    wa = vec([
-        length(indXA[x][findall(instance.Yobserv[indXA[x]] .== y)]) / nA for
-        y in instance.Y, x = 1:nbX
-    ])
-    wb = vec([
-        length(indXB[x][findall(instance.Zobserv[indXB[x].+nA] .== z)]) / nB for
-        z in instance.Z, x = 1:nbX
-    ])
-    wa2 = wa[wa.>0.0]
-    wb2 = wb[wb.>0.0]
+    wa = vec([sum(indXA[x][YA[indXA[x]].==y]) for y in Ylevels, x = 1:nbX])
+    wb = vec([sum(indXB[x][ZB[indXB[x]].==z]) for z in Zlevels, x = 1:nbX])
 
-    Xvalues = stack(sort(unique(eachrow(one_hot_encoder(instance.Xval)))), dims = 1)
+    wa2 = filter(>(0), wa) ./ nA
+    wb2 = filter(>(0), wb) ./ nB
 
-    Xobserv = sort(unique(eachrow(instance.Xobserv)))
-    Yobserv = sort(unique(instance.Yobserv))
-    Zobserv = sort(unique(instance.Zobserv))
-
-    XYA = Vector{Int}[]
-    for (y, x) in product(Yobserv, Xobserv)
-        push!(XYA, [x...; y])
+    XYA2 = Vector{T}[]
+    XZB2 = Vector{T}[]
+    i = 0
+    for (y, x) in product(Ylevels, Xlevels)
+        i += 1
+        wa[i] > 0 && push!(XYA2, [x...; y])
     end
-    XZB = Vector{Int}[]
-    for (z, x) in product(Zobserv, Xobserv)
-        push!(XZB, [x...; z])
+    i = 0
+    for (z, x) in product(Zlevels, Xlevels)
+        i += 1
+        wb[i] > 0 && push!(XZB2, [x...; z])
     end
 
-    XYA2 = XYA[wa.>0] # XYA observés
-    XZB2 = XZB[wb.>0] # XZB observés
+    # +
+    Ylevels_hot = one_hot_encoder(Ylevels)
+    Zlevels_hot = one_hot_encoder(Zlevels)
 
-    Y_hot = one_hot_encoder(instance.Y)
-    Z_hot = one_hot_encoder(instance.Z)
+    nx = size(X, 2) ## Nb modalités x 
 
-    nx = size(Xvalues, 2) # Nb modalités x 
+    # les x parmi les XYA observés, potentiellement des valeurs repetées 
+    XA_hot = stack([v[1:nx] for v in XYA2], dims = 1)
+    # les x dans XZB observés, potentiellement des valeurs repetées 
+    XB_hot = stack([v[1:nx] for v in XZB2], dims = 1)
 
-    XA_hot = stack([v[1:nx] for v in XYA2], dims = 1) # les x parmi les XYA observés, potentiellement des valeurs repetées 
-    XB_hot = stack([v[1:nx] for v in XZB2], dims = 1) # les x parmi les XZB observés, potentiellement des valeurs repetées 
+    yA = last.(XYA2) # les y parmi les XYA observés, potentiellement des valeurs repetées 
+    yA_hot = one_hot_encoder(yA, Ylevels)
+    zB = last.(XZB2) # les z parmi les XZB observés, potentiellement des valeurs repetées 
+    zB_hot = one_hot_encoder(zB, Zlevels)
 
-    yA = getindex.(XYA2, nx + 1) # les y parmi les XYA observés, potentiellement des valeurs repetées 
-    yA_hot = one_hot_encoder(yA)
-    zB = getindex.(XZB2, nx + 1) # les z parmi les XZB observés, potentiellement des valeurs repetées 
-    zB_hot = one_hot_encoder(zB)
+    # Algorithm
 
+    ## Initialisation 
+
+    yB_pred = zeros(size(XZB2, 1)) # number of observed different values in A
+    zA_pred = zeros(size(XYA2, 1)) # number of observed different values in B
     nbrvarX = 3
 
     dimXZB = length(XZB2[1])
     dimXYA = length(XYA2[1])
 
-    yB_pred = zeros(size(XZB2, 1)) # number of observed different values in B
-    zA_pred = zeros(size(XYA2, 1)) # number of observed different values in A
+    Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
+    Zloss = loss_crossentropy(zB_hot, Zlevels_hot)
 
-    Y_loss = loss_crossentropy(yA_hot, Y_hot)
-    Z_loss = loss_crossentropy(zB_hot, Z_hot)
-
-    ### Optimal Transport
+    ## Optimal Transport
 
     C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1) .* nx ./ nbrvarX
     C = C0 ./ maximum(C0)
 
-    zA_pred_hot_i = zeros(Int, (nA, length(instance.Z)))
-    yB_pred_hot_i = zeros(Int, (nB, length(instance.Y)))
+    zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
+    yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
 
-    est = 0.0
+    est_opt = Inf
 
     for iter = 1:iterations
 
-        G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div = "kl") #unbalanced
+        G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div = "kl") 
 
         for j in eachindex(yB_pred)
-            yB_pred[j] = optimal_modality(instance.Y, Y_loss, G[:, j])
-        end
-        for i in eachindex(zA_pred)
-            zA_pred[i] = optimal_modality(instance.Z, Z_loss, G[i, :])
+            yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G, :, j))
         end
 
-        yB_pred_hot = one_hot_encoder(yB_pred)
-        zA_pred_hot = one_hot_encoder(zA_pred)
+        for i in eachindex(zA_pred)
+            zA_pred[i] = optimal_modality(Zlevels, Zloss, view(G,i, :))
+        end
+
+        yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
+        zA_pred_hot = one_hot_encoder(zA_pred, Zlevels)
 
         ### Update Cost matrix
         alpha1 = 1 / maximum(loss_crossentropy(yA_hot, yB_pred_hot))
@@ -167,29 +185,31 @@ function unbalanced_modality(data; iterations = 1)
 
         ### Predict
 
-        for i in axes(XYA_i, 1)
-            ind = findfirst(XYA_i[i, :] == v for v in XYA2)
-            if !isnothing(ind)
-                zA_pred_hot_i[i, :] .= zA_pred_hot[ind, :]
-            end
+        for i in axes(XYA, 1)
+            ind = findfirst(XYA[i, :] == v for v in XYA2)
+            zA_pred_hot_i[i, :] .= zA_pred_hot[ind, :]
         end
 
-        for i in axes(XZB_i, 1)
-            ind = findfirst(XZB_i[i, :] == v for v in XZB2)
-            if !isnothing(ind)
-                yB_pred_hot_i[i, :] .= yB_pred_hot[ind, :]
-            end
+        for i in axes(XZB, 1)
+            ind = findfirst(XZB[i, :] == v for v in XZB2)
+            yB_pred_hot_i[i, :] .= yB_pred_hot[ind, :]
         end
 
-        YB_pred = onecold(yB_pred_hot_i)
-        ZA_pred = onecold(zA_pred_hot_i)
+        YBpred = onecold(yB_pred_hot_i)
+        ZApred = onecold(zA_pred_hot_i)
 
-        ### Evaluate 
+        est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
 
-        est = (sum(YB_true .== YB_pred) .+ sum(ZA_true .== ZA_pred)) ./ (nA + nB)
+        if est < est_opt
+            est_opt = est
+        else
+            return est_opt
+        end
 
     end
 
-    return est
+    return est_opt
+
 
 end
+
