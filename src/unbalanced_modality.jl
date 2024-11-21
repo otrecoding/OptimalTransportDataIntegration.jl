@@ -165,6 +165,7 @@ function unbalanced_modality(data; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
 
         for i in eachindex(zA_pred)
             zA_pred[i] = optimal_modality(Zlevels, Zloss, view(G, i, :))
+            zA_pred[i] = optimal_modality(Zlevels, Zloss, view(G,i, :))
         end
 
         yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
@@ -209,3 +210,4 @@ function unbalanced_modality(data; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
 
 
 end
+
