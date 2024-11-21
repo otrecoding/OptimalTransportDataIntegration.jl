@@ -5,6 +5,7 @@ using DocStringExtensions
 using Parameters
 using Printf
 
+
 export digitize
 
 digitize(x, bins) = searchsortedlast.(Ref(bins), x)
@@ -28,5 +29,8 @@ include("otjoint.jl")
 # Data integration functions
 include("unbalanced_modality.jl")
 include("simple_learning.jl")
+
+# Generic interface
+include("otrecod.jl")
 
 end
