@@ -19,6 +19,7 @@ Data integration using optimal transport theory
       + reg_m = 0
  
 ### Simple Learning
+
 We launch `M=1000` simulations 
 		
 Data generation parameters
