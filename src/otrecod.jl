@@ -52,6 +52,8 @@ export UnbalancedModality
 
 @with_kw struct UnbalancedModality <: AbstractMethod
 
+    reg_m::Float64 = 0.1
+    reg::Float64 = 0.0
     Ylevels::AbstractVector = 1:4
     Zlevels::AbstractVector = 1:3
 
