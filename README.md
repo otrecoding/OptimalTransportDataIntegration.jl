@@ -12,11 +12,11 @@ Data integration using optimal transport theory
 ### Unbalanced Modality
 
     - balanced : 
-      + reg = 0
-      + reg_m = 0 
+      + reg = 0.0
+      + reg_m = 0.0 
     - unbalanced : 
-      + rho = [0.01 0.05 0.1 0.25 0.5 0.75 1]
-      + reg_m = 0
+      + reg = [0.001, 0.01, 0.1]
+      + reg_m = [0.01 0.05 0.1 0.25 0.5 0.75 1]
  
 ### Simple Learning
 
