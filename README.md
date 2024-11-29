@@ -36,4 +36,5 @@ Data generation parameters
 - `learning_rate` = 0.01
 - `batchsize` =  64
 - `epochs` = 1000
-
+- `loss` = `logitcrossentropy`
+- 
