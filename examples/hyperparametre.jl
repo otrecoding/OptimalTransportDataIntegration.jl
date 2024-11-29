@@ -10,82 +10,56 @@
 #       jupytext_version: 1.16.4
 # ---
 
-using OTRecod
+using OptimalTransportDataIntegration
 using DataFrames
 using CSV
-using Distances
+using Printf
 using DelimitedFiles
-using Statistics
 
-function hyperparam(subdir, csv_files, maxrelax, lambda_reg)
+function otjoint(nsimulations)
 
-    prederrors = Float64[]
+    maxrelax = collect(0:0.1:2)
+    lambda_reg = collect(0:0.1:1)
+    estimations = Float32[]
+    
+    params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], eps = 0.0, p = 0.2)
+    
+    outfile =  open("results_otjoint.csv","w")
+    header = header = ["id", "maxrelax", "lambda_reg", "estimation"]
+    writedlm("results.csv", hcat(header...))
+    open("results.csv", "a") do io
+        for i in 1:nsimulations
+        
+            data = generate_xcat_ycat(params)
+            csv_file = @sprintf "dataset%04i.csv" i
 
-    for csv_file in csv_files
-        @show csv_file
-        data = DataFrame(CSV.File(joinpath(subdir, csv_file)))
+            CSV.write(joinpath("datasets", csv_file), data)
 
-        X = Matrix(data[!, ["X1", "X2", "X3"]])
-        Y = Vector(data.Y)
-        Z = Vector(data.Z)
-        database = data.database
+            @show csv_file
+            for m in maxrelax, λ in lambda_reg
+        
+                est = otrecod(data, OTjoint(maxrelax = m, lambda_reg = λ))
+        
+                writedlm(io, [i m λ est "otjoint"])
+        
+            end
 
-        instance = Instance(database, X, Y, Z, Hamming())
+            # est = otrecod(data, UnbalancedModality(reg = 0.0, reg_m = 0.0))
 
-        percent_closest = 0.2
+            #reg = [0.0, 0.001, 0.01, 0.1]
+            #reg_m = [0.0 0.01 0.05 0.1 0.25 0.5 0.75 1]
 
-        for m in maxrelax, l in lambda_reg
+            #for r in reg, r_m in reg_m
 
-            sol = ot_joint(instance, m, l, percent_closest)
-            OTRecod.compute_pred_error!(sol, instance, false)
-            @show sol.errorpredavg
-            push!(prederrors, sol.errorpredavg)
+            #    est = otrecod(data, UnbalancedModality(reg = r, reg_m = r_m))
+
+            #end
+
+            #est = otrecod(data, SimpleLearning()) > 0.5
 
         end
-
     end
 
-    return prederrors
-
 end
 
-maxrelax = collect(0:0.1:2)
-lambda_reg = collect(0:0.1:1)
-
-subdir = joinpath(@__DIR__, "datasets")
-csv_files = filter(endswith("csv"), readdir(subdir, join = true))
-
-function compute_p_and_m(csv_files)
-    pmax = 0
-    mmax = 0
-    for csv_file in csv_files
-        pmax = max(pmax, parse(Int, split(csv_file, '_')[3]) + 1)
-        mmax = max(mmax, parse(Int, split(csv_file, '_')[4][1:2]) + 1)
-    end
-    pmax, mmax
-end
-
-@time results = hyperparam(subdir, csv_files, maxrelax, lambda_reg)
-
-open("results.txt", "w") do io
-    writedlm(io, results)
-end
-
-@show pmax, mmax = compute_p_and_m(csv_files)
-k = 0
-errors = zeros(length(maxrelax), length(lambda_reg), pmax)
-for csv_file in csv_files
-    p = parse(Int, split(csv_file, '_')[3]) + 1
-    for i in eachindex(maxrelax), j in eachindex(lambda_reg)
-        global k
-        k += 1
-        errors[i, j, p] += results[k] / mmax
-    end
-end
-
-@show pmax
-for p = 1:pmax
-    x = errors[:, :, p]
-    i, j = Tuple(findmin(x)[2])
-    println(" maxrelax = $(maxrelax[i]) lambda_reg = $(lambda_reg[j])")
-end
+otjoint(1)
