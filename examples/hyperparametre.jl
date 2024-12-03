@@ -62,4 +62,4 @@ function otjoint(nsimulations)
 
 end
 
-otjoint(1)
+otjoint(1000)
