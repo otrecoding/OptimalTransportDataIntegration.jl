@@ -38,8 +38,8 @@ function ot_joint(
     nB = inst.nB
     A = 1:nA
     B = 1:nB
-    Ylevels = sort(unique(inst.Yobserv))
-    Zlevels = sort(unique(inst.Zobserv))
+    Ylevels = 1:4
+    Zlevels = 1:3
     indY = inst.indY
     indZ = inst.indZ
     Xobserv = inst.Xobserv
@@ -64,7 +64,7 @@ function ot_joint(
     voisins_X = dist_X .<= 1
 
     # println("... computing costs")
-    C = average_distance_to_closest(inst, percent_closest)[1]
+    C = average_distance_to_closest(inst, percent_closest)
 
     # Compute the estimators that appear in the model
 
@@ -328,8 +328,8 @@ function otjoint(data; lambda_reg = 0.392, maxrelax = 0.714, percent_closest = 0
     Y = Vector(data.Y)
     Z = Vector(data.Z)
 
-    Ylevels = sort(unique(Y))
-    Zlevels = sort(unique(Z))
+    Ylevels = 1:4
+    Zlevels = 1:3
 
     instance = Instance(database, X, Y, Ylevels, Z, Zlevels, Hamming())
 
