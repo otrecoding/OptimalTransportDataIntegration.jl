@@ -72,34 +72,36 @@ function average_distance_to_closest(inst::Instance, percent_closest::Float64)
     # Redefine A and B for the model
     A = 1:inst.nA
     B = 1:inst.nB
-    Y = inst.Ylevels
-    Z = inst.Zlevels
+    @show Y = inst.Ylevels
+    @show Z = inst.Zlevels
     indY = inst.indY
     indZ = inst.indZ
 
     # Compute average distances as described in the above
     Davg = zeros(Float64, (length(Y), length(Z)))
-    DindivA = zeros(Float64, (inst.nA, length(Z)))
-    DindivB = zeros(Float64, (inst.nB, length(Y)))
 
     for y in Y, i in indY[y], z in Z
 
-        nbclose = max(round(Int, percent_closest * length(indZ[z])), 1)
-        distance = sort([inst.D[i, j] for j in indZ[z]])
-        DindivA[i, z] = sum(distance[1:nbclose]) / nbclose
-        Davg[y, z] += sum(distance[1:nbclose]) / nbclose / length(indY[y]) / 2.0
+        nbclose = round(Int, percent_closest * length(indZ[z]))
+        if nbclose > 0 
+            distance = [inst.D[i, j] for j in indZ[z]]
+            p = partialsortperm(distance, 1:nbclose)
+            Davg[y, z] += sum(distance[p]) / nbclose / length(indY[y]) / 2.0
+        end
 
     end
 
     for z in Z, j in indZ[z], y in Y
 
-        nbclose = max(round(Int, percent_closest * length(indY[y])), 1)
-        distance = sort([inst.D[i, j] for i in indY[y]])
-        DindivB[j, y] = sum(distance[1:nbclose]) / nbclose
-        Davg[y, z] += sum(distance[1:nbclose]) / nbclose / length(indZ[z]) / 2.0
+        nbclose = round(Int, percent_closest * length(indY[y]))
+        if nbclose > 0 
+            distance = [inst.D[i, j] for i in indY[y]]
+            p = partialsortperm(distance, 1:nbclose)
+            Davg[y, z] += sum(distance[p]) / nbclose / length(indZ[z]) / 2.0
+        end
 
     end
 
-    Davg, DindivA, DindivB
+    Davg
 
 end
