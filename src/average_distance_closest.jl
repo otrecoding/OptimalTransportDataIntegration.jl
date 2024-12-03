@@ -72,8 +72,8 @@ function average_distance_to_closest(inst::Instance, percent_closest::Float64)
     # Redefine A and B for the model
     A = 1:inst.nA
     B = 1:inst.nB
-    @show Y = inst.Ylevels
-    @show Z = inst.Zlevels
+    Y = inst.Ylevels
+    Z = inst.Zlevels
     indY = inst.indY
     indZ = inst.indZ
 
