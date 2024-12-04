@@ -5,7 +5,7 @@ makedocs(
     sitename = "OptimalTransportDataIntegration",
     authors = "Jeremy Omer, Valérie Garès and Pierre Navaro",
     format = Documenter.HTML(),
-    modules = [OTRecod],
+    modules = [OptimalTransportDataIntegration],
     pages = ["Documentation" => "index.md"],
 )
 
