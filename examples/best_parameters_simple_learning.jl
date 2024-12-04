@@ -44,4 +44,4 @@ function simple_learning(nsimulations::Int)
 
 end
 
-simple_learning(1)
+simple_learning(1000)
