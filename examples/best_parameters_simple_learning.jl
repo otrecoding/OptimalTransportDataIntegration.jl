@@ -16,7 +16,7 @@ using CSV
 using Printf
 using DelimitedFiles
 
-function simple_learning(nsimulations::Int)
+function simple_learning(start, stop)
 
     estimations = Float32[]
     
@@ -25,11 +25,14 @@ function simple_learning(nsimulations::Int)
 
     open(outfile, "a") do io
 
-        seekstart(io)
-        writedlm(io, hcat(header...))
 
-        for i in 1:nsimulations
+        for i in start:stop
         
+            if i == 1
+                seekstart(io)
+                writedlm(io, hcat(header...))
+            end
+
             csv_file = @sprintf "dataset%04i.csv" i
             @show csv_file
 
@@ -44,4 +47,4 @@ function simple_learning(nsimulations::Int)
 
 end
 
-simple_learning(1000)
+simple_learning(985, 1000)

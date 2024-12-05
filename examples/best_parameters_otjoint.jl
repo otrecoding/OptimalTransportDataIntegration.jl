@@ -16,7 +16,7 @@ using CSV
 using Printf
 using DelimitedFiles
 
-function otjoint(nsimulations)
+function otjoint(start, stop)
 
     maxrelax = collect(0:0.1:2)
     lambda_reg = collect(0:0.1:1)
@@ -29,11 +29,14 @@ function otjoint(nsimulations)
 
     open(outfile, "a") do io
 
-        seekstart(io)
-        writedlm(io, hcat(header...))
 
         for i in 1:nsimulations
         
+            if i == 1
+                seekstart(io)
+                writedlm(io, hcat(header...))
+            end
+
             data = generate_xcat_ycat(params)
             csv_file = @sprintf "dataset%04i.csv" i
             @show csv_file
@@ -53,4 +56,4 @@ function otjoint(nsimulations)
 
 end
 
-otjoint(1000)
+otjoint(1, 1000)
