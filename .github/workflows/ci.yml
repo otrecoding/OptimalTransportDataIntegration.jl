@@ -50,8 +50,8 @@ jobs:
       - uses: julia-actions/julia-runtest@latest
 
       - if: matrix.os == 'ubuntu-latest'
-        - uses: julia-actions/julia-docdeploy@latest
-          env:
+        uses: julia-actions/julia-docdeploy@latest
+        env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
             PYTHON: ''
