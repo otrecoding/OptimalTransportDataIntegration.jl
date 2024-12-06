@@ -145,6 +145,10 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
     Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
     Zloss = loss_crossentropy(zB_hot, Zlevels_hot)
 
+    alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
+    alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
+
+
     ## Optimal Transport
 
     C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1) .* nx ./ nbrvarX
@@ -153,7 +157,10 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
     zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
     yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
 
-    est_opt = Inf
+    est_opt = 0.0
+
+    YBpred = zeros(T, nB)
+    ZApred = zeros(T, nA)
 
     for iter = 1:iterations
 
@@ -171,11 +178,9 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
         zA_pred_hot = one_hot_encoder(zA_pred, Zlevels)
 
         ### Update Cost matrix
-        alpha1 = 1 / maximum(loss_crossentropy(yA_hot, yB_pred_hot))
-        alpha2 = 1 / maximum(loss_crossentropy(zB_hot, zA_pred_hot))
 
         chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
-        chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
+        chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot) 
         fcost = chinge1 .+ chinge2'
 
         C .= C0 ./ maximum(C0) .+ fcost
@@ -190,16 +195,12 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
             yB_pred_hot_i[i, :] .= yB_pred_hot[ind, :]
         end
 
-        YBpred = onecold(yB_pred_hot_i)
-        ZApred = onecold(zA_pred_hot_i)
+        YBpred .= onecold(yB_pred_hot_i)
+        ZApred .= onecold(zA_pred_hot_i)
 
-        est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
+        @show est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
 
-        if est < est_opt
-            est_opt = est
-        else
-            return est_opt
-        end
+        est_opt = max(est_opt, est)
 
     end
 
