@@ -1,13 +1,12 @@
 # OptimalTransportDataIntegration.jl
 
-## Instance
-
-```@docs
-Instance
+```@meta
+CurrentModule = OptimalTransportDataIntegration
 ```
 
-## Solution
+```@index
+```
 
-```@docs
-Solution
+```@autodocs
+Modules = [OptimalTransportDataIntegration]
 ```

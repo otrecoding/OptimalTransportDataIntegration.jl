@@ -42,7 +42,7 @@ end
 
 export unbalanced_modality
 
-function unbalanced_modality(data; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
+function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
 
     T = Int32
 
@@ -157,7 +157,7 @@ function unbalanced_modality(data; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
 
     for iter = 1:iterations
 
-        G = PythonOT.mm_unbalanced(wa2, wb2, C, 0.1; div = "kl")
+        G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
 
         for j in eachindex(yB_pred)
             yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G, :, j))
@@ -165,7 +165,6 @@ function unbalanced_modality(data; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
 
         for i in eachindex(zA_pred)
             zA_pred[i] = optimal_modality(Zlevels, Zloss, view(G, i, :))
-            zA_pred[i] = optimal_modality(Zlevels, Zloss, view(G,i, :))
         end
 
         yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
@@ -180,8 +179,6 @@ function unbalanced_modality(data; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
         fcost = chinge1 .+ chinge2'
 
         C .= C0 ./ maximum(C0) .+ fcost
-
-        ### Predict
 
         for i in axes(XYA, 1)
             ind = findfirst(XYA[i, :] == v for v in XYA2)

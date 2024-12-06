@@ -33,8 +33,8 @@ function simple_learning(
     data;
     hidden_layer_size = 10,
     learning_rate = 0.01,
-    batchsize = 512,
-    epochs = 500,
+    batchsize = 64,
+    epochs = 1000,
 )
 
     dba = subset(data, :database => ByRow(==(1)))
@@ -57,9 +57,6 @@ function simple_learning(
     modelXYA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
     modelXZB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
 
-    YB = Flux.onecold(modelXYA(XB))
-    ZA = Flux.onecold(modelXZB(XA))
-
     train!(
         modelXYA,
         XA,
@@ -77,8 +74,8 @@ function simple_learning(
         epochs = epochs,
     )
 
-    YB .= Flux.onecold(modelXYA(XB))
-    ZA .= Flux.onecold(modelXZB(XA))
+    YB = Flux.onecold(modelXYA(XB))
+    ZA = Flux.onecold(modelXZB(XA))
 
     (sum(dbb.Y .== YB) + sum(dba.Z .== ZA)) / (nA + nB)
 

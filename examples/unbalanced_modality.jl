@@ -15,32 +15,34 @@
 # ---
 
 # +
+using CSV
+using DataFrames
 using OptimalTransportDataIntegration
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [2, 0, 0], eps = 0.0, p = 0.2)
 data = generate_xcat_ycat(params)
 @show sort(unique(data.Y)), sort(unique(data.Z))
-@time est = unbalanced_modality(data)
+@time est = otrecod(data, UnbalancedModality())
 println(est)
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [0, 0, 0], eps = 0.0, p = 0.2)
 data = generate_xcat_ycat(params)
 @show sort(unique(data.Y)), sort(unique(data.Z))
-@time est = unbalanced_modality(data)
+@time est = otrecod(data, UnbalancedModality())
 println(est)
 
 data = CSV.read(joinpath(@__DIR__, "../test/data_good.csv"), DataFrame)
 @show sort(unique(data.Y)), sort(unique(data.Z))
-@time est = unbalanced_modality(data)
+@time est = otrecod(data, UnbalancedModality())
 println(est)
 
 data = CSV.read(joinpath(@__DIR__, "../test/data_bad.csv"), DataFrame)
 @show sort(unique(data.Y)), sort(unique(data.Z))
-@time est = unbalanced_modality(data)
+@time est = otrecod(data, UnbalancedModality())
 println(est)
 
 params = DataParameters(nA = 1000, nB = 500)
 data = generate_xcat_ycat(params)
 @show sort(unique(data.Y)), sort(unique(data.Z))
-@time est = unbalanced_modality(data)
+@time est = otrecod(data, UnbalancedModality())
 println(est)
