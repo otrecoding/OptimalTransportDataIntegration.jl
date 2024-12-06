@@ -37,4 +37,4 @@ Data generation parameters
 - `batchsize` =  64
 - `epochs` = 1000
 - `loss` = `logitcrossentropy`
-- 
+

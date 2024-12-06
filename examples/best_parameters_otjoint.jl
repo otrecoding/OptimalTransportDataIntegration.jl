@@ -57,3 +57,13 @@ function otjoint(start, stop)
 end
 
 otjoint(1, 1000)
+
+##
+data = CSV.read("results_otjoint.csv", DataFrame)
+
+sort(combine(groupby(data, ["maxrelax", "lambda_reg"]), :estimation => mean), order(:estimation_mean, rev = true))
+
+# equivalent with pandas
+# import pandas as pd
+# data = pd.read_csv("results_otjoint.csv", sep="\t")
+# data.groupby(["maxrelax", "lambda_reg"]).estimation.mean().sort_values(ascending=False)
