@@ -18,7 +18,7 @@ using DelimitedFiles
 using OptimalTransportDataIntegration
 
 # +
-function sample_size_effect(all_params, nsimulations)
+function sample_size_effect(all_params::Vector{DataParameters}, nsimulations::Int)
 
     estimations = Float32[]
     
@@ -57,4 +57,4 @@ all_params = (
 
 nsimulations = 100
 
-@time sample_size_effect(nsimulations, all_params)
+@time sample_size_effect(all_params, nsimulations)
