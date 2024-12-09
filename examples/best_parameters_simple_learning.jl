@@ -19,15 +19,15 @@ using DelimitedFiles
 function simple_learning(start, stop)
 
     estimations = Float32[]
-    
-    outfile =  "results_simple_learning.csv"
+
+    outfile = "results_simple_learning.csv"
     header = ["id" "estimation" "method"]
 
     open(outfile, "a") do io
 
 
-        for i in start:stop
-        
+        for i = start:stop
+
             if i == 1
                 seekstart(io)
                 writedlm(io, hcat(header...))

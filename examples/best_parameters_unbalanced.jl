@@ -21,14 +21,14 @@ function unbalanced(start, stop)
     reg = [0.0, 0.001, 0.01, 0.1]
     reg_m = [0.01 0.05 0.1 0.25 0.5 0.75 1]
     estimations = Float32[]
-    
-    outfile =  "results_unbalanced.csv"
+
+    outfile = "results_unbalanced.csv"
     header = ["id" "reg" "reg_m" "estimation" "method"]
 
     open(outfile, "a") do io
 
-        for i in start:stop
-        
+        for i = start:stop
+
             if i == 1
                 seekstart(io)
                 writedlm(io, hcat(header...))
