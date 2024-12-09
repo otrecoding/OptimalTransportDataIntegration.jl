@@ -17,7 +17,7 @@ function average_distance_to_closest(inst::Instance, percent_closest::Float64)
     for y in Y, i in indY[y], z in Z
 
         nbclose = round(Int, percent_closest * length(indZ[z]))
-        if nbclose > 0 
+        if nbclose > 0
             distance = [inst.D[i, j] for j in indZ[z]]
             p = partialsortperm(distance, 1:nbclose)
             Davg[y, z] += sum(distance[p]) / nbclose / length(indY[y]) / 2.0
@@ -28,7 +28,7 @@ function average_distance_to_closest(inst::Instance, percent_closest::Float64)
     for z in Z, j in indZ[z], y in Y
 
         nbclose = round(Int, percent_closest * length(indY[y]))
-        if nbclose > 0 
+        if nbclose > 0
             distance = [inst.D[i, j] for i in indY[y]]
             p = partialsortperm(distance, 1:nbclose)
             Davg[y, z] += sum(distance[p]) / nbclose / length(indZ[z]) / 2.0

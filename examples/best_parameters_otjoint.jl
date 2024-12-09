@@ -21,17 +21,17 @@ function otjoint(start, stop)
     maxrelax = collect(0:0.1:2)
     lambda_reg = collect(0:0.1:1)
     estimations = Float32[]
-    
+
     params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], eps = 0.0, p = 0.2)
-    
-    outfile =  "results_otjoint.csv"
+
+    outfile = "results_otjoint.csv"
     header = ["id", "maxrelax", "lambda_reg", "estimation", "method"]
 
     open(outfile, "a") do io
 
 
-        for i in 1:nsimulations
-        
+        for i = 1:nsimulations
+
             if i == 1
                 seekstart(io)
                 writedlm(io, hcat(header...))
@@ -44,10 +44,10 @@ function otjoint(start, stop)
             CSV.write(joinpath("datasets", csv_file), data)
 
             for m in maxrelax, λ in lambda_reg
-        
+
                 est = otrecod(data, OTjoint(maxrelax = m, lambda_reg = λ))
                 writedlm(io, [i m λ est "otjoint"])
-        
+
             end
 
         end
@@ -61,7 +61,10 @@ otjoint(1, 1000)
 ##
 data = CSV.read("results_otjoint.csv", DataFrame)
 
-sort(combine(groupby(data, ["maxrelax", "lambda_reg"]), :estimation => mean), order(:estimation_mean, rev = true))
+sort(
+    combine(groupby(data, ["maxrelax", "lambda_reg"]), :estimation => mean),
+    order(:estimation_mean, rev = true),
+)
 
 # equivalent with pandas
 # import pandas as pd
