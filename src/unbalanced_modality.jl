@@ -173,7 +173,7 @@ function unbalanced_modality(
         if reg_m > 0.0
             G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
         else
-            G = PythonOT.emd(wa2, wb2, C)
+            G = PythonOT.sinkhorn(wa2, wb2, C, reg)
         end
 
         for j in eachindex(yB_pred)
