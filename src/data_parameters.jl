@@ -8,18 +8,23 @@ export save_params
     nA::Int = 1000
     nB::Int = 1000
     mA::Vector{Int} = [0, 0, 0]
-    mB::Vector{Int} = [0, 0, 0]
+    mB::Vector{Int} = [1, 0, 0]
     covA::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
     covB::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
     px1c::Vector{Float64} = [0.5, 0.5]
     px2c::Vector{Float64} = [0.333, 0.334, 0.333]
     px3c::Vector{Float64} = [0.25, 0.25, 0.25, 0.25]
-    p::Float64 = 0.6
+    p::Float64 = 0.2
     aA::Vector{Int} = [1, 1, 1, 1, 1, 1]
     aB::Vector{Int} = [1, 1, 1, 1, 1, 1]
     eps::Float64 = 0.0
 end
 
+"""
+$(SIGNATURES)
+
+Read the data generation scenario from a JSON file
+"""
 function read_params(jsonfile::AbstractString)
 
     data = JSON.parsefile(jsonfile)
@@ -46,6 +51,11 @@ function read_params(jsonfile::AbstractString)
 
 end
 
+"""
+$(SIGNATURES)
+
+Write the data generation scenario to a JSON file
+"""
 function save_params(jsonfile::AbstractString, params::DataParameters)
 
     data = Dict(
