@@ -50,7 +50,7 @@ function covariates_link_effect(nsimulations::Int, pvalues)
                 writedlm(io, [i p est "ote"])
 
                 #OTE Regularized unbalanced transport 
-                est = otrecod(data, UnbalancedModality())
+                est = otrecod(data, UnbalancedModality(reg = 0.01, reg_m = 0.05))
                 writedlm(io, [i p est "ote-r"])
 
                 #SL Simple Learning
