@@ -18,16 +18,20 @@ using DelimitedFiles
 using OptimalTransportDataIntegration
 
 # +
-function sample_size_effect(all_params::Vector{DataParameters}, nsimulations::Int)
+function sample_ratio_effect(nsimulations::Int, ratios)
 
-    outfile = "sample_size_effect_ot.csv"
+    outfile = "sample_ratio_effect.csv"
     header = ["id", "nA", "nB", "estimation", "method"]
 
     open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
-        for params in all_params
+        for r in ratios
+
+            nA = 1000
+            nB = nA ÷ r
+            params = DataParameters(nB = nB)
 
             for i = 1:nsimulations
 
@@ -63,12 +67,6 @@ function sample_size_effect(all_params::Vector{DataParameters}, nsimulations::In
 
 end
 
-all_params = [
-    DataParameters(nA = 100, nB = 100),
-    DataParameters(nA = 1000, nB = 1000),
-    DataParameters(nA = 10000, nB = 10000),
-]
-
 nsimulations = 100
 
-@time sample_size_effect(all_params, nsimulations)
+@time sample_ratio_effect(nsimulations, (1, 2, 10))
