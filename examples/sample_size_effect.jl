@@ -20,15 +20,13 @@ using OptimalTransportDataIntegration
 # +
 function sample_size_effect(all_params, nsimulations)
 
-    estimations = Float32[]
-
     outfile = "sample_size_effect_ot.csv"
     header = ["id", "nA", "nB", "estimation", "method"]
 
-    open(outfile, "a") do io
+    open(outfile, "w") do io
 
-        seekstart(io)
         writedlm(io, hcat(header...))
+
         for params in all_params
 
             for i = 1:nsimulations
@@ -65,11 +63,11 @@ function sample_size_effect(all_params, nsimulations)
 
 end
 
-all_params = (
+all_params = [
     DataParameters(nA = 100, nB = 100),
     DataParameters(nA = 1000, nB = 1000),
     DataParameters(nA = 10000, nB = 10000),
-)
+]
 
 nsimulations = 100
 
