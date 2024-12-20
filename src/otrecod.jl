@@ -56,7 +56,7 @@ export UnbalancedModality
     reg_m::Float64 = 0.1
     Ylevels::AbstractVector = 1:4
     Zlevels::AbstractVector = 1:3
-    iterations::Int = 1
+    iterations::Int = 10
 
 end
 

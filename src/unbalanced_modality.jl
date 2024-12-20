@@ -173,7 +173,7 @@ function unbalanced_modality(
         if reg_m > 0.0
             G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
         else
-            G = PythonOT.sinkhorn(wa2, wb2, C, reg)
+            G = PythonOT.emd(wa2, wb2, C)
         end
 
         for j in eachindex(yB_pred)
@@ -208,7 +208,7 @@ function unbalanced_modality(
         YBpred .= onecold(yB_pred_hot_i)
         ZApred .= onecold(zA_pred_hot_i)
 
-        @show est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
+        est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
 
         est_opt = max(est_opt, est)
 
