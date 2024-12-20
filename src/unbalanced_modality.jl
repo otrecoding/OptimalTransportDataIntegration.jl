@@ -42,7 +42,14 @@ end
 
 export unbalanced_modality
 
-function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
+function unbalanced_modality(
+    data,
+    reg,
+    reg_m;
+    Ylevels = 1:4,
+    Zlevels = 1:3,
+    iterations = 1
+)
 
     T = Int32
 
@@ -148,7 +155,6 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
     alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
     alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
 
-
     ## Optimal Transport
 
     C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1) .* nx ./ nbrvarX
@@ -164,7 +170,11 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
 
     for iter = 1:iterations
 
-        G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
+        if reg_m > 0.0
+            G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
+        else
+            G = PythonOT.emd(wa2, wb2, C)
+        end
 
         for j in eachindex(yB_pred)
             yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G, :, j))
@@ -180,7 +190,7 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
         ### Update Cost matrix
 
         chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
-        chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot) 
+        chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
         fcost = chinge1 .+ chinge2'
 
         C .= C0 ./ maximum(C0) .+ fcost
@@ -198,7 +208,7 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
         YBpred .= onecold(yB_pred_hot_i)
         ZApred .= onecold(zA_pred_hot_i)
 
-        @show est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
+        est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
 
         est_opt = max(est_opt, est)
 
@@ -208,4 +218,3 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
 
 
 end
-
