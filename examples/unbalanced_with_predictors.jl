@@ -10,10 +10,13 @@ using JSON
 using Flux
 using OptimalTransportDataIntegration
 using Test
+import PythonOT
 
 # +
 json_file = joinpath("dataset.json")
 csv_file = joinpath("dataset.csv")
+
+const hidden_layer_size = 10
         
 params = JSON.parsefile("dataset.json")
 
@@ -47,6 +50,9 @@ ZB = Flux.onehotbatch(Z[indB], 1:3)
 XA = view(X, :, indA)
 XB = view(X, :, indB)
 
+XYA = vcat(XA, YA)
+XZB = vcat(XB, ZB)
+
 # Compute distances matrix and save original vectors YA and ZB to yA and zB
 
 distance = Hamming()
@@ -62,96 +68,62 @@ wb = ones(nB) ./ nB
 
 C0 = pairwise(distance, XA, XB) ./ size(XA, 1)
 
-C = C0 / np.max(C0)
+C = C0 / maximum(C0)
 
-dimXA = size(XA, 1)
-dimXB = size(XB, 1)
+dimXYA = size(XYA, 1)
+dimXZB = size(XZB, 1)
 dimYA = size(YA, 1)
 dimZB = size(ZB, 1)
 
-modelXYA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
-modelXZB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
+modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
+modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
+
+function train!(model, x, y; learning_rate = 0.01, batchsize = 64, epochs = 500)
+
+    loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
+    optim = Flux.setup(Flux.Adam(learning_rate), model)
+
+    for epoch = 1:epochs
+        for (x, y) in loader
+            grads = Flux.gradient(model) do m
+                y_hat = m(x)
+                Flux.logitcrossentropy(y_hat, y)
+            end
+            Flux.update!(optim, model, grads[1])
+        end
+    end
+
+end
+
+wa = fill(1 / nA, nA)
+wb = fill(1 / nB, nB)
+
+G = PythonOT.emd(wa, wb, C)
+
+YB = nB .* YA * G
+ZA = nA .* ZB * G'
 
 train!(
         modelXYA,
-        XA,
-        YA,
+        XYA,
+        ZB,
         learning_rate = learning_rate,
         batchsize = batchsize,
         epochs = epochs,
 )
 train!(
         modelXZB,
-        XB,
-        ZB,
+        XZB,
+        YA,
         learning_rate = learning_rate,
         batchsize = batchsize,
         epochs = epochs,
 )
 
-YB = Flux.onecold(modelXYA(XB))
-ZA = Flux.onecold(modelXZB(XA))
+ZA = Flux.onehot(modelXZB(XZB))
+YB = Flux.onehot(modelXYA(XYA))
 
 #=
-
-
-
-yA = np.copy(YA)
-zB = np.copy(ZB)
-# -
-
-
-# ## Use a Neural Network for classifier
-
-# +
-from keras import initializers
-
-def get_model_en(dimX, dimY):
-    model = Sequential()
-    model.add(Dense(160, input_dim=dimX, activation="relu"))
-    model.add(Dense(dimY, activation="softmax"))
-    model.compile(
-        loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"]
-    )
-    return model
-
-
-# -
-
-# function to reset weights
-
-# +
-import tensorflow as tf
-
-def reset_weights(model):
-    for layer in model.layers: 
-        if isinstance(layer, tf.keras.Model):
-            reset_weights(layer)
-            continue
-        for k, initializer in layer.__dict__.items():
-            if "initializer" not in k:
-                continue
-            # find the corresponding variable
-            var = getattr(layer, k.replace("_initializer", ""))
-            var.assign(initializer(var.shape, var.dtype))
-
-
-# +
-dimXZB = XZB.shape[1]
-dimXYA = XYA.shape[1]
-dimY = YA.shape[1]
-dimZ = ZB.shape[1]
-g = get_model_en(dimXZB, dimY)
-f = get_model_en(dimXYA, dimZ)
-
-C0 = cdist(XA, XB, metric="hamming") #* dimX / nbrvarX
-
-C = C0 / np.max(C0)
-
-G = ot.emd(wa, wb, C)
-
-YB = nB * G.T.dot(yA)
-ZA = nA * G.dot(zB)
 
 g.fit(XZB, YB)
 yBpred = g.predict(XZB)
