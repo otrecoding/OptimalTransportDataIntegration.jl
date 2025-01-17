@@ -54,11 +54,11 @@ function simple_learning(
     nA = size(XA, 2)
     nB = size(XB, 2)
 
-    modelXYA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
-    modelXZB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
+    modelA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
+    modelB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
 
     train!(
-        modelXYA,
+        modelA,
         XA,
         YA,
         learning_rate = learning_rate,
@@ -66,7 +66,7 @@ function simple_learning(
         epochs = epochs,
     )
     train!(
-        modelXZB,
+        modelB,
         XB,
         ZB,
         learning_rate = learning_rate,
@@ -74,8 +74,8 @@ function simple_learning(
         epochs = epochs,
     )
 
-    YB = Flux.onecold(modelXYA(XB))
-    ZA = Flux.onecold(modelXZB(XA))
+    YB = Flux.onecold(modelA(XB))
+    ZA = Flux.onecold(modelB(XA))
 
     (sum(dbb.Y .== YB) + sum(dba.Z .== ZA)) / (nA + nB)
 
