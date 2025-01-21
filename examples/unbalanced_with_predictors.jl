@@ -37,7 +37,6 @@ function unbalanced_with_predictors(data)
     XYA = vcat(XA, YA)
     XZB = vcat(XB, ZB)
     
-    
     nA :: Int = params["nA"]
     nB :: Int = params["nB"]
     
@@ -79,39 +78,21 @@ function unbalanced_with_predictors(data)
     wa = fill(1 / nA, nA)
     wb = fill(1 / nB, nB)
     
-    G = PythonOT.entropic_partial_wasserstein(wa, wb, C, 0.1)
     
-    YB = nB .* YA * G
-    ZA = nA .* ZB * G'
-    
-
-    train!(modelXYA, XYA, ZA)
-    train!(modelXZB, XZB, YB)
-    
-    YBpred = modelXZB(XZB)
-    ZApred = modelXYA(XYA)
-    
-    est = (sum(YBtrue .== Flux.onecold(YBpred)) + sum(ZAtrue .== Flux.onecold(ZApred))) / (nA + nB)
-    println("before BCD est = $(est)")
-    
-    # BCD algorithm
-    
-    iterations = 10
     alpha1, alpha2 = 0.25, 0.33
 
     function loss_crossentropy(Y, F)
-        ϵ = 1e-12
         res = zeros(size(Y, 2), size(F, 2))
-        logF = log.(F .+ ϵ)
+        logF = log.(F)
         for i in axes(Y, 1)
             res .+= -Y[i, :] .* logF[i, :]'
         end
         return res
     end
 
-    for i in 1:iterations
+    for i in 1:iterations # BCD algorithm
      
-        G = PythonOT.emd(wa, wb, C)
+        G = PythonOT.entropic_partial_wasserstein(wa, wb, C, reg)
     
         YB = nB .* YA * G
         ZA = nA .* ZB * G'
@@ -119,18 +100,21 @@ function unbalanced_with_predictors(data)
         train!(modelXYA, XYA, ZA)
         train!(modelXZB, XZB, YB)
      
-        YBpred_new = Flux.softmax(modelXZB(XZB))
-        ZApred_new = Flux.softmax(modelXYA(XYA))
+        YBpred = Flux.softmax(modelXZB(XZB))
+        ZApred = Flux.softmax(modelXYA(XYA))
+
+        @show est = (sum(YBtrue .== Flux.onecold(YBpred)) + sum(ZAtrue .== Flux.onecold(ZApred))) / (nA + nB)
     
-        loss_y = alpha1 * loss_crossentropy(YA, YBpred_new)
-        loss_z = alpha2 * loss_crossentropy(ZB, ZApred_new)
+        loss_y = alpha1 * loss_crossentropy(YA, YBpred)
+        loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
 
         fcost = loss_y .+ loss_z'
+
+        println("fcost = $(sum(G .* fcost))")
+        println("total cost = $(sum(G .* C))")
          
-        C .= C0 / maximum(C0) .+ fcost
+        C .= C0 / maximum(C0) .+ G .* fcost
          
-        est = (sum(YBtrue .== Flux.onecold(YBpred_new)) + sum(ZAtrue .== Flux.onecold(ZApred_new))) / (nA + nB)
-        println("Cost = $(sum(G .* C)), fcost = $(sum(G .* fcost)),   est = $(est)")
      
     end
 
