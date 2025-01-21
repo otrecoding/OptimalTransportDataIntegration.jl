@@ -53,9 +53,6 @@ XB = view(X, :, indB)
 XYA = vcat(XA, YA)
 XZB = vcat(XB, ZB)
 
-# Compute distances matrix and save original vectors YA and ZB to yA and zB
-
-distance = Hamming()
 
 nA :: Int = params["nA"]
 nB :: Int = params["nB"]
@@ -66,7 +63,7 @@ nB :: Int = params["nB"]
 wa = ones(nA) ./ nA
 wb = ones(nB) ./ nB
 
-C0 = pairwise(distance, XA, XB) ./ size(XA, 1)
+C0 = pairwise(Hamming(), XA, XB)
 
 C = C0 / maximum(C0)
 
@@ -100,30 +97,16 @@ wb = fill(1 / nB, nB)
 
 G = PythonOT.emd(wa, wb, C)
 
-YB = nB .* YA * G
-ZA = nA .* ZB * G'
-
-train!(
-        modelXYA,
-        XYA,
-        ZB,
-        learning_rate = learning_rate,
-        batchsize = batchsize,
-        epochs = epochs,
-)
-train!(
-        modelXZB,
-        XZB,
-        YA,
-        learning_rate = learning_rate,
-        batchsize = batchsize,
-        epochs = epochs,
-)
-
-ZA = Flux.onehot(modelXZB(XZB))
-YB = Flux.onehot(modelXYA(XYA))
-
 #=
+@show YB = nB .* YA * G
+@show ZA = nA .* ZB * G'
+
+train!(modelXYA, XYA, ZA)
+train!(modelXZB, XZB, YB)
+
+@show YB = modelXZB(XZB)
+@show ZA = modelXYA(XYA)
+
 
 g.fit(XZB, YB)
 yBpred = g.predict(XZB)
