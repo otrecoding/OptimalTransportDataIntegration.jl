@@ -171,7 +171,7 @@ function unbalanced_modality(
     for iter = 1:iterations
 
         if reg_m > 0.0
-            G = PythonOT.entropic_partial_wasserstein(wa2, wb2, C, reg)
+            G = PythonOT.entropic_partial_wasserstein(wa2, wb2, C, reg) #Pourquoi il n'y a pas le paramètre m à calibrer ot.partial.entropic_partial_wasserstein(a, b, M, reg, m)
         else
             G = PythonOT.emd(wa2, wb2, C)
         end
