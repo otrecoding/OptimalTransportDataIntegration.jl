@@ -130,7 +130,7 @@ function unbalanced_modality(
 
     # les x parmi les XYA observés, potentiellement des valeurs repetées 
     XA_hot = stack([v[1:nx] for v in XYA2], dims = 1)
-    # les x dans XZB observés, potentiellement des valeurs repetées 
+    # les x parmi les XZB observés, potentiellement des valeurs repetées 
     XB_hot = stack([v[1:nx] for v in XZB2], dims = 1)
 
     yA = last.(XYA2) # les y parmi les XYA observés, potentiellement des valeurs repetées 
@@ -171,9 +171,7 @@ function unbalanced_modality(
     for iter = 1:iterations
 
         if reg_m > 0.0
-            #G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
-            G = ot.partial.entropic_partial_wasserstein(wa2, wb2, C, reg = reg, m=reg_m)
-            #reg_m a optimiser entre 0 et 1
+            G = PythonOT.entropic_partial_wasserstein(wa2, wb2, C, reg)
         else
             G = PythonOT.emd(wa2, wb2, C)
         end
