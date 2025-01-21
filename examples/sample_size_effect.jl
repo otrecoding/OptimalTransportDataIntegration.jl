@@ -18,7 +18,7 @@ using DelimitedFiles
 using OptimalTransportDataIntegration
 
 # +
-function sample_size_effect(all_params::Vector{DataParameters}, nsimulations::Int)
+function sample_size_effect(all_params, nsimulations)
 
     outfile = "sample_size_effect_ot.csv"
     header = ["id", "nA", "nB", "estimation", "method"]
@@ -71,4 +71,4 @@ all_params = [
 
 nsimulations = 100
 
-@time sample_size_effect(all_params, nsimulations)
+@time sample_size_effect(nsimulations, all_params)
