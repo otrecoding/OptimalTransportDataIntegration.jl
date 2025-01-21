@@ -171,7 +171,9 @@ function unbalanced_modality(
     for iter = 1:iterations
 
         if reg_m > 0.0
-            G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
+            #G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
+            G = ot.partial.entropic_partial_wasserstein(wa2, wb2, C, reg = reg, m=reg_m)
+            #reg_m a optimiser entre 0 et 1
         else
             G = PythonOT.emd(wa2, wb2, C)
         end
