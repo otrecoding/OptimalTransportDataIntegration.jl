@@ -167,7 +167,8 @@ function unbalanced_modality(
 
     YBpred = zeros(T, nB)
     ZApred = zeros(T, nA)
-
+    sav_totalcost = []
+    sav_fcost = []
     for iter = 1:iterations
 
         if reg_m > 0.0
@@ -211,7 +212,8 @@ function unbalanced_modality(
         est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
 
         est_opt = max(est_opt, est)
-
+        sav_totalcost.append(np.sum(G*C))
+        sav_fcost.append(np.sum(G*fcost))
     end
 
     return est_opt
