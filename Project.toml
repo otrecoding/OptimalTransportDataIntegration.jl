@@ -1,7 +1,10 @@
 name = "OptimalTransportDataIntegration"
 uuid = "f00d1d04-589e-4742-a825-5ec24d3c488e"
 authors = ["Jeremy Omer <jeremy.omer@insa-rennes.fr>", "Valérie Garès <valerie.gares@insa-rennes.fr>", "Pierre Navaro <pierre.navaro@math.cnrs.fr>"]
-version = "0.1.0"
+version = "0.1.1"
+
+[sources]
+PythonOT = {url = "https://github.com/pnavaro/PythonOT.jl", rev = "main"}
 
 [deps]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
