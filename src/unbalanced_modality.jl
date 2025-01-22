@@ -45,7 +45,7 @@ export unbalanced_modality
 function unbalanced_modality(
     data,
     reg,
-    reg_m;
+    m;
     Ylevels = 1:4,
     Zlevels = 1:3,
     iterations = 1
@@ -157,7 +157,7 @@ function unbalanced_modality(
 
     ## Optimal Transport
 
-    C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1) .* nx ./ nbrvarX
+    C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1) 
     C = C0 ./ maximum(C0)
 
     zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
@@ -170,8 +170,8 @@ function unbalanced_modality(
 
     for iter = 1:iterations
 
-        if reg_m > 0.0
-            G = PythonOT.entropic_partial_wasserstein(wa2, wb2, C, reg) #Pourquoi il n'y a pas le paramètre m à calibrer ot.partial.entropic_partial_wasserstein(a, b, M, reg, m)
+        if m > 0.0
+            G = PythonOT.entropic_partial_wasserstein(wa2, wb2, C, reg, m = m) 
         else
             G = PythonOT.emd(wa2, wb2, C)
         end
