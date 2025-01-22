@@ -59,8 +59,8 @@ function unbalanced_with_predictors()
     nA :: Int = params["nA"]
     nB :: Int = params["nB"]
     
-    @test nA == size(XA, 2)
-    @test nB == size(XB, 2)
+    @assert nA == size(XA, 2)
+    @assert nB == size(XB, 2)
     
     wa = ones(nA) ./ nA
     wb = ones(nB) ./ nB
@@ -97,23 +97,14 @@ function unbalanced_with_predictors()
     wa = fill(1 / nA, nA)
     wb = fill(1 / nB, nB)
     
-    train!(modelXYA, XYA, ZA)
-    train!(modelXZB, XZB, YB)
-    
-    YBpred_old = modelXZB(XZB)
-    ZApred_old = modelXYA(XYA)
-    
-    @show est = (sum(YBtrue .== Flux.onecold(YBpred)) + sum(ZAtrue .== Flux.onecold(ZApred))) / (nA + nB)
-    
     # BCD algorithm
     
     iterations = 10
     alpha1, alpha2 = 0.25, 0.33
 
     function loss_crossentropy(Y, F)
-        ϵ = 1e-12
         res = zeros(size(Y, 2), size(F, 2))
-        logF = log.(F .+ ϵ)
+        logF = log.(F)
         for i in axes(Y, 1)
             res .+= -Y[i, :] .* logF[i, :]'
         end
@@ -122,7 +113,7 @@ function unbalanced_with_predictors()
 
     for i in 1:iterations
      
-        G = PythonOT.emd(wa, wb, C)
+        G = PythonOT.entropic_partial_wasserstein(wa, wb, C, 0.01)
     
         YB = nB .* YA * G
         ZA = nA .* ZB * G'
@@ -130,19 +121,21 @@ function unbalanced_with_predictors()
         train!(modelXYA, XYA, ZA)
         train!(modelXZB, XZB, YB)
      
-        YBpred_new = Flux.softmax(modelXZB(XZB))
-        ZApred_new = Flux.softmax(modelXYA(XYA))
+        YBpred = Flux.softmax(modelXZB(XZB))
+        ZApred = Flux.softmax(modelXYA(XYA))
     
-        loss_y = alpha1 * loss_crossentropy(YA, YBpred_new)
-        loss_z = alpha2 * loss_crossentropy(ZB, ZApred_new)
+        loss_y = alpha1 * loss_crossentropy(YA, YBpred)
+        loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
 
-        @show size(loss_y)
-    
         fcost = loss_y .+ loss_z'
          
         C .= C0 / maximum(C0) .+ fcost
-         
-        @show est = (sum(YBtrue .== Flux.onecold(YBpred_new)) + sum(ZAtrue .== Flux.onecold(ZApred_new))) / (nA + nB)
+
+        est = (sum(YBtrue .== Flux.onecold(YBpred)) + sum(ZAtrue .== Flux.onecold(ZApred))) / (nA + nB)
+
+        println(rpad("total cost", 25, "."), lpad(round(sum(G .* C), digits=5), 6, "."))
+        println(rpad("f cost", 25, "."), lpad(round(sum(G .* fcost), digits=5), 6, "."))
+        println(rpad("estimation ", 25, "."), lpad(round(est, digits=5), 6, "."))
      
     end
 
