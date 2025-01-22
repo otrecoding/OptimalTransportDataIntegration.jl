@@ -12,27 +12,9 @@ using OptimalTransportDataIntegration
 using Test
 import PythonOT
 
-function unbalanced_with_predictors()
+function unbalanced_with_predictors(data)
 
-    # +
-    json_file = joinpath("dataset.json")
-    csv_file = joinpath("dataset.csv")
-    
-    hidden_layer_size = 10
-            
-    params = JSON.parsefile("dataset.json")
-    
-    println(params)
-    
-    # ## Dataset
-    #
-    # Read the csv file
-    
-    data = CSV.read(csv_file, DataFrame)
-    
     T = Int32
-    
-    # Split the two databases
     
     base = data.database
     
@@ -77,7 +59,7 @@ function unbalanced_with_predictors()
     modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
     modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
     
-    function train!(model, x, y; learning_rate = 0.01, batchsize = 64, epochs = 500)
+    function train!(model, x, y; learning_rate = 0.01, batchsize = 16, epochs = 1000)
     
         loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
         optim = Flux.setup(Flux.Adam(learning_rate), model)
@@ -109,7 +91,8 @@ function unbalanced_with_predictors()
     YBpred = modelXZB(XZB)
     ZApred = modelXYA(XYA)
     
-    @show est = (sum(YBtrue .== Flux.onecold(YBpred)) + sum(ZAtrue .== Flux.onecold(ZApred))) / (nA + nB)
+    est = (sum(YBtrue .== Flux.onecold(YBpred)) + sum(ZAtrue .== Flux.onecold(ZApred))) / (nA + nB)
+    println("before BCD est = $(est)")
     
     # BCD algorithm
     
@@ -142,17 +125,30 @@ function unbalanced_with_predictors()
         loss_y = alpha1 * loss_crossentropy(YA, YBpred_new)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred_new)
 
-        @show size(loss_y)
-    
         fcost = loss_y .+ loss_z'
          
         C .= C0 / maximum(C0) .+ fcost
          
-        @show est = (sum(YBtrue .== Flux.onecold(YBpred_new)) + sum(ZAtrue .== Flux.onecold(ZApred_new))) / (nA + nB)
+        est = (sum(YBtrue .== Flux.onecold(YBpred_new)) + sum(ZAtrue .== Flux.onecold(ZApred_new))) / (nA + nB)
+        println("Cost = $(sum(G .* C)), fcost = $(sum(G .* fcost)),   est = $(est)")
      
     end
 
 end
 
-@time unbalanced_with_predictors()
+json_file = joinpath("dataset.json")
+csv_file = joinpath("dataset.csv")
+
+hidden_layer_size = 100
+        
+params = JSON.parsefile("dataset.json")
+
+show(params)
+
+data = CSV.read(csv_file, DataFrame)
+@time unbalanced_with_predictors(data)
+
+@time println("OT : $(otrecod(data, OTjoint()))")
+@time println("Simple Learning : $(otrecod(data, SimpleLearning()))")
+@time println("OTE : $(otrecod(data, UnbalancedModality()))")
 
