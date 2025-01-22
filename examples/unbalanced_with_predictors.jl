@@ -97,11 +97,17 @@ function unbalanced_with_predictors()
     wa = fill(1 / nA, nA)
     wb = fill(1 / nB, nB)
     
+    G = PythonOT.entropic_partial_wasserstein(wa, wb, C, 0.1)
+    
+    YB = nB .* YA * G
+    ZA = nA .* ZB * G'
+    
+
     train!(modelXYA, XYA, ZA)
     train!(modelXZB, XZB, YB)
     
-    YBpred_old = modelXZB(XZB)
-    ZApred_old = modelXYA(XYA)
+    YBpred = modelXZB(XZB)
+    ZApred = modelXYA(XYA)
     
     @show est = (sum(YBtrue .== Flux.onecold(YBpred)) + sum(ZAtrue .== Flux.onecold(ZApred))) / (nA + nB)
     
