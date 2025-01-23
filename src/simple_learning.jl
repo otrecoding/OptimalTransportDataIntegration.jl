@@ -77,6 +77,6 @@ function simple_learning(
     YB = Flux.onecold(modelA(XB))
     ZA = Flux.onecold(modelB(XA))
 
-    (sum(dbb.Y .== YB) + sum(dba.Z .== ZA)) / (nA + nB)
+    round((sum(dbb.Y .== YB) + sum(dba.Z .== ZA)) / (nA + nB), digits=4)
 
 end
