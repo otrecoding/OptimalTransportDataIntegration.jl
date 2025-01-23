@@ -215,7 +215,7 @@ function unbalanced_modality(
 
     end
 
-    return est_opt
+    return round(est_opt, digits=4)
 
 
 end

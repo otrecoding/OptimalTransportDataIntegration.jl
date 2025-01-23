@@ -336,6 +336,6 @@ function otjoint(data; lambda_reg = 0.392, maxrelax = 0.714, percent_closest = 0
     sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
     compute_pred_error!(sol, instance, false)
 
-    return 1 - sol.errorpredavg
+    return round(1 - sol.errorpredavg, digits=4)
 
 end
