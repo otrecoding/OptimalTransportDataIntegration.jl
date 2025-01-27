@@ -45,7 +45,7 @@ export unbalanced_modality
 function unbalanced_modality(
     data,
     reg,
-    reg_m;
+    m;
     Ylevels = 1:4,
     Zlevels = 1:3,
     iterations = 1
@@ -168,7 +168,12 @@ function unbalanced_modality(
     YBpred = zeros(T, nB)
     ZApred = zeros(T, nA)
 
+
+    total_costs = Float32[]
+    fcosts = Float32[]
+    perfs = Float32[]
     for iter = 1:iterations
+
 
         if reg_m > 0.0
             # G = PythonOT.entropic_partial_wasserstein(wa2, wb2, C, reg; m = reg_m)
@@ -213,6 +218,17 @@ function unbalanced_modality(
 
         est_opt = max(est_opt, est)
 
+        push!(total_costs, sum(G .* C))
+        push!(fcosts, sum(G .* fcost))
+        push!(perfs, est)
+
+    end
+
+    println(rpad("total cost", 15, " "), "fcost", lpad("estimation", 15, " "))
+    for i in 1:iterations
+        println(rpad(round(total_costs[i], digits=6), 15, " "),
+                round(fcosts[i], digits=6),
+                lpad(round(perfs[i], digits=6), 15, " "))
     end
 
     return round(est_opt, digits=4)
