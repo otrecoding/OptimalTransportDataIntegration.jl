@@ -76,6 +76,7 @@ function unbalanced_with_predictors(data; iterations = 10)
     
     end
     
+
     alpha1, alpha2 = 0.25, 0.33
 
     function loss_crossentropy(Y, F)
