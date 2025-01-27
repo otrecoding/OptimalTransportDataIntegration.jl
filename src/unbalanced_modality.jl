@@ -45,7 +45,7 @@ export unbalanced_modality
 function unbalanced_modality(
     data,
     reg,
-    m;
+    reg_m;
     Ylevels = 1:4,
     Zlevels = 1:3,
     iterations = 1
