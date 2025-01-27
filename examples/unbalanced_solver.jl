@@ -58,6 +58,7 @@ function optimal_modality(values, loss, weight)
 
 end
 
+T = Int
 
 # +
 csv_file = joinpath("dataset.csv")
@@ -117,7 +118,6 @@ Xvalues = unique(eachrow(Xobserv))
 dist_X = pairwise(Cityblock(), Xvalues, Xvalues)
 voisins_X = dist_X .<= 1
 
-T = Int
 
 base = data.database
 
