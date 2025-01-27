@@ -20,68 +20,7 @@ using JuMP, Clp
 import PythonOT
 import .Iterators: product
 import Distances: pairwise, Hamming, Cityblock
-
-
 import .Iterators: product
-
-# +
-csv_file = joinpath("dataset.csv")
-
-data = CSV.read(csv_file, DataFrame)
-# -
-
-Ylevels = 1:4
-Zlevels = 1:3
-
-X = Matrix{Int}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
-Xlevels = sort(unique(eachrow(X)))
-
-
-nx = size(X, 2)
-XYA = Vector{Int}[]
-XZB = Vector{Int}[]
-for (y, x) in product(Ylevels, Xlevels)
-    push!(XYA, [x...; y])
-end
-for (z, x) in product(Zlevels, Xlevels)
-    push!(XZB, [x...; z])
-end
-
-XA_hot = stack([v[1:nx] for v in XYA], dims = 1)
-XB_hot = stack([v[1:nx] for v in XZB], dims = 1)
-
-C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1)
-
-c = Dict()
-
-for (i, (y,x1)) in enumerate(product(Ylevels, Xlevels))
-    for (j, (z,x2)) in enumerate(product(Zlevels, Xlevels))
-        c[(x1, y, x2, z)] = C0[i,j]
-    end
-end
-
-c0 = zeros(Int32, length(product(Ylevels, Xlevels)), length(product(Zlevels, Xlevels)))
-for p1 in axes(c0,1)
-    for p2 in axes(c0,2)
-        x1 = Int32.(XYA[p1][1:nx])
-        y = last(XYA[p1])
-        x2 = Int32.(XZB[p2][1:nx])
-        z = last(XZB[p2])
-        c0[p1,p2] = c[(x1, y, x2, z)]
-        end
-    end
-    
-c0 ≈ C0
-
-
-modelA = Model(Clp.Optimizer)
-set_optimizer_attribute(modelA, "LogLevel", 0)
-
-Xobserv = Matrix(data[!, [:X1, :X2, :X3]])
-Xvalues = unique(eachrow(Xobserv))
-dist_X = pairwise(Cityblock(), Xvalues, Xvalues)
-voisins_X = dist_X .<= 1
-#=
 
 onecold(X) = map(argmax, eachrow(X))
 
@@ -119,16 +58,72 @@ function optimal_modality(values, loss, weight)
 
 end
 
-T = Int32
+
+# +
+csv_file = joinpath("dataset.csv")
+
+data = CSV.read(csv_file, DataFrame)
+# -
+
+Ylevels = 1:4
+Zlevels = 1:3
+
+X = Matrix{Int}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
+Xlevels = sort(unique(eachrow(X)))
+Y = Vector{T}(data.Y)
+Z = Vector{T}(data.Z)
+
+
+nx = size(X, 2)
+XYA = Vector{Int}[]
+XZB = Vector{Int}[]
+for (y, x) in product(Ylevels, Xlevels)
+    push!(XYA, [x...; y])
+end
+for (z, x) in product(Zlevels, Xlevels)
+    push!(XZB, [x...; z])
+end
+
+XA_hot = stack([v[1:nx] for v in XYA], dims = 1)
+XB_hot = stack([v[1:nx] for v in XZB], dims = 1)
+
+C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1)
+
+c = Dict()
+
+for (i, (y,x1)) in enumerate(product(Ylevels, Xlevels))
+    for (j, (z,x2)) in enumerate(product(Zlevels, Xlevels))
+        c[(x1, y, x2, z)] = C0[i,j]
+    end
+end
+
+c0 = zeros(Int32, length(product(Ylevels, Xlevels)), length(product(Zlevels, Xlevels)))
+for p1 in axes(c0,1)
+    for p2 in axes(c0,2)
+        x1 = Int32.(XYA[p1][1:nx])
+        y = last(XYA[p1])
+        x2 = Int32.(XZB[p2][1:nx])
+        z = last(XZB[p2])
+        c0[p1,p2] = c[(x1, y, x2, z)]
+        end
+    end
+    
+@assert c0 ≈ C0
+
+
+
+Xobserv = Matrix(data[!, [:X1, :X2, :X3]])
+Xvalues = unique(eachrow(Xobserv))
+dist_X = pairwise(Cityblock(), Xvalues, Xvalues)
+voisins_X = dist_X .<= 1
+
+T = Int
 
 base = data.database
 
 indA = findall(base .== 1)
 indB = findall(base .== 2)
 
-X = Matrix{T}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
-Y = Vector{T}(data.Y)
-Z = Vector{T}(data.Z)
 
 YA = view(Y, indA)
 YB = view(Y, indB)
@@ -166,108 +161,105 @@ for (i, x) in enumerate(Xlevels)
     indXB[i] = findall(distB .< 0.1)
 end
 
+Ylevels_hot = one_hot_encoder(Ylevels)
+Zlevels_hot = one_hot_encoder(Zlevels)
+
 # +
-Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
-Zloss = loss_crossentropy(zB_hot, Zlevels_hot)
-alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
-alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
+Yloss = loss_crossentropy(YA_hot, Ylevels_hot)
+Zloss = loss_crossentropy(ZB_hot, Zlevels_hot)
+@show alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
+@show alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
+
 
 ## Optimal Transport
 
 C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1) 
 C = C0 ./ maximum(C0)
 
-zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
-yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
 
 est_opt = 0.0
 
 YBpred = zeros(T, nB)
 ZApred = zeros(T, nA)
 
-c = Dict()
-for (p1, (y, x1)) in enumerate(product(Ylevels, Xlevels))
-    for (p2, (z, x2)) in enumerate(product(Zlevels, Xlevels))
-        c[(x1,y,x2,z)] = C[p1,p2]
-    end
-end
-
 # Compute the estimators that appear in the model
 
-estim_XA = Dict([(x, length(indXA[x]) / nA) for x = 1:nbX])
-estim_XB = Dict([(x, length(indXB[x]) / nB) for x = 1:nbX])
+estim_XA = Dict([(x, length(indXA[x]) / nA) for x = eachindex(indXA)])
+estim_XB = Dict([(x, length(indXB[x]) / nB) for x = eachindex(indXA)])
 estim_XA_YA = Dict([
-    ((x, y), length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / nA) for x = 1:nbX,
-    y in Ylevels
+    ((x, y), length(indXA[x][findall(YA[indXA[x]] .== y)]) / nA) 
+         for x = eachindex(indXA), y in Ylevels
 ])
 estim_XB_ZB = Dict([
-    ((x, z), length(indXB[x][findall(Zobserv[indXB[x].+nA] .== z)]) / nB) for
-    x = 1:nbX, z in Zlevels
+    ((x, z), length(indXB[x][findall(ZB[indXB[x]] .== z)]) / nB) 
+         for x = eachindex(indXB), z in Zlevels
 ])
 
+nbX = length(indXA)
 
-
-# for iter = 1:iterations
+model = Model(Clp.Optimizer)
+set_optimizer_attribute(model, "LogLevel", 0)
 
 @variable(
-        modelA,
-        gammaA[x1 in 1:nbX, y in Ylevels, x2 in 1:nbX,z in Zlevels] >= 0,
-        base_name = "gammaA"
+        model,
+        gamma[x1 in 1:nbX, y in Ylevels, x2 in 1:nbX,z in Zlevels] >= 0,
+        base_name = "gamma"
     )
 
       
-    @variable(modelA, errorA_XY[x1 in 1:nbX, y in Ylevels], base_name = "errorA_XY")
-    @variable(
-        modelA,
-        abserrorA_XY[x1 in 1:nbX, y in Ylevels] >= 0,
-        base_name = "abserrorA_XY"
-    )
-    @variable(modelA, errorA_XZ[x2 in 1:nbX, z in Zlevels], base_name = "errorA_XZ")
-    @variable(
-        modelA,
-        abserrorA_XZ[x2 in 1:nbX, z in Zlevels] >= 0,
-        base_name = "abserrorA_XZ"
-    )
+@variable(model, error_XY[x1 in 1:nbX, y in Ylevels], base_name = "error_XY")
+@variable(
+        model,
+        abserror_XY[x1 in 1:nbX, y in Ylevels] >= 0,
+        base_name = "abserror_XY"
+)
+@variable(model, error_XZ[x2 in 1:nbX, z in Zlevels], base_name = "error_XZ")
+@variable(
+        model,
+        abserror_XZ[x2 in 1:nbX, z in Zlevels] >= 0,
+        base_name = "abserror_XZ"
+)
 
-     # Constraints
-    # - assign sufficient probability to each class of covariates with the same outcome
-    @constraint(
-        modelA,
-        ctYandXinA[x1 in 1:nbX, y in Ylevels],
-        sum(gammaA[x1, y,x2, z] for z in Zlevels) == estim_XA_YA[x1, y] + errorA_XY[x1, y]
-    )
+ # Constraints
+# - assign sufficient probability to each class of covariates with the same outcome
+@constraint(
+    model,
+    ctYandXinA[x1 in 1:nbX, y in Ylevels],
+    sum(gamma[x1, y,x2, z] for z in Zlevels) == estim_XA_YA[x1, y] + error_XY[x1, y]
+)
 
 
-    # - we impose that the probability of Y conditional to X is the same in the two databases
-    # - the consequence is that the probability of Y and Z conditional to Y is also the same in the two bases
-    @constraint(
-        modelA,
-        ctZandXinA[x2 in 1:nbX, z in Zlevels],
-        sum(gammaA[x1, y,x2, z] for y in Ylevels) ==
-        estim_XB_ZB[x2, z] + errorA_XZ[x2, z]
-    )
+# - we impose that the probability of Y conditional to X is the same in the two databases
+# - the consequence is that the probability of Y and Z conditional to Y is also the same in the two bases
+@constraint(
+    model,
+    ctZandXinA[x2 in 1:nbX, z in Zlevels],
+    sum(gamma[x1, y,x2, z] for y in Ylevels) ==
+    estim_XB_ZB[x2, z] + error_XZ[x2, z]
+)
 
-  
-    # - recover the norm 1 of the error
-    @constraint(modelA, [x1 in 1:nbX, y in Ylevels], errorA_XY[x1, y] <= abserrorA_XY[x1, y])
-    @constraint(modelA, [x1 in 1:nbX, y in Ylevels], -errorA_XY[x1, y] <= abserrorA_XY[x1, y])
-    @constraint(
-        modelA,
-        sum(abserrorA_XY[x1, y] for x1 = 1:nbX, y in Ylevels) <= maxrelax / 2.0
-    )
-    @constraint(modelA, sum(errorA_XY[x1, y] for x1 = 1:nbX, y in Ylevels) == 0.0)
-    @constraint(modelA, [x2 in 1:nbX, z in Zlevels], errorA_XZ[x2, z] <= abserrorA_XZ[x2, z])
-    @constraint(modelA, [x2 in 1:nbX, z in Zlevels], -errorA_XZ[x2, z] <= abserrorA_XZ[x2, z])
-    @constraint(
-        modelA,
-        sum(abserrorA_XZ[x2, z] for x2 = 1:nbX, z in Zlevels) <= maxrelax / 2.0
-    )
-    @constraint(modelA, sum(errorA_XZ[x2, z] for x2 = 1:nbX, z in Zlevels) == 0.0)
 
+# - recover the norm 1 of the error
+@constraint(model, [x1 in 1:nbX, y in Ylevels], error_XY[x1, y] <= abserror_XY[x1, y])
+@constraint(model, [x1 in 1:nbX, y in Ylevels], -error_XY[x1, y] <= abserror_XY[x1, y])
+@constraint(
+    model,
+    sum(abserrorA_XY[x1, y] for x1 = 1:nbX, y in Ylevels) <= maxrelax / 2.0
+)
+@constraint(model, sum(error_XY[x1, y] for x1 = 1:nbX, y in Ylevels) == 0.0)
+@constraint(model, [x2 in 1:nbX, z in Zlevels], error_XZ[x2, z] <= abserror_XZ[x2, z])
+@constraint(model, [x2 in 1:nbX, z in Zlevels], -error_XZ[x2, z] <= abserror_XZ[x2, z])
+@constraint(
+    model,
+    sum(abserror_XZ[x2, z] for x2 = 1:nbX, z in Zlevels) <= maxrelax / 2.0
+)
+@constraint(model, sum(error_XZ[x2, z] for x2 = 1:nbX, z in Zlevels) == 0.0)
+
+#=
   
     # - regularization
     @variable(
-        modelA,
+        model,
         reg_absA[
             x1 in 1:nbX,
             x2 in findall(voisins_X[x1, :]),
@@ -276,21 +268,21 @@ estim_XB_ZB = Dict([
         ] >= 0
     )
     @constraint(
-        modelA,
+        model,
         [x1 in 1:nbX, x2 in findall(voisins_X[x1, :]), y in Ylevels, x in in 1:nbX, z in Zlevels],
         reg_absA[x1, x2, y, z] >=
-        gammaA[x1, y, x,z] / (max(1, length(indXA[x1])) / nA) -
-        gammaA[x2, y, x,z] / (max(1, length(indXA[x2])) / nA)
+        gamma[x1, y, x,z] / (max(1, length(indXA[x1])) / nA) -
+        gamma[x2, y, x,z] / (max(1, length(indXA[x2])) / nA)
     )
     @constraint(
-        modelA,
+        model,
         [x1 in 1:nbX, x2 in findall(voisins_X[x1, :]), y in Ylevels, x in in 1:nbX, z in Zlevels],
         reg_absA[x1, x2, y, z] >=
-        gammaA[x2, y,x, z] / (max(1, length(indXA[x2])) / nA) -
-        gammaA[x1, y, x,z] / (max(1, length(indXA[x1])) / nA)
+        gamma[x2, y,x, z] / (max(1, length(indXA[x2])) / nA) -
+        gamma[x1, y, x,z] / (max(1, length(indXA[x1])) / nA)
     )
     @expression(
-        modelA,
+        model,
         regterm,
         sum(
             1 / length(voisins_X[x1, :]) * reg_absA[x1, x2, y, z] for x1 = 1:nbX,
@@ -300,7 +292,7 @@ estim_XB_ZB = Dict([
 
  # - regularization
     @variable(
-        modelA,
+        model,
         reg_absB[
             x1 in 1:nbX,
             x2 in findall(voisins_X[x1, :]),
@@ -309,21 +301,21 @@ estim_XB_ZB = Dict([
         ] >= 0
     )
     @constraint(
-        modelA,
+        model,
         [x1 in 1:nbX, x2 in findall(voisins_X[x1, :]), x in in 1:nbX, y in Ylevels, z in Zlevels],
         reg_absB[x1, x2, y, z] >=
-        gammaA[x, y, x1,z] / (max(1, length(indXB[x1])) / nB) -
-        gammaA[x, y, x2,z] / (max(1, length(indXB[x2])) / nB)
+        gamma[x, y, x1,z] / (max(1, length(indXB[x1])) / nB) -
+        gamma[x, y, x2,z] / (max(1, length(indXB[x2])) / nB)
     )
     @constraint(
-        modelA,
+        model,
         [x1 in 1:nbX, x2 in findall(voisins_X[x1, :]), x in in 1:nbX, y in Ylevels, z in Zlevels],
         reg_absB[x1, x2, y, z] >=
-        gammaA[x, y,x2, z] / (max(1, length(indXB[x2])) / nB) -
-        gammaA[x, y, x1,z] / (max(1, length(indXB[x1])) / nB)
+        gamma[x, y,x2, z] / (max(1, length(indXB[x2])) / nB) -
+        gamma[x, y, x1,z] / (max(1, length(indXB[x1])) / nB)
     )
     @expression(
-        modelA,
+        model,
         regterm,
         sum(
             1 / length(voisins_X[x1, :]) * reg_absB[x1, x2, y, z] for x1 = 1:nbX,
@@ -334,9 +326,9 @@ estim_XB_ZB = Dict([
     
     # by default, the OT cost and regularization term are weighted to lie in the same interval
     @objective(
-        modelA,
+        model,
         Min,
-        sum(c[x1,y, x2,z] * gammaA[x1, y,x2, z] for y in Ylevels, z in Zlevels, x1 = 1:nbX, x2 = 1:nbX) +
+        sum(c[x1,y, x2,z] * gamma[x1, y,x2, z] for y in Ylevels, z in Zlevels, x1 = 1:nbX, x2 = 1:nbX) +
         lambda_reg * sum(
             1 / length(voisins_X[x1, :]) * reg_absA[x1, x2, y, z] for x1 = 1:nbX,
             x2 in findall(voisins_X[x1, :]), y in Ylevels, z in Zlevels
@@ -347,15 +339,16 @@ estim_XB_ZB = Dict([
         )
     )
 
-##Attention au cout pas la meme forme
+=#
 
- 
 
     # Solve the problem
-    optimize!(modelA)
+    optimize!(model)
 
     # Extract the values of the solution
-    gammaA_val = [value(gammaA[x1, y,x2, z]) for x1 = 1:nbX, y in Ylevels,x2 = 1:nbX, z in Zlevels]
+    gamma_val = [value(gamma[x1, y,x2, z]) for x1 = 1:nbX, y in Ylevels,x2 = 1:nbX, z in Zlevels]
+
+#=
 
     for j in eachindex(yB_pred)
         yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G, :, j))
@@ -365,16 +358,19 @@ estim_XB_ZB = Dict([
         zA_pred[i] = optimal_modality(Zlevels, Zloss, view(G, i, :))
     end
 
-    yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
-    zA_pred_hot = one_hot_encoder(zA_pred, Zlevels)
+    YBpred_hot = one_hot_encoder(yB_pred, Ylevels)
+    ZApred_hot = one_hot_encoder(zA_pred, Zlevels)
 
     ### Update Cost matrix
 
-    chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
-    chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
-    fcost = chinge1 .+ chinge2'
+    cost1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
+    cost2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
+    fcost = cost1 .+ cost2'
 
     C .= C0 ./ maximum(C0) .+ fcost
+
+    zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
+    yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
 
     for i in axes(XYA, 1)
         ind = findfirst(XYA[i, :] == v for v in XYA2)
