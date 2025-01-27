@@ -174,8 +174,10 @@ function unbalanced_modality(
     perfs = Float32[]
     for iter = 1:iterations
 
-        if m > 0.0
-            G = PythonOT.entropic_partial_wasserstein(wa2, wb2, C, reg, m = m) 
+
+        if reg_m > 0.0
+            # G = PythonOT.entropic_partial_wasserstein(wa2, wb2, C, reg; m = reg_m)
+            G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
         else
             G = PythonOT.emd(wa2, wb2, C)
         end
@@ -229,7 +231,7 @@ function unbalanced_modality(
                 lpad(round(perfs[i], digits=6), 15, " "))
     end
 
-    return est_opt
+    return round(est_opt, digits=4)
 
 
 end

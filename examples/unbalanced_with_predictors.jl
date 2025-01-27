@@ -12,27 +12,9 @@ using OptimalTransportDataIntegration
 using Test
 import PythonOT
 
-function unbalanced_with_predictors()
+function unbalanced_with_predictors(data; iterations = 10)
 
-    # +
-    json_file = joinpath("dataset.json")
-    csv_file = joinpath("dataset.csv")
-    
-    hidden_layer_size = 10
-            
-    params = JSON.parsefile("dataset.json")
-    
-    println(params)
-    
-    # ## Dataset
-    #
-    # Read the csv file
-    
-    data = CSV.read(csv_file, DataFrame)
-    
     T = Int32
-    
-    # Split the two databases
     
     base = data.database
     
@@ -55,7 +37,6 @@ function unbalanced_with_predictors()
     XYA = vcat(XA, YA)
     XZB = vcat(XB, ZB)
     
-    
     nA :: Int = params["nA"]
     nB :: Int = params["nB"]
     
@@ -67,17 +48,18 @@ function unbalanced_with_predictors()
     
     C0 = pairwise(Hamming(), XA, XB)
     
-    C = C0 / maximum(C0)
+    C = C0 ./ maximum(C0) 
     
     dimXYA = size(XYA, 1)
     dimXZB = size(XZB, 1)
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
     
+    hidden_layer_size = 10
     modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
     modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
     
-    function train!(model, x, y; learning_rate = 0.01, batchsize = 64, epochs = 500)
+    function train!(model, x, y; learning_rate = 0.01, batchsize = 16, epochs = 500)
     
         loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
         optim = Flux.setup(Flux.Adam(learning_rate), model)
@@ -94,12 +76,7 @@ function unbalanced_with_predictors()
     
     end
     
-    wa = fill(1 / nA, nA)
-    wb = fill(1 / nB, nB)
-    
-    # BCD algorithm
-    
-    iterations = 10
+
     alpha1, alpha2 = 0.25, 0.33
 
     function loss_crossentropy(Y, F)
@@ -111,9 +88,10 @@ function unbalanced_with_predictors()
         return res
     end
 
-    for i in 1:iterations
+    for i in 1:iterations # BCD algorithm
      
-        G = PythonOT.entropic_partial_wasserstein(wa, wb, C, 0.01)
+        reg = 0.1
+        G = PythonOT.entropic_partial_wasserstein(wa, wb, C, reg)
     
         YB = nB .* YA * G
         ZA = nA .* ZB * G'
@@ -123,23 +101,37 @@ function unbalanced_with_predictors()
      
         YBpred = Flux.softmax(modelXZB(XZB))
         ZApred = Flux.softmax(modelXYA(XYA))
-    
+
+        est_y = sum(YBtrue .== Flux.onecold(YBpred)) / nB
+        est_z = sum(ZAtrue .== Flux.onecold(ZApred)) / nA
+        est = (sum(YBtrue .== Flux.onecold(YBpred)) + sum(ZAtrue .== Flux.onecold(ZApred))) / (nA + nB)
+
+        println("est_y = $est_y ,  est_z = $est_z, est = $est")
+         
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
 
         fcost = loss_y .+ loss_z'
+
+        println("fcost = $(sum(G .* fcost))")
+
+        C .= C0 ./ maximum(C0) .+ fcost
          
-        C .= C0 / maximum(C0) .+ fcost
-
-        est = (sum(YBtrue .== Flux.onecold(YBpred)) + sum(ZAtrue .== Flux.onecold(ZApred))) / (nA + nB)
-
-        println(rpad("total cost", 25, "."), lpad(round(sum(G .* C), digits=5), 6, "."))
-        println(rpad("f cost", 25, "."), lpad(round(sum(G .* fcost), digits=5), 6, "."))
-        println(rpad("estimation ", 25, "."), lpad(round(est, digits=5), 6, "."))
+        println("total cost = $(sum(G .* C))")
      
     end
 
 end
 
-@time unbalanced_with_predictors()
+json_file = joinpath("dataset.json")
+csv_file = joinpath("dataset.csv")
+
+params = JSON.parsefile("dataset.json")
+
+data = CSV.read(csv_file, DataFrame)
+@time unbalanced_with_predictors(data, iterations = 1)
+
+@time println("OT : $(otrecod(data, OTjoint()))")
+@time println("Simple Learning : $(otrecod(data, SimpleLearning()))")
+@time println("OTE : $(otrecod(data, UnbalancedModality(iterations=0)))")
 
