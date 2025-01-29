@@ -27,6 +27,7 @@ include("pred_error.jl")
 include("otjoint.jl")
 
 # Data integration functions
+include("entropic_partial_wasserstein.jl")
 include("unbalanced_modality.jl")
 include("simple_learning.jl")
 
