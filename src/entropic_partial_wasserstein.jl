@@ -1,5 +1,7 @@
 using LinearAlgebra
 
+export entropic_partial_wasserstein
+
 @doc raw"""
     entropic_partial_wasserstein(a, b, M, reg, m=nothing, numItermax=1000, 
         stopThr=1e-100, verbose=false, log=false)
