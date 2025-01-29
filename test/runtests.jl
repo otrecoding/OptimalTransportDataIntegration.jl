@@ -34,7 +34,6 @@ end
     data = CSV.read(joinpath(@__DIR__, "data_bad.csv"), DataFrame)
     @time est = otrecod(data, UnbalancedModality())
     println(est)
-
     
     @time est = otrecod(data, UnbalancedModality(reg_m = 0.0))
     println(est)
