@@ -59,8 +59,8 @@ function ot_joint(
     nbX = length(indXA)
 
     # compute the neighbors of the covariates for regularization
-    Xvalues = Matrix(unique(DataFrame(Xobserv, :auto)))
-    dist_X = pairwise(norme, transpose(Xvalues), transpose(Xvalues), dims = 2)
+    Xvalues = unique(eachrow(Xobserv))
+    dist_X = pairwise(norme, Xvalues, Xvalues)
     voisins_X = dist_X .<= 1
 
     # println("... computing costs")
