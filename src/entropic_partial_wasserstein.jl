@@ -68,7 +68,7 @@ julia> b = [.1, .1];
 
 julia> M = [0. 1.; 2. 3.];
 
-julia> round(entropic_partial_wasserstein(a, b, M, 1, m = 0.1), digits=2)
+julia> round.(entropic_partial_wasserstein(a, b, M, 1, m = 0.1), digits=2)
 2×2 Matrix{Float64}:
  0.06  0.02
  0.01  0.0
