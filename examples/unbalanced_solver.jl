@@ -18,7 +18,7 @@ import CSV
 using DataFrames
 using JuMP, Clp
 import .Iterators: product
-import Distances: pairwise, Hamming, Cityblock
+import Distances: colwise, pairwise, Hamming, Cityblock
 
 onecold(X) = map(argmax, eachrow(X))
 
@@ -65,13 +65,13 @@ function unbalanced_solver(data; lambda_reg = 0.392, maxrelax = 0.714)
     Ylevels = 1:4
     Zlevels = 1:3
     
-    X = Matrix{Int}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
-    Xlevels = sort(unique(eachrow(X)))
+    X_hot = Matrix{Int}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
+    Xlevels = sort(unique(eachrow(X_hot)))
     Y = Vector{T}(data.Y)
     Z = Vector{T}(data.Z)
     
     
-    nx = size(X, 2)
+    nx = size(X_hot, 2)
     XYA = Vector{Int}[]
     XZB = Vector{Int}[]
     for (y, x) in product(Ylevels, Xlevels)
@@ -107,10 +107,8 @@ function unbalanced_solver(data; lambda_reg = 0.392, maxrelax = 0.714)
         
     @assert c0 ≈ C0
     
-    
-    
-    Xobserv = Matrix(data[!, [:X1, :X2, :X3]])
-    Xvalues = unique(eachrow(Xobserv))
+    X = Matrix(data[!, [:X1, :X2, :X3]])
+    @show Xvalues = unique(eachrow(X))
     dist_X = pairwise(Cityblock(), Xvalues, Xvalues)
     voisins_X = dist_X .<= 1
     
@@ -126,16 +124,16 @@ function unbalanced_solver(data; lambda_reg = 0.392, maxrelax = 0.714)
     ZA = view(Z, indA)
     ZB = view(Z, indB)
     
-    XA = view(X, indA, :)
-    XB = view(X, indB, :)
+    XA_hot = view(X_hot, indA, :)
+    XB_hot = view(X_hot, indB, :)
     
     YA_hot = one_hot_encoder(YA, Ylevels)
     ZA_hot = one_hot_encoder(ZA, Zlevels)
     YB_hot = one_hot_encoder(YB, Ylevels)
     ZB_hot = one_hot_encoder(ZB, Zlevels)
     
-    XYA = hcat(XA, YA)
-    XZB = hcat(XB, ZB)
+    XYA = hcat(XA_hot, YA)
+    XZB = hcat(XB_hot, ZB)
     
     distance = Hamming()
     
@@ -145,17 +143,18 @@ function unbalanced_solver(data; lambda_reg = 0.392, maxrelax = 0.714)
     nB = length(indB)
     
     # Compute the indexes of individuals with same covariates
-    indXA = Dict{T,Array{T}}()
-    indXB = Dict{T,Array{T}}()
-    Xlevels = sort(unique(eachrow(X)))
+    indXA = Vector{T}[]
+    indXB = Vector{T}[]
+    Xlevels = sort(unique(eachrow(X_hot)))
     # -
     
     for (i, x) in enumerate(Xlevels)
-        distA = vec(pairwise(distance, x[:, :], XA', dims = 2))
-        distB = vec(pairwise(distance, x[:, :], XB', dims = 2))
-        indXA[i] = findall(distA .< 0.1)
-        indXB[i] = findall(distB .< 0.1)
+        distA = vec(pairwise(distance, x[:,:], XA_hot', dims=2))
+        distB = vec(pairwise(distance, x[:,:], XB_hot', dims=2))
+        push!(indXA, findall(==(0), distA))
+        push!(indXB, findall(==(0), distB))
     end
+
     
     Ylevels_hot = one_hot_encoder(Ylevels)
     Zlevels_hot = one_hot_encoder(Zlevels)
@@ -193,7 +192,6 @@ function unbalanced_solver(data; lambda_reg = 0.392, maxrelax = 0.714)
     
     @show nbX = length(indXA)
     @show length(Xlevels)
-    @show indXA
     
     model = Model(Clp.Optimizer)
     set_optimizer_attribute(model, "LogLevel", 0)
@@ -335,6 +333,8 @@ function unbalanced_solver(data; lambda_reg = 0.392, maxrelax = 0.714)
     # Extract the values of the solution
     gamma_val = [value(gamma[x1, y,x2, z]) for x1 = 1:nbX, y in Ylevels,x2 = 1:nbX, z in Zlevels]
 
+    nothing
+
 #=
 
     for j in eachindex(yB_pred)
@@ -383,4 +383,4 @@ csv_file = joinpath("dataset.csv")
 
 data = CSV.read(csv_file, DataFrame)
 
-@time unbalanced_solver(data, maxrelax = 0.01)
+@time unbalanced_solver(data)
