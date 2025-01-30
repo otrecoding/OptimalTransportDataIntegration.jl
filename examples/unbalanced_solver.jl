@@ -88,8 +88,8 @@ function unbalanced_solver(data; lambda_reg = 0.392, maxrelax = 0.714)
     
     c = Dict()
     
-    for (i, (y,x1)) in enumerate(product(Ylevels, Xlevels))
-        for (j, (z,x2)) in enumerate(product(Zlevels, Xlevels))
+    for (i, (y,x1)) in enumerate(product(Ylevels, eachindex(Xlevels)))
+        for (j, (z,x2)) in enumerate(product(Zlevels, eachindex(Xlevels)))
             c[(x1, y, x2, z)] = C0[i,j]
         end
     end
@@ -97,9 +97,9 @@ function unbalanced_solver(data; lambda_reg = 0.392, maxrelax = 0.714)
     c0 = zeros(Int32, length(product(Ylevels, Xlevels)), length(product(Zlevels, Xlevels)))
     for p1 in axes(c0,1)
         for p2 in axes(c0,2)
-            x1 = Int32.(XYA[p1][1:nx])
+            x1 = findfirst( ==(XYA[p1][1:nx]), Xlevels)
             y = last(XYA[p1])
-            x2 = Int32.(XZB[p2][1:nx])
+            x2 = findfirst( ==(XZB[p2][1:nx]), Xlevels)
             z = last(XZB[p2])
             c0[p1,p2] = c[(x1, y, x2, z)]
             end
@@ -191,7 +191,9 @@ function unbalanced_solver(data; lambda_reg = 0.392, maxrelax = 0.714)
              for x = eachindex(indXB), z in Zlevels
     ])
     
-    nbX = length(indXA)
+    @show nbX = length(indXA)
+    @show length(Xlevels)
+    @show indXA
     
     model = Model(Clp.Optimizer)
     set_optimizer_attribute(model, "LogLevel", 0)
