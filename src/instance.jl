@@ -17,8 +17,8 @@ Definition and initialization of an Instance structure
 """
 struct Instance
 
-    nA::Int64
-    nB::Int64
+    nA::Int
+    nB::Int
     D::Matrix{Float64}
     Xobserv::Matrix{Int}
     Yobserv::Vector{Int}
@@ -26,12 +26,10 @@ struct Instance
     Xlevels::Vector{Vector{Int}}
     Ylevels::Vector{Int}
     Zlevels::Vector{Int}
-    indY::Dict{Int64,Vector{Int64}}
-    indZ::Dict{Int64,Vector{Int64}}
-    indXA::Dict{Int64,Vector{Int64}}
-    indXB::Dict{Int64,Vector{Int64}}
-    DA::Matrix{Float64}
-    DB::Matrix{Float64}
+    indY::Vector{Vector{Int}}
+    indZ::Vector{Vector{Int}}
+    indXA::Vector{Vector{Int}}
+    indXB::Vector{Vector{Int}}
 
 
     function Instance(
@@ -55,8 +53,8 @@ struct Instance
         nB = length(indB)
 
         # list the distinct modalities in A and B
-        indY = Dict((m, findall(Y[indA] .== m)) for m in Ylevels)
-        indZ = Dict((m, findall(Z[indB] .== m)) for m in Zlevels)
+        indY = [findall(Y[indA] .== m) for m in Ylevels]
+        indZ = [findall(Z[indB] .== m) for m in Zlevels]
 
         # compute the distance between pairs of individuals in different bases
         # devectorize all the computations to go about twice faster only compute norm 1 here
@@ -64,22 +62,18 @@ struct Instance
         b = X[indB, :]'
 
         D = pairwise(distance, a, b, dims = 2)
-        DA = pairwise(distance, a, a, dims = 2)
-        DB = pairwise(distance, b, b, dims = 2)
 
         # Compute the indexes of individuals with same covariates
-        indXA = Dict{Int64,Array{Int64}}()
-        indXB = Dict{Int64,Array{Int64}}()
+        indXA = Vector{Int64}[]
+        indXB = Vector{Int64}[]
         Xlevels = sort(unique(eachrow(X)))
 
-        nbX = 0
         # aggregate both bases
         for x in Xlevels
-            nbX = nbX + 1
             distA = vec(pairwise(distance, x[:, :], a, dims = 2))
             distB = vec(pairwise(distance, x[:, :], b, dims = 2))
-            indXA[nbX] = findall(distA .< 0.1)
-            indXB[nbX] = findall(distB .< 0.1)
+            push!(indXA, findall(distA .< 0.1))
+            push!(indXB, findall(distB .< 0.1))
         end
 
         new(
@@ -96,8 +90,6 @@ struct Instance
             indZ,
             indXA,
             indXB,
-            DA,
-            DB,
         )
     end
 

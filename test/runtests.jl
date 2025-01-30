@@ -1,6 +1,7 @@
 using Aqua
 using CSV
 using DataFrames
+using Documenter
 using OptimalTransportDataIntegration
 using Test
 
@@ -42,4 +43,16 @@ end
 
 @testset "Aqua.jl" begin
     Aqua.test_deps_compat(OptimalTransportDataIntegration)
+end
+
+@testset "doctests" begin
+    DocMeta.setdocmeta!(OptimalTransportDataIntegration, :DocTestSetup, :(using OptimalTransportDataIntegration); recursive=true)
+    doctest(
+        OptimalTransportDataIntegration;
+        doctestfilters=[
+            r"{([a-zA-Z0-9]+,\s?)+[a-zA-Z0-9]+}",
+            r"(Array{[a-zA-Z0-9]+,\s?1}|Vector{[a-zA-Z0-9]+})",
+            r"(Array{[a-zA-Z0-9]+,\s?2}|Matrix{[a-zA-Z0-9]+})",
+        ],
+    )
 end

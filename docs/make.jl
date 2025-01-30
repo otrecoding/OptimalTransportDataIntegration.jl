@@ -7,6 +7,7 @@ makedocs(
     format = Documenter.HTML(),
     modules = [OptimalTransportDataIntegration],
     pages = ["Documentation" => "index.md"],
+    doctest = false
 )
 
 deploydocs(repo = "github.com/otrecoding/OptimalTransportDataIntegration.jl.git")

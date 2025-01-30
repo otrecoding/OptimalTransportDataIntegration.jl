@@ -68,7 +68,7 @@ function otrecod(data::DataFrame, method::UnbalancedModality)
         method.reg_m;
         Ylevels = method.Ylevels,
         Zlevels = method.Zlevels,
-        iterations = method.iterations
+        iterations = method.iterations,
     )
 
 end
