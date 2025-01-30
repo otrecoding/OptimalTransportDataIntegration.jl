@@ -56,28 +56,23 @@ function ot_joint(
     # println("... aggregating individuals")
     indXA = inst.indXA
     indXB = inst.indXB
-    nbX = length(indXA)
+    Xlevels = eachindex(indXA)
 
     # compute the neighbors of the covariates for regularization
     Xvalues = unique(eachrow(Xobserv))
     dist_X = pairwise(norme, Xvalues, Xvalues)
-    voisins_X = dist_X .<= 1
+    voisins_X = findall.(eachrow(dist_X .<= 1))
+    nvoisins_X = length(Xvalues)
 
     # println("... computing costs")
     C = average_distance_to_closest(inst, percent_closest)
 
     # Compute the estimators that appear in the model
 
-    estim_XA = Dict([(x, length(indXA[x]) / nA) for x = 1:nbX])
-    estim_XB = Dict([(x, length(indXB[x]) / nB) for x = 1:nbX])
-    estim_XA_YA = Dict([
-        ((x, y), length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / nA) for x = 1:nbX,
-        y in Ylevels
-    ])
-    estim_XB_ZB = Dict([
-        ((x, z), length(indXB[x][findall(Zobserv[indXB[x].+nA] .== z)]) / nB) for
-        x = 1:nbX, z in Zlevels
-    ])
+    estim_XA = length.(indXA) ./ nA
+    estim_XB = length.(indXB) ./ nB
+    estim_XA_YA = [length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / nA for x = Xlevels, y in Ylevels]
+    estim_XB_ZB = [length(indXB[x][findall(Zobserv[indXB[x].+nA] .== z)]) / nB for x = Xlevels, z in Zlevels]
 
 
     # Basic part of the model
@@ -86,40 +81,40 @@ function ot_joint(
     # - gammaA[x,y,z]: joint probability of X=x, Y=y and Z=z in base A
     @variable(
         modelA,
-        gammaA[x in 1:nbX, y in Ylevels, z in Zlevels] >= 0,
+        gammaA[x in Xlevels, y in Ylevels, z in Zlevels] >= 0,
         base_name = "gammaA"
     )
 
     # - gammaB[x,y,z]: joint probability of X=x, Y=y and Z=z in base B
     @variable(
         modelB,
-        gammaB[x in 1:nbX, y in Ylevels, z in Zlevels] >= 0,
+        gammaB[x in Xlevels, y in Ylevels, z in Zlevels] >= 0,
         base_name = "gammaB"
     )
 
-    @variable(modelA, errorA_XY[x in 1:nbX, y in Ylevels], base_name = "errorA_XY")
+    @variable(modelA, errorA_XY[x in Xlevels, y in Ylevels], base_name = "errorA_XY")
     @variable(
         modelA,
-        abserrorA_XY[x in 1:nbX, y in Ylevels] >= 0,
+        abserrorA_XY[x in Xlevels, y in Ylevels] >= 0,
         base_name = "abserrorA_XY"
     )
-    @variable(modelA, errorA_XZ[x in 1:nbX, z in Zlevels], base_name = "errorA_XZ")
+    @variable(modelA, errorA_XZ[x in Xlevels, z in Zlevels], base_name = "errorA_XZ")
     @variable(
         modelA,
-        abserrorA_XZ[x in 1:nbX, z in Zlevels] >= 0,
+        abserrorA_XZ[x in Xlevels, z in Zlevels] >= 0,
         base_name = "abserrorA_XZ"
     )
 
-    @variable(modelB, errorB_XY[x in 1:nbX, y in Ylevels], base_name = "errorB_XY")
+    @variable(modelB, errorB_XY[x in Xlevels, y in Ylevels], base_name = "errorB_XY")
     @variable(
         modelB,
-        abserrorB_XY[x in 1:nbX, y in Ylevels] >= 0,
+        abserrorB_XY[x in Xlevels, y in Ylevels] >= 0,
         base_name = "abserrorB_XY"
     )
-    @variable(modelB, errorB_XZ[x in 1:nbX, z in Zlevels], base_name = "errorB_XZ")
+    @variable(modelB, errorB_XZ[x in Xlevels, z in Zlevels], base_name = "errorB_XZ")
     @variable(
         modelB,
-        abserrorB_XZ[x in 1:nbX, z in Zlevels] >= 0,
+        abserrorB_XZ[x in Xlevels, z in Zlevels] >= 0,
         base_name = "abserrorB_XZ"
     )
 
@@ -127,12 +122,12 @@ function ot_joint(
     # - assign sufficient probability to each class of covariates with the same outcome
     @constraint(
         modelA,
-        ctYandXinA[x in 1:nbX, y in Ylevels],
+        ctYandXinA[x in Xlevels, y in Ylevels],
         sum(gammaA[x, y, z] for z in Zlevels) == estim_XA_YA[x, y] + errorA_XY[x, y]
     )
     @constraint(
         modelB,
-        ctZandXinB[x in 1:nbX, z in Zlevels],
+        ctZandXinB[x in Xlevels, z in Zlevels],
         sum(gammaB[x, y, z] for y in Ylevels) == estim_XB_ZB[x, z] + errorB_XZ[x, z]
     )
 
@@ -140,69 +135,69 @@ function ot_joint(
     # - the consequence is that the probability of Y and Z conditional to Y is also the same in the two bases
     @constraint(
         modelA,
-        ctZandXinA[x in 1:nbX, z in Zlevels],
+        ctZandXinA[x in Xlevels, z in Zlevels],
         estim_XB[x] * sum(gammaA[x, y, z] for y in Ylevels) ==
         estim_XB_ZB[x, z] * estim_XA[x] + estim_XB[x] * errorA_XZ[x, z]
     )
 
     @constraint(
         modelB,
-        ctYandXinB[x in 1:nbX, y in Ylevels],
+        ctYandXinB[x in Xlevels, y in Ylevels],
         estim_XA[x] * sum(gammaB[x, y, z] for z in Zlevels) ==
         estim_XA_YA[x, y] * estim_XB[x] + estim_XA[x] * errorB_XY[x, y]
     )
 
     # - recover the norm 1 of the error
-    @constraint(modelA, [x in 1:nbX, y in Ylevels], errorA_XY[x, y] <= abserrorA_XY[x, y])
-    @constraint(modelA, [x in 1:nbX, y in Ylevels], -errorA_XY[x, y] <= abserrorA_XY[x, y])
+    @constraint(modelA, [x in Xlevels, y in Ylevels], errorA_XY[x, y] <= abserrorA_XY[x, y])
+    @constraint(modelA, [x in Xlevels, y in Ylevels], -errorA_XY[x, y] <= abserrorA_XY[x, y])
     @constraint(
         modelA,
-        sum(abserrorA_XY[x, y] for x = 1:nbX, y in Ylevels) <= maxrelax / 2.0
+        sum(abserrorA_XY[x, y] for x = Xlevels, y in Ylevels) <= maxrelax / 2.0
     )
-    @constraint(modelA, sum(errorA_XY[x, y] for x = 1:nbX, y in Ylevels) == 0.0)
-    @constraint(modelA, [x in 1:nbX, z in Zlevels], errorA_XZ[x, z] <= abserrorA_XZ[x, z])
-    @constraint(modelA, [x in 1:nbX, z in Zlevels], -errorA_XZ[x, z] <= abserrorA_XZ[x, z])
+    @constraint(modelA, sum(errorA_XY[x, y] for x = Xlevels, y in Ylevels) == 0.0)
+    @constraint(modelA, [x in Xlevels, z in Zlevels], errorA_XZ[x, z] <= abserrorA_XZ[x, z])
+    @constraint(modelA, [x in Xlevels, z in Zlevels], -errorA_XZ[x, z] <= abserrorA_XZ[x, z])
     @constraint(
         modelA,
-        sum(abserrorA_XZ[x, z] for x = 1:nbX, z in Zlevels) <= maxrelax / 2.0
+        sum(abserrorA_XZ[x, z] for x = Xlevels, z in Zlevels) <= maxrelax / 2.0
     )
-    @constraint(modelA, sum(errorA_XZ[x, z] for x = 1:nbX, z in Zlevels) == 0.0)
+    @constraint(modelA, sum(errorA_XZ[x, z] for x = Xlevels, z in Zlevels) == 0.0)
 
-    @constraint(modelB, [x in 1:nbX, y in Ylevels], errorB_XY[x, y] <= abserrorB_XY[x, y])
-    @constraint(modelB, [x in 1:nbX, y in Ylevels], -errorB_XY[x, y] <= abserrorB_XY[x, y])
+    @constraint(modelB, [x in Xlevels, y in Ylevels], errorB_XY[x, y] <= abserrorB_XY[x, y])
+    @constraint(modelB, [x in Xlevels, y in Ylevels], -errorB_XY[x, y] <= abserrorB_XY[x, y])
     @constraint(
         modelB,
-        sum(abserrorB_XY[x, y] for x = 1:nbX, y in Ylevels) <= maxrelax / 2.0
+        sum(abserrorB_XY[x, y] for x = Xlevels, y in Ylevels) <= maxrelax / 2.0
     )
-    @constraint(modelB, sum(errorB_XY[x, y] for x = 1:nbX, y in Ylevels) == 0.0)
-    @constraint(modelB, [x in 1:nbX, z in Zlevels], errorB_XZ[x, z] <= abserrorB_XZ[x, z])
-    @constraint(modelB, [x in 1:nbX, z in Zlevels], -errorB_XZ[x, z] <= abserrorB_XZ[x, z])
+    @constraint(modelB, sum(errorB_XY[x, y] for x = Xlevels, y in Ylevels) == 0.0)
+    @constraint(modelB, [x in Xlevels, z in Zlevels], errorB_XZ[x, z] <= abserrorB_XZ[x, z])
+    @constraint(modelB, [x in Xlevels, z in Zlevels], -errorB_XZ[x, z] <= abserrorB_XZ[x, z])
     @constraint(
         modelB,
-        sum(abserrorB_XZ[x, z] for x = 1:nbX, z in Zlevels) <= maxrelax / 2.0
+        sum(abserrorB_XZ[x, z] for x = Xlevels, z in Zlevels) <= maxrelax / 2.0
     )
-    @constraint(modelB, sum(errorB_XZ[x, z] for x = 1:nbX, z in Zlevels) == 0.0)
+    @constraint(modelB, sum(errorB_XZ[x, z] for x = Xlevels, z in Zlevels) == 0.0)
 
     # - regularization
     @variable(
         modelA,
         reg_absA[
-            x1 in 1:nbX,
-            x2 in findall(voisins_X[x1, :]),
+            x1 in Xlevels,
+            x2 in voisins_X[x1],
             y in Ylevels,
             z in Zlevels,
         ] >= 0
     )
     @constraint(
         modelA,
-        [x1 in 1:nbX, x2 in findall(voisins_X[x1, :]), y in Ylevels, z in Zlevels],
+        [x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels],
         reg_absA[x1, x2, y, z] >=
         gammaA[x1, y, z] / (max(1, length(indXA[x1])) / nA) -
         gammaA[x2, y, z] / (max(1, length(indXA[x2])) / nA)
     )
     @constraint(
         modelA,
-        [x1 in 1:nbX, x2 in findall(voisins_X[x1, :]), y in Ylevels, z in Zlevels],
+        [x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels],
         reg_absA[x1, x2, y, z] >=
         gammaA[x2, y, z] / (max(1, length(indXA[x2])) / nA) -
         gammaA[x1, y, z] / (max(1, length(indXA[x1])) / nA)
@@ -211,30 +206,30 @@ function ot_joint(
         modelA,
         regterm,
         sum(
-            1 / length(voisins_X[x1, :]) * reg_absA[x1, x2, y, z] for x1 = 1:nbX,
-            x2 in findall(voisins_X[x1, :]), y in Ylevels, z in Zlevels
+            1 / nvoisins_X * reg_absA[x1, x2, y, z] for x1 = Xlevels,
+            x2 in voisins_X[x1], y in Ylevels, z in Zlevels
         )
     )
 
     @variable(
         modelB,
         reg_absB[
-            x1 in 1:nbX,
-            x2 in findall(voisins_X[x1, :]),
+            x1 in Xlevels,
+            x2 in voisins_X[x1],
             y in Ylevels,
             z in Zlevels,
         ] >= 0
     )
     @constraint(
         modelB,
-        [x1 in 1:nbX, x2 in findall(voisins_X[x1, :]), y in Ylevels, z in Zlevels],
+        [x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels],
         reg_absB[x1, x2, y, z] >=
         gammaB[x1, y, z] / (max(1, length(indXB[x1])) / nB) -
         gammaB[x2, y, z] / (max(1, length(indXB[x2])) / nB)
     )
     @constraint(
         modelB,
-        [x1 in 1:nbX, x2 in findall(voisins_X[x1, :]), y in Ylevels, z in Zlevels],
+        [x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels],
         reg_absB[x1, x2, y, z] >=
         gammaB[x2, y, z] / (max(1, length(indXB[x2])) / nB) -
         gammaB[x1, y, z] / (max(1, length(indXB[x1])) / nB)
@@ -243,8 +238,8 @@ function ot_joint(
         modelB,
         regterm,
         sum(
-            1 / length(voisins_X[x1, :]) * reg_absB[x1, x2, y, z] for x1 = 1:nbX,
-            x2 in findall(voisins_X[x1, :]), y in Ylevels, z in Zlevels
+            1 / nvoisins_X * reg_absB[x1, x2, y, z] for x1 = Xlevels,
+            x2 in voisins_X[x1], y in Ylevels, z in Zlevels
         )
     )
 
@@ -252,20 +247,20 @@ function ot_joint(
     @objective(
         modelA,
         Min,
-        sum(C[y, z] * gammaA[x, y, z] for y in Ylevels, z in Zlevels, x = 1:nbX) +
+        sum(C[y, z] * gammaA[x, y, z] for y in Ylevels, z in Zlevels, x = Xlevels) +
         lambda_reg * sum(
-            1 / length(voisins_X[x1, :]) * reg_absA[x1, x2, y, z] for x1 = 1:nbX,
-            x2 in findall(voisins_X[x1, :]), y in Ylevels, z in Zlevels
+            1 / nvoisins_X * reg_absA[x1, x2, y, z] for x1 = Xlevels,
+            x2 in voisins_X[x1], y in Ylevels, z in Zlevels
         )
     )
 
     @objective(
         modelB,
         Min,
-        sum(C[y, z] * gammaB[x, y, z] for y in Ylevels, z in Zlevels, x = 1:nbX) +
+        sum(C[y, z] * gammaB[x, y, z] for y in Ylevels, z in Zlevels, x = Xlevels) +
         lambda_reg * sum(
-            1 / length(voisins_X[x1, :]) * reg_absB[x1, x2, y, z] for x1 = 1:nbX,
-            x2 in findall(voisins_X[x1, :]), y in Ylevels, z in Zlevels
+            1 / nvoisins_X * reg_absB[x1, x2, y, z] for x1 = Xlevels,
+            x2 in voisins_X[x1], y in Ylevels, z in Zlevels
         )
     )
 
@@ -274,25 +269,25 @@ function ot_joint(
     optimize!(modelB)
 
     # Extract the values of the solution
-    gammaA_val = [value(gammaA[x, y, z]) for x = 1:nbX, y in Ylevels, z in Zlevels]
-    gammaB_val = [value(gammaB[x, y, z]) for x = 1:nbX, y in Ylevels, z in Zlevels]
+    gammaA_val = [value(gammaA[x, y, z]) for x = Xlevels, y in Ylevels, z in Zlevels]
+    gammaB_val = [value(gammaB[x, y, z]) for x = Xlevels, y in Ylevels, z in Zlevels]
 
     # compute the resulting estimators for the distributions of Z 
     # conditional to X and Y in base A and of Y conditional to X and Z in base B
-    estimatorZA = 1 / length(Zlevels) * ones(nbX, length(Ylevels), length(Zlevels))
-    for x = 1:nbX
+    estimatorZA = 1 / length(Zlevels) * ones(length(Xlevels), length(Ylevels), length(Zlevels))
+    for x = Xlevels
         for y in Ylevels
             proba_c_mA = sum(gammaA_val[x, y, z] for z in Zlevels)
-            if proba_c_mA > 1.0e-6
+            if proba_c_mA > 1e-6
                 estimatorZA[x, y, :] = 1 / proba_c_mA * gammaA_val[x, y, :]
             end
         end
     end
-    estimatorYB = 1 / length(Ylevels) * ones(nbX, length(Ylevels), length(Zlevels))
-    for x = 1:nbX
+    estimatorYB = 1 / length(Ylevels) * ones(length(Xlevels), length(Ylevels), length(Zlevels))
+    for x = Xlevels
         for z in Zlevels
             proba_c_mB = sum(gammaB_val[x, y, z] for y in Ylevels)
-            if proba_c_mB > 1.0e-6
+            if proba_c_mB > 1e-6
                 estimatorYB[x, :, z] = 1 / proba_c_mB * gammaB_val[x, :, z]
             end
         end
@@ -300,7 +295,7 @@ function ot_joint(
 
     # Display the solution
     # println("Solution of the joint probability transport")
-    # println("Distance cost = ", sum(C[y,z] * (gammaA_val[x,y,z]+gammaB_val[x,y,z]) for y in Y, z in Z, x in 1:nbX))
+    # println("Distance cost = ", sum(C[y,z] * (gammaA_val[x,y,z]+gammaB_val[x,y,z]) for y in Y, z in Z, x in Xlevels))
     # println("Regularization cost = ", lambda_reg * value(regterm))
 
     if full_disp
@@ -310,8 +305,8 @@ function ot_joint(
 
     Solution(
         time() - tstart,
-        [sum(gammaA_val[x, y, z] for x = 1:nbX) for y in Ylevels, z in Zlevels],
-        [sum(gammaB_val[x, y, z] for x = 1:nbX) for y in Ylevels, z in Zlevels],
+        [sum(gammaA_val[x, y, z] for x = Xlevels) for y in Ylevels, z in Zlevels],
+        [sum(gammaB_val[x, y, z] for x = Xlevels) for y in Ylevels, z in Zlevels],
         estimatorZA,
         estimatorYB,
     )
