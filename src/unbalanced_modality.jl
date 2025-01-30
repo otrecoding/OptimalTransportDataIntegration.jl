@@ -42,14 +42,7 @@ end
 
 export unbalanced_modality
 
-function unbalanced_modality(
-    data,
-    reg,
-    reg_m;
-    Ylevels = 1:4,
-    Zlevels = 1:3,
-    iterations = 1
-)
+function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
 
     T = Int32
 
@@ -157,7 +150,7 @@ function unbalanced_modality(
 
     ## Optimal Transport
 
-    C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1) 
+    C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1)
     C = C0 ./ maximum(C0)
 
     zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
@@ -225,13 +218,15 @@ function unbalanced_modality(
     end
 
     println(rpad("total cost", 15, " "), "fcost", lpad("estimation", 15, " "))
-    for i in 1:iterations
-        println(rpad(round(total_costs[i], digits=6), 15, " "),
-                round(fcosts[i], digits=6),
-                lpad(round(perfs[i], digits=6), 15, " "))
+    for i = 1:iterations
+        println(
+            rpad(round(total_costs[i], digits = 6), 15, " "),
+            round(fcosts[i], digits = 6),
+            lpad(round(perfs[i], digits = 6), 15, " "),
+        )
     end
 
-    return round(est_opt, digits=4)
+    return round(est_opt, digits = 4)
 
 
 end

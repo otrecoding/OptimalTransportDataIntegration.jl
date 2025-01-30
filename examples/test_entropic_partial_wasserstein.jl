@@ -53,10 +53,10 @@ nB = length(indB)
 
 # Optimal Transport
 
-C = pairwise(Hamming(), XA, XB; dims = 1) 
+C = pairwise(Hamming(), XA, XB; dims = 1)
 
-wa = vec([sum(indXA[x][YA[indXA[x]].==y]) for y in Ylevels, x = eachindex(indXA)])
-wb = vec([sum(indXB[x][ZB[indXB[x]].==z]) for z in Zlevels, x = eachindex(indXB)])
+wa = vec([sum(indXA[x][YA[indXA[x]].==y]) for y in Ylevels, x in eachindex(indXA)])
+wb = vec([sum(indXB[x][ZB[indXB[x]].==z]) for z in Zlevels, x in eachindex(indXB)])
 
 wa2 = filter(>(0), wa) ./ nA
 wb2 = filter(>(0), wb) ./ nB
@@ -65,10 +65,10 @@ nx = size(X, 2) ## Nb modalités x
 
 XYA2 = Vector{T}[]
 XZB2 = Vector{T}[]
-for (i,(y, x)) in enumerate(product(Ylevels, Xlevels))
+for (i, (y, x)) in enumerate(product(Ylevels, Xlevels))
     wa[i] > 0 && push!(XYA2, [x...; y])
 end
-for (i,(z, x)) in enumerate(product(Zlevels, Xlevels))
+for (i, (z, x)) in enumerate(product(Zlevels, Xlevels))
     wb[i] > 0 && push!(XZB2, [x...; z])
 end
 
@@ -78,6 +78,6 @@ XB_hot = stack([v[1:nx] for v in XZB2], dims = 1)
 
 ## Optimal Transport
 
-C = pairwise(Hamming(), XA_hot, XB_hot; dims = 1) 
+C = pairwise(Hamming(), XA_hot, XB_hot; dims = 1)
 
 G = entropic_partial_wasserstein(wa2, wb2, C, 0.1)

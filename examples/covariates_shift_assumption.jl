@@ -27,7 +27,7 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
 
         writedlm(io, hcat(header...))
 
-        for (j,mB) in enumerate(scenarios)
+        for (j, mB) in enumerate(scenarios)
 
             params = DataParameters(mB = mB)
 
@@ -66,6 +66,6 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
 end
 
 nsimulations = 100
-scenarios = ([0,0,0], [1,0,0], [1,1,0] , [1,2,0])
+scenarios = ([0, 0, 0], [1, 0, 0], [1, 1, 0], [1, 2, 0])
 
 @time covariates_shift_assumption(nsimulations, scenarios)

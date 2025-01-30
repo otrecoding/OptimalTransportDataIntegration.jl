@@ -19,32 +19,32 @@ import OptimalTransportDataIntegration: Instance, ot_joint
 import Distances: Hamming
 
 
-let 
+let
 
-    for simulation in 1:10
+    for simulation = 1:10
 
         params = DataParameters(nA = 1000, nB = 1000)
-        
+
         data = generate_xcat_ycat(params)
-        
+
         # +
-        
+
         X = Matrix(data[!, ["X1", "X2", "X3"]])
         Y = Vector(data.Y)
         Z = Vector(data.Z)
         database = data.database
-        
+
         dist_choice = Hamming()
-        
+
         Ylevels = 1:4
         Zlevels = 1:3
-        
+
         instance = Instance(database, X, Y, Ylevels, Z, Zlevels, dist_choice)
-        
+
         lambda_reg = 0.392
         maxrelax = 0.714
         percent_closest = 0.2
-        
+
         @time sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
         println(compute_pred_error!(sol, instance, false))
 

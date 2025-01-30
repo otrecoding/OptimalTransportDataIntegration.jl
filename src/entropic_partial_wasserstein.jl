@@ -82,7 +82,17 @@ julia> round.(entropic_partial_wasserstein(a, b, M, 1, m = 0.1), digits=2)
 
 
 """
-function entropic_partial_wasserstein(a, b, M, reg; m=nothing, numItermax=1000, stopThr=1e-100, verbose=false, log=false)
+function entropic_partial_wasserstein(
+    a,
+    b,
+    M,
+    reg;
+    m = nothing,
+    numItermax = 1000,
+    stopThr = 1e-100,
+    verbose = false,
+    log = false,
+)
 
     dim_a, dim_b = size(M)
     dx = ones(eltype(a), dim_a)
@@ -105,7 +115,7 @@ function entropic_partial_wasserstein(a, b, M, reg; m=nothing, numItermax=1000, 
         @error "Problem infeasible. Parameter m should lower or equal than min(|a|_1, |b|_1)."
     end
 
-    log && (log_e = Dict{Any, Any}("err" => []))
+    log && (log_e = Dict{Any,Any}("err" => []))
 
     K = exp.(-M ./ reg)
     K .= K .* m ./ sum(K)
@@ -123,11 +133,11 @@ function entropic_partial_wasserstein(a, b, M, reg; m=nothing, numItermax=1000, 
     while err > stopThr && cpt < numItermax
         Kprev .= K
         K .= K .* q1
-        K1 .= Diagonal(min.(a ./ vec(sum(K, dims=2)), dx)) * K
+        K1 .= Diagonal(min.(a ./ vec(sum(K, dims = 2)), dx)) * K
         q1 .= q1 .* Kprev ./ K1
         K1prev .= K1
         K1 .= K1 .* q2
-        K2 .= K1 * Diagonal(min.(b ./ vec(sum(K1, dims=1)), dy))
+        K2 .= K1 * Diagonal(min.(b ./ vec(sum(K1, dims = 1)), dy))
         q2 .= q2 .* K1prev ./ K2
         K2prev .= K2
         K2 .= K2 .* q3
@@ -156,6 +166,3 @@ function entropic_partial_wasserstein(a, b, M, reg; m=nothing, numItermax=1000, 
         return K
     end
 end
-
-
-
