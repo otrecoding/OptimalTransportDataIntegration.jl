@@ -62,14 +62,42 @@ end
 function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
 
     T = Int
+
     Ylevels = 1:4
     Zlevels = 1:3
 
-    X_hot = Matrix{Int}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
-    Xlevels_hot = sort(unique(eachrow(X_hot)))
+    X = Matrix(data[!, [:X1, :X2, :X3]])
     Y = Vector{T}(data.Y)
     Z = Vector{T}(data.Z)
 
+    base = data.database
+
+    indA = findall(base .== 1)
+    indB = findall(base .== 2)
+
+    YA = view(Y, indA)
+    YB = view(Y, indB)
+    ZA = view(Z, indA)
+    ZB = view(Z, indB)
+
+    YA_hot = one_hot_encoder(YA, Ylevels)
+    ZA_hot = one_hot_encoder(ZA, Zlevels)
+    YB_hot = one_hot_encoder(YB, Ylevels)
+    ZB_hot = one_hot_encoder(ZB, Zlevels)
+
+
+    # Compute data for aggregation of the individuals
+
+    nA = length(indA)
+    nB = length(indB)
+
+    X_hot = one_hot_encoder(X)
+    Xlevels_hot = sort(unique(eachrow(X_hot))) 
+    @assert length(Xlevels_hot) == 24 "not possible observations in X"
+    Ylevels_hot = one_hot_encoder(Ylevels)
+    Zlevels_hot = one_hot_encoder(Zlevels)
+
+    distance = Hamming()
 
     nx = size(X_hot, 2)
     XYA = Vector{Int}[]
@@ -81,105 +109,54 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
         push!(XZB, [x...; z])
     end
 
-    XA_hot = stack([v[1:nx] for v in XYA], dims = 1)
-    XB_hot = stack([v[1:nx] for v in XZB], dims = 1)
+    a = stack([v[1:nx] for v in XYA], dims = 1)
+    b = stack([v[1:nx] for v in XZB], dims = 1)
 
-    C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1)
+    C0 = pairwise(distance, a, b; dims = 1)
 
-    c = Dict()
+    c = zeros(Int, length(Xlevels_hot), length(Ylevels), length(Xlevels_hot), length(Zlevels))
 
     for (i, (y, x1)) in enumerate(product(Ylevels, eachindex(Xlevels_hot)))
         for (j, (z, x2)) in enumerate(product(Zlevels, eachindex(Xlevels_hot)))
-            c[(x1, y, x2, z)] = C0[i, j]
+            c[x1, y, x2, z] = C0[i, j]
         end
     end
 
-    c0 = zeros(
-        Int32,
-        length(product(Ylevels, Xlevels_hot)),
-        length(product(Zlevels, Xlevels_hot)),
-    )
+    c0 = zero(C0)
+
     for p1 in axes(c0, 1)
         for p2 in axes(c0, 2)
             x1 = findfirst(==(XYA[p1][1:nx]), Xlevels_hot)
             y = last(XYA[p1])
             x2 = findfirst(==(XZB[p2][1:nx]), Xlevels_hot)
             z = last(XZB[p2])
-            c0[p1, p2] = c[(x1, y, x2, z)]
+            c0[p1, p2] = c[x1, y, x2, z]
         end
     end
 
     @assert c0 ≈ C0
 
-    X = Matrix(data[!, [:X1, :X2, :X3]])
-    @show Xvalues = unique(eachrow(X))
+
+    Xvalues = unique(eachrow(X))
     dist_X = pairwise(Cityblock(), Xvalues, Xvalues)
     voisins_X = findall.(eachrow(dist_X .<= 1))
     nX = length(Xvalues)
 
-    base = data.database
-
-    indA = findall(base .== 1)
-    indB = findall(base .== 2)
-
-
-    YA = view(Y, indA)
-    YB = view(Y, indB)
-    ZA = view(Z, indA)
-    ZB = view(Z, indB)
-
-    XA_hot = view(X_hot, indA, :)
-    XB_hot = view(X_hot, indB, :)
-
-    YA_hot = one_hot_encoder(YA, Ylevels)
-    ZA_hot = one_hot_encoder(ZA, Zlevels)
-    YB_hot = one_hot_encoder(YB, Ylevels)
-    ZB_hot = one_hot_encoder(ZB, Zlevels)
-
-    XYA = hcat(XA_hot, YA)
-    XZB = hcat(XB_hot, ZB)
-
-    distance = Hamming()
-
-    # Compute data for aggregation of the individuals
-
-    nA = length(indA)
-    nB = length(indB)
 
     # Compute the indexes of individuals with same covariates
     indXA = Vector{T}[]
     indXB = Vector{T}[]
     # -
 
+    a = view(X_hot, indA, :)
+    b = view(X_hot, indB, :)
+
     for (i, x) in enumerate(Xlevels_hot)
-        distA = vec(pairwise(distance, x[:, :], XA_hot', dims = 2))
-        distB = vec(pairwise(distance, x[:, :], XB_hot', dims = 2))
+        distA = vec(pairwise(distance, x[:, :], a', dims = 2))
+        distB = vec(pairwise(distance, x[:, :], b', dims = 2))
         push!(indXA, findall(==(0), distA))
         push!(indXB, findall(==(0), distB))
     end
-
-    return indXB
-
-    Ylevels_hot = one_hot_encoder(Ylevels)
-    Zlevels_hot = one_hot_encoder(Zlevels)
-
-    # +
-    Yloss = loss_crossentropy(YA_hot, Ylevels_hot)
-    Zloss = loss_crossentropy(ZB_hot, Zlevels_hot)
-    @show alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
-    @show alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
-
-
-    ## Optimal Transport
-
-    C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1)
-    C = C0 ./ maximum(C0)
-
-
-    est_opt = 0.0
-
-    YBpred = zeros(T, nB)
-    ZApred = zeros(T, nA)
 
     # Compute the estimators that appear in the model
 
@@ -191,7 +168,8 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
         [length(indXB[x][ZB[indXB[x]].==z]) / nB for x in eachindex(indXB), z in Zlevels]
 
 
-    @show Xlevels = eachindex(Xlevels_hot)
+    Xlevels = eachindex(Xlevels_hot)
+    return Xlevels
 
 
     model = Model(Clp.Optimizer)
@@ -313,24 +291,21 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
         )
     )
 
-
     # by default, the OT cost and regularization term are weighted to lie in the same interval
     @objective(
         model,
         Min,
-        sum(
-            c[x1, y, x2, z] * Ω[x1, y, x2, z] for y in Ylevels, z in Zlevels, x1 in Xlevels,
-            x2 in Xlevels
+        sum(c[x1, y, x2, z] * Ω[x1, y, x2, z] for y in Ylevels, z in Zlevels, x1 = Xlevels, x2 = Xlevels) +
+        lambda_reg * sum(
+            1 / nX * reg_absA[x1, x2, y, z] for x1 = Xlevels,
+            x2 in voisins_X[x1], y in Ylevels, z in Zlevels
         ) +
         lambda_reg * sum(
-            1 / nX * reg_absA[x1, x2, y, z] for x1 in Xlevels, x2 in voisins_X[x1],
-            y in Ylevels, z in Zlevels
-        ) +
-        lambda_reg * sum(
-            1 / voisins_X[x1] * reg_absB[x1, x2, y, z] for x1 in Xlevels,
+            1 / nX * reg_absB[x1, x2, y, z] for x1 = Xlevels,
             x2 in voisins_X[x1], y in Ylevels, z in Zlevels
         )
     )
+
 
     # Solve the problem
     optimize!(model)
@@ -343,14 +318,19 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
     c0 = zeros(Int32, length(product(Ylevels, Xlevels)), length(product(Zlevels, Xlevels)))
     for p1 in axes(c0, 1)
         for p2 in axes(c0, 2)
-            x1 = findfirst(==(XYA[p1][1:nx]), Xlevels_hot)
+            x1 = findfirst(==(XYA[p1,:][1:nx]), Xlevels_hot)
             y = last(XYA[p1])
-            x2 = findfirst(==(XZB[p2][1:nx]), Xlevels_hot)
+            x2 = findfirst(==(XZB[p2,:][1:nx]), Xlevels_hot)
             z = last(XZB[p2])
-            c0[p1, p2] = c[(x1, y, x2, z)]
+            c0[p1, p2] = c[x1, y, x2, z]
         end
     end
 
+    # +
+    Yloss = loss_crossentropy(YA_hot, Ylevels_hot)
+    Zloss = loss_crossentropy(ZB_hot, Zlevels_hot)
+    alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
+    alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
 
 
     #=
