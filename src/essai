@@ -1,0 +1,25 @@
+nXYA nombre de modalité XYA
+nXZB nombre de modalité XZB
+
+#tenter sur des variables binaires
+#definir g toutes les possibilités de Z * Z * Z * Z * Z nXYA fois
+#definir f toutes les possibilités de Y * Y * Y * Y * Y nXZB fois
+#avec itertools
+
+for f in |Y| * |Y| * |Y| * |Y| * |Y| 1:nXZB
+  for g in |Z| * |Z| * |Z| * |Z| * |Z| 1:nXYA
+    #définir le cout
+    for (y, x1) in product(Ylevels, Xlevels)
+      for (z, x2) in product(Zlevels, Xlevels)
+        i = indice de (z, x2)
+        j = indice de (y, x1) 
+        c[x1,y,x2,z] = d(x1,x2) + loss(y,f[j]) + loss(z,g[i])
+        #solver
+
+        # ou 
+    chinge1 = alpha1 * loss_crossentropy(yA_hot, f)
+    chinge2 = alpha2 * loss_crossentropy(zB_hot,g)
+    fcost = chinge1 .+ chinge2'
+    C .= C0 ./ maximum(C0) .+ fcost
+    G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
+    
