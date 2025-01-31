@@ -169,7 +169,6 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
 
 
     Xlevels = eachindex(Xlevels_hot)
-    return Xlevels
 
 
     model = Model(Clp.Optimizer)
@@ -310,71 +309,59 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
     # Solve the problem
     optimize!(model)
 
+
     # Extract the values of the solution
     gamma_val = [
         value(Ω[x1, y, x2, z]) for x1 in Xlevels, y in Ylevels, x2 in Xlevels, z in Zlevels
     ]
 
-    c0 = zeros(Int32, length(product(Ylevels, Xlevels)), length(product(Zlevels, Xlevels)))
+
+    # compute G from gamma_val ?
+
     for p1 in axes(c0, 1)
         for p2 in axes(c0, 2)
-            x1 = findfirst(==(XYA[p1,:][1:nx]), Xlevels_hot)
+            x1 = findfirst(==(XYA[p1][1:nx]), Xlevels_hot)
             y = last(XYA[p1])
-            x2 = findfirst(==(XZB[p2,:][1:nx]), Xlevels_hot)
+            x2 = findfirst(==(XZB[p2][1:nx]), Xlevels_hot)
             z = last(XZB[p2])
-            c0[p1, p2] = c[x1, y, x2, z]
+            C0[p1, p2] = c[x1, y, x2, z]
         end
     end
 
+    @show size(C0)
     # +
     Yloss = loss_crossentropy(YA_hot, Ylevels_hot)
     Zloss = loss_crossentropy(ZB_hot, Zlevels_hot)
     alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
     alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
 
+    # YBpred = zero(YB)
+    # for j in eachindex(YBpred)
+    #     YBpred[j] = optimal_modality(Ylevels, Yloss, view(C0, :, j))
+    # end
 
-    #=
+    # ZApred = zero(ZA)
+    # for i in eachindex(ZApred)
+    #     ZApred[i] = optimal_modality(Zlevels, Zloss, view(C0, i, :))
+    # end
 
-        for j in eachindex(yB_pred)
-            yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G, :, j))
-        end
+    #  YBpred_hot = one_hot_encoder(YBpred, Ylevels)
+    #  ZApred_hot = one_hot_encoder(ZApred, Zlevels)
 
-        for i in eachindex(zA_pred)
-            zA_pred[i] = optimal_modality(Zlevels, Zloss, view(G, i, :))
-        end
+    #  ### Update Cost matrix
 
-        YBpred_hot = one_hot_encoder(yB_pred, Ylevels)
-        ZApred_hot = one_hot_encoder(zA_pred, Zlevels)
+    #  cost1 = alpha1 * loss_crossentropy(YA_hot, YBpred_hot)
+    #  cost2 = alpha2 * loss_crossentropy(ZB_hot, ZApred_hot)
 
-        ### Update Cost matrix
+    #  fcost = cost1 .+ cost2'
 
-        cost1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
-        cost2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
-        fcost = cost1 .+ cost2'
+    #  C = C0 ./ maximum(C0) .+ fcost
 
-        C .= C0 ./ maximum(C0) .+ fcost
+    #  YBpred = onecold(YBpred_hot)
+    #  ZApred = onecold(ZApred_hot)
 
-        zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
-        yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
+    est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
 
-        for i in axes(XYA, 1)
-            ind = findfirst(XYA[i, :] == v for v in XYA2)
-            zA_pred_hot_i[i, :] .= zA_pred_hot[ind, :]
-        end
-
-        for i in axes(XZB, 1)
-            ind = findfirst(XZB[i, :] == v for v in XZB2)
-            yB_pred_hot_i[i, :] .= yB_pred_hot[ind, :]
-        end
-
-        YBpred .= onecold(yB_pred_hot_i)
-        ZApred .= onecold(zA_pred_hot_i)
-
-        est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
-
-        est_opt = max(est_opt, est)
-
-    =#
 end
 
 csv_file = joinpath("dataset.csv")
