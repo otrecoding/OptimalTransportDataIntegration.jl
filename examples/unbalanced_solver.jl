@@ -43,6 +43,9 @@ end
 """
 function optimal_modality(values, loss, weight)
 
+    @assert size(loss, 1) == size(weight, 1)
+    @assert size(loss, 2) == size(values, 1)
+
     cost_for_each_modality = Float64[]
     for j in eachindex(values)
         s = 0
@@ -100,17 +103,17 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
     distance = Hamming()
 
     nx = size(X_hot, 2)
-    XYA = Vector{Int}[]
-    XZB = Vector{Int}[]
+    XYAlevels = Vector{Int}[]
+    XZBlevels = Vector{Int}[]
     for (y, x) in product(Ylevels, Xlevels_hot)
-        push!(XYA, [x...; y])
+        push!(XYAlevels, [x...; y])
     end
     for (z, x) in product(Zlevels, Xlevels_hot)
-        push!(XZB, [x...; z])
+        push!(XZBlevels, [x...; z])
     end
 
-    a = stack([v[1:nx] for v in XYA], dims = 1)
-    b = stack([v[1:nx] for v in XZB], dims = 1)
+    a = stack([v[1:nx] for v in XYAlevels], dims = 1)
+    b = stack([v[1:nx] for v in XZBlevels], dims = 1)
 
     C0 = pairwise(distance, a, b; dims = 1)
 
@@ -126,10 +129,10 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
 
     for p1 in axes(c0, 1)
         for p2 in axes(c0, 2)
-            x1 = findfirst(==(XYA[p1][1:nx]), Xlevels_hot)
-            y = last(XYA[p1])
-            x2 = findfirst(==(XZB[p2][1:nx]), Xlevels_hot)
-            z = last(XZB[p2])
+            x1 = findfirst(==(XYAlevels[p1][1:nx]), Xlevels_hot)
+            y = last(XYAlevels[p1])
+            x2 = findfirst(==(XZBlevels[p2][1:nx]), Xlevels_hot)
+            z = last(XZBlevels[p2])
             c0[p1, p2] = c[x1, y, x2, z]
         end
     end
@@ -320,33 +323,61 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
 
     for p1 in axes(c0, 1)
         for p2 in axes(c0, 2)
-            x1 = findfirst(==(XYA[p1][1:nx]), Xlevels_hot)
-            y = last(XYA[p1])
-            x2 = findfirst(==(XZB[p2][1:nx]), Xlevels_hot)
-            z = last(XZB[p2])
+            x1 = findfirst(==(XYAlevels[p1][1:nx]), Xlevels_hot)
+            y = last(XYAlevels[p1])
+            x2 = findfirst(==(XZBlevels[p2][1:nx]), Xlevels_hot)
+            z = last(XZBlevels[p2])
             C0[p1, p2] = c[x1, y, x2, z]
         end
     end
 
     @show size(C0)
+
     # +
-    Yloss = loss_crossentropy(YA_hot, Ylevels_hot)
-    Zloss = loss_crossentropy(ZB_hot, Zlevels_hot)
+    Yloss = loss_crossentropy(one_hot_encoder(last.(XYAlevels), Ylevels), Ylevels_hot)
+    Zloss = loss_crossentropy(one_hot_encoder(last.(XZBlevels), Zlevels), Zlevels_hot)
+
+    @show size(Yloss), Ylevels
+    @show size(Zloss), Zlevels
     alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
     alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
 
-    # YBpred = zero(YB)
-    # for j in eachindex(YBpred)
-    #     YBpred[j] = optimal_modality(Ylevels, Yloss, view(C0, :, j))
-    # end
+    yB_pred = [ optimal_modality(Ylevels, Yloss, view(C0, :, j)) for j in axes(C0, 2)]
+    zA_pred = [ optimal_modality(Zlevels, Zloss, view(C0, i, :)) for i in axes(C0, 1)]
 
-    # ZApred = zero(ZA)
-    # for i in eachindex(ZApred)
-    #     ZApred[i] = optimal_modality(Zlevels, Zloss, view(C0, i, :))
-    # end
+    ### Update Cost matrix
 
-    #  YBpred_hot = one_hot_encoder(YBpred, Ylevels)
-    #  ZApred_hot = one_hot_encoder(ZApred, Zlevels)
+    yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
+    zA_pred_hot = one_hot_encoder(zA_pred, Zlevels)
+
+    # chinge1 = alpha1 * loss_crossentropy(one_hot_encoder(last.(XYAlevels), Ylevels), yB_pred_hot)
+    # chinge2 = alpha2 * loss_crossentropy(one_hot_encoder(last.(XZBlevels), Zlevels), zA_pred_hot)
+
+    # fcost = chinge1 .+ chinge2'
+
+    # C = C0 ./ maximum(C0) .+ fcost
+
+    zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
+    yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
+
+    XA = view(X_hot, indA, :)
+    XB = view(X_hot, indB, :)
+
+    XYA = hcat(XA, YA)
+    XZB = hcat(XB, ZB)
+
+    for i in 1:nA
+       ind = findfirst(XYA[i, :] == v for v in XYAlevels)
+       zA_pred_hot_i[i, :] .= zA_pred_hot[ind, :]
+    end
+
+    for i in 1:nB
+       ind = findfirst(XZB[i, :] == v for v in XZBlevels)
+       yB_pred_hot_i[i, :] .= yB_pred_hot[ind, :]
+    end
+
+    YBpred = onecold(yB_pred_hot_i)
+    ZApred = onecold(zA_pred_hot_i)
 
     #  ### Update Cost matrix
 
