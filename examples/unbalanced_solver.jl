@@ -147,14 +147,6 @@ function unbalanced_with_pot(data, reg = 0.1, reg_m = 0.1; Ylevels = 1:4, Zlevel
     zB = last.(XZBlevels) # les z parmi les XZB observés, potentiellement des valeurs repetées 
     zB_hot = one_hot_encoder(zB, Zlevels)
 
-    # Algorithm
-
-    ## Initialisation 
-
-    yB_pred = zeros(size(XZBlevels, 1)) # number of observed different values in A
-    zA_pred = zeros(size(XYAlevels, 1)) # number of observed different values in B
-    nbrvarX = size(data, 2) - 3 # size of data less Y, Z and database id
-
     Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
     Zloss = loss_crossentropy(zB_hot, Zlevels_hot)
 
@@ -174,6 +166,9 @@ function unbalanced_with_pot(data, reg = 0.1, reg_m = 0.1; Ylevels = 1:4, Zlevel
     # G = PythonOT.entropic_partial_wasserstein(wa2, wb2, C, reg; m = reg_m)
     G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
 
+    yB_pred = zeros(size(XZBlevels, 1)) # number of observed different values in A
+    zA_pred = zeros(size(XYAlevels, 1)) # number of observed different values in B
+
     for j in eachindex(yB_pred)
         yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G, :, j))
     end
@@ -186,12 +181,12 @@ function unbalanced_with_pot(data, reg = 0.1, reg_m = 0.1; Ylevels = 1:4, Zlevel
     zA_pred_hot = one_hot_encoder(zA_pred, Zlevels)
 
     for i in axes(XYA, 1)
-        ind = findfirst(XYA[i, :] == v for v in XYAlevels)
+        ind = findfirst(XYA[i, :] ≈ v for v in XYAlevels)
         zA_pred_hot_i[i, :] .= zA_pred_hot[ind, :]
     end
 
     for i in axes(XZB, 1)
-        ind = findfirst(XZB[i, :] == v for v in XZBlevels)
+        ind = findfirst(XZB[i, :] ≈ v for v in XZBlevels)
         yB_pred_hot_i[i, :] .= yB_pred_hot[ind, :]
     end
 
@@ -281,7 +276,6 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
     end
 
     @assert c0 ≈ C0
-
 
     Xvalues = unique(eachrow(X))
     dist_X = pairwise(Cityblock(), Xvalues, Xvalues)
@@ -475,9 +469,13 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
         end
     end
 
-    # +
-    Yloss = loss_crossentropy(one_hot_encoder(last.(XYAlevels), Ylevels), Ylevels_hot)
-    Zloss = loss_crossentropy(one_hot_encoder(last.(XZBlevels), Zlevels), Zlevels_hot)
+    yA = last.(XYAlevels) # les y parmi les XYA observés, potentiellement des valeurs repetées 
+    yA_hot = one_hot_encoder(yA, Ylevels)
+    zB = last.(XZBlevels) # les z parmi les XZB observés, potentiellement des valeurs repetées 
+    zB_hot = one_hot_encoder(zB, Zlevels)
+
+    Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
+    Zloss = loss_crossentropy(zB_hot, Zlevels_hot)
 
     yB_pred = [ optimal_modality(Ylevels, Yloss, view(C0, :, j)) for j in axes(C0, 2)]
     zA_pred = [ optimal_modality(Zlevels, Zloss, view(C0, i, :)) for i in axes(C0, 1)]
@@ -497,12 +495,12 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
     XZB = hcat(XB_hot, ZB)
 
     for i in 1:nA
-       ind = findfirst(XYA[i, :] == v for v in XYAlevels)
+       ind = findfirst(XYA[i, :] ≈ v for v in XYAlevels)
        zA_pred_hot_i[i, :] .= zA_pred_hot[ind, :]
     end
 
     for i in 1:nB
-       ind = findfirst(XZB[i, :] == v for v in XZBlevels)
+       ind = findfirst(XZB[i, :] ≈ v for v in XZBlevels)
        yB_pred_hot_i[i, :] .= yB_pred_hot[ind, :]
     end
 
