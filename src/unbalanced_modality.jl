@@ -51,7 +51,7 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
     indA = findall(base .== 1)
     indB = findall(base .== 2)
 
-    X = Matrix{T}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
+    X_hot = Matrix{T}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
     Y = Vector{T}(data.Y)
     Z = Vector{T}(data.Z)
 
@@ -60,8 +60,8 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
     ZA = view(Z, indA)
     ZB = view(Z, indB)
 
-    XA = view(X, indA, :)
-    XB = view(X, indB, :)
+    XA = view(X_hot, indA, :)
+    XB = view(X_hot, indB, :)
 
     YA_hot = one_hot_encoder(YA, Ylevels)
     ZA_hot = one_hot_encoder(ZA, Zlevels)
@@ -85,7 +85,7 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
     # Compute the indexes of individuals with same covariates
     indXA = Dict{T,Array{T}}()
     indXB = Dict{T,Array{T}}()
-    Xlevels = sort(unique(eachrow(X)))
+    Xlevels = sort(unique(eachrow(X_hot)))
 
     for (i, x) in enumerate(Xlevels)
         distA = vec(pairwise(distance, x[:, :], XA', dims = 2))
@@ -119,7 +119,7 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
     Ylevels_hot = one_hot_encoder(Ylevels)
     Zlevels_hot = one_hot_encoder(Zlevels)
 
-    nx = size(X, 2) ## Nb modalités x 
+    nx = size(X_hot, 2) ## Nb modalités x 
 
     # les x parmi les XYA observés, potentiellement des valeurs repetées 
     XA_hot = stack([v[1:nx] for v in XYA2], dims = 1)
