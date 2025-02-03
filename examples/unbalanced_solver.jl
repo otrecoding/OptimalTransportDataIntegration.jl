@@ -19,6 +19,7 @@ using DataFrames
 using JuMP, Clp
 import .Iterators: product
 import Distances: colwise, pairwise, Hamming, Cityblock
+import PythonOT
 
 onecold(X) = map(argmax, eachrow(X))
 
@@ -60,6 +61,148 @@ function optimal_modality(values, loss, weight)
 end
 
 
+function unbalanced_with_pot(data, reg = 0.1, reg_m = 0.1; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
+
+    T = Int32
+
+    base = data.database
+
+    indA = findall(base .== 1)
+    indB = findall(base .== 2)
+
+    X_hot = Matrix{T}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
+    Y = Vector{T}(data.Y)
+    Z = Vector{T}(data.Z)
+
+    YA = view(Y, indA)
+    YB = view(Y, indB)
+    ZA = view(Z, indA)
+    ZB = view(Z, indB)
+
+    YA_hot = one_hot_encoder(YA, Ylevels)
+    ZA_hot = one_hot_encoder(ZA, Zlevels)
+    YB_hot = one_hot_encoder(YB, Ylevels)
+    ZB_hot = one_hot_encoder(ZB, Zlevels)
+
+    XYA = hcat(X_hot[indA, :], YA)
+    XZB = hcat(X_hot[indB, :], ZB)
+
+    distance = Hamming()
+
+    # Compute data for aggregation of the individuals
+
+    nA = length(indA)
+    nB = length(indB)
+
+    # list the distinct modalities in A and B
+    indY = Dict((m, findall(YA .== m)) for m in Ylevels)
+    indZ = Dict((m, findall(ZB .== m)) for m in Zlevels)
+
+    # Compute the indexes of individuals with same covariates
+    indXA = Dict{T,Array{T}}()
+    indXB = Dict{T,Array{T}}()
+    Xlevels = sort(unique(eachrow(X_hot)))
+
+    for (i, x) in enumerate(Xlevels)
+        distA = vec(pairwise(distance, x[:, :], X_hot[indA, :]', dims = 2))
+        distB = vec(pairwise(distance, x[:, :], X_hot[indB, :]', dims = 2))
+        indXA[i] = findall(distA .< 0.1)
+        indXB[i] = findall(distB .< 0.1)
+    end
+
+    nbX = length(indXA)
+
+    wa = vec([sum(indXA[x][YA[indXA[x]].==y]) for y in Ylevels, x = 1:nbX])
+    wb = vec([sum(indXB[x][ZB[indXB[x]].==z]) for z in Zlevels, x = 1:nbX])
+
+    wa2 = filter(>(0), wa) ./ nA
+    wb2 = filter(>(0), wb) ./ nB
+
+    XYAlevels = Vector{T}[]
+    XZBlevels = Vector{T}[]
+    i = 0
+    for (y, x) in product(Ylevels, Xlevels)
+        i += 1
+        wa[i] > 0 && push!(XYAlevels, [x...; y])
+    end
+    i = 0
+    for (z, x) in product(Zlevels, Xlevels)
+        i += 1
+        wb[i] > 0 && push!(XZBlevels, [x...; z])
+    end
+
+    # +
+    Ylevels_hot = one_hot_encoder(Ylevels)
+    Zlevels_hot = one_hot_encoder(Zlevels)
+
+    nx = size(X_hot, 2) ## Nb modalités x 
+
+    # les x parmi les XYA observés, potentiellement des valeurs repetées 
+    XA_hot = stack([v[1:nx] for v in XYAlevels], dims = 1)
+    # les x parmi les XZB observés, potentiellement des valeurs repetées 
+    XB_hot = stack([v[1:nx] for v in XZBlevels], dims = 1)
+
+    yA = last.(XYAlevels) # les y parmi les XYA observés, potentiellement des valeurs repetées 
+    yA_hot = one_hot_encoder(yA, Ylevels)
+    zB = last.(XZBlevels) # les z parmi les XZB observés, potentiellement des valeurs repetées 
+    zB_hot = one_hot_encoder(zB, Zlevels)
+
+    # Algorithm
+
+    ## Initialisation 
+
+    yB_pred = zeros(size(XZBlevels, 1)) # number of observed different values in A
+    zA_pred = zeros(size(XYAlevels, 1)) # number of observed different values in B
+    nbrvarX = size(data, 2) - 3 # size of data less Y, Z and database id
+
+    Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
+    Zloss = loss_crossentropy(zB_hot, Zlevels_hot)
+
+    ## Optimal Transport
+
+    C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1)
+    C = C0 ./ maximum(C0)
+
+    zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
+    yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
+
+    est_opt = 0.0
+
+    YBpred = zeros(T, nB)
+    ZApred = zeros(T, nA)
+
+    # G = PythonOT.entropic_partial_wasserstein(wa2, wb2, C, reg; m = reg_m)
+    G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
+
+    for j in eachindex(yB_pred)
+        yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G, :, j))
+    end
+
+    for i in eachindex(zA_pred)
+        zA_pred[i] = optimal_modality(Zlevels, Zloss, view(G, i, :))
+    end
+
+    yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
+    zA_pred_hot = one_hot_encoder(zA_pred, Zlevels)
+
+    for i in axes(XYA, 1)
+        ind = findfirst(XYA[i, :] == v for v in XYAlevels)
+        zA_pred_hot_i[i, :] .= zA_pred_hot[ind, :]
+    end
+
+    for i in axes(XZB, 1)
+        ind = findfirst(XZB[i, :] == v for v in XZBlevels)
+        yB_pred_hot_i[i, :] .= yB_pred_hot[ind, :]
+    end
+
+    YBpred .= onecold(yB_pred_hot_i)
+    ZApred .= onecold(zA_pred_hot_i)
+
+    est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
+
+end
+
+
 # -
 
 function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
@@ -96,11 +239,11 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
 
     X_hot = one_hot_encoder(X)
     Xlevels_hot = sort(unique(eachrow(X_hot))) 
+
     @assert length(Xlevels_hot) == 24 "not possible observations in X"
+
     Ylevels_hot = one_hot_encoder(Ylevels)
     Zlevels_hot = one_hot_encoder(Zlevels)
-
-    distance = Hamming()
 
     nx = size(X_hot, 2)
     XYAlevels = Vector{Int}[]
@@ -115,7 +258,7 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
     a = stack([v[1:nx] for v in XYAlevels], dims = 1)
     b = stack([v[1:nx] for v in XZBlevels], dims = 1)
 
-    C0 = pairwise(distance, a, b; dims = 1)
+    C0 = pairwise(Hamming(), a, b; dims = 1)
 
     c = zeros(Int, length(Xlevels_hot), length(Ylevels), length(Xlevels_hot), length(Zlevels))
 
@@ -155,11 +298,12 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
     b = view(X_hot, indB, :)
 
     for (i, x) in enumerate(Xlevels_hot)
-        distA = vec(pairwise(distance, x[:, :], a', dims = 2))
-        distB = vec(pairwise(distance, x[:, :], b', dims = 2))
-        push!(indXA, findall(==(0), distA))
-        push!(indXB, findall(==(0), distB))
+        distA = vec(pairwise(Hamming(), x[:, :], a', dims = 2))
+        distB = vec(pairwise(Hamming(), x[:, :], b', dims = 2))
+        push!(indXA, findall(distA .< 0.1))
+        push!(indXB, findall(distB .< 0.1))
     end
+
 
     # Compute the estimators that appear in the model
 
@@ -331,16 +475,9 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
         end
     end
 
-    @show size(C0)
-
     # +
     Yloss = loss_crossentropy(one_hot_encoder(last.(XYAlevels), Ylevels), Ylevels_hot)
     Zloss = loss_crossentropy(one_hot_encoder(last.(XZBlevels), Zlevels), Zlevels_hot)
-
-    @show size(Yloss), Ylevels
-    @show size(Zloss), Zlevels
-    alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
-    alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
 
     yB_pred = [ optimal_modality(Ylevels, Yloss, view(C0, :, j)) for j in axes(C0, 2)]
     zA_pred = [ optimal_modality(Zlevels, Zloss, view(C0, i, :)) for i in axes(C0, 1)]
@@ -350,21 +487,14 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
     yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
     zA_pred_hot = one_hot_encoder(zA_pred, Zlevels)
 
-    # chinge1 = alpha1 * loss_crossentropy(one_hot_encoder(last.(XYAlevels), Ylevels), yB_pred_hot)
-    # chinge2 = alpha2 * loss_crossentropy(one_hot_encoder(last.(XZBlevels), Zlevels), zA_pred_hot)
-
-    # fcost = chinge1 .+ chinge2'
-
-    # C = C0 ./ maximum(C0) .+ fcost
-
     zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
     yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
 
-    XA = view(X_hot, indA, :)
-    XB = view(X_hot, indB, :)
+    XA_hot = view(X_hot, indA, :)
+    XB_hot = view(X_hot, indB, :)
 
-    XYA = hcat(XA, YA)
-    XZB = hcat(XB, ZB)
+    XYA = hcat(XA_hot, YA)
+    XZB = hcat(XB_hot, ZB)
 
     for i in 1:nA
        ind = findfirst(XYA[i, :] == v for v in XYAlevels)
@@ -379,18 +509,6 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
     YBpred = onecold(yB_pred_hot_i)
     ZApred = onecold(zA_pred_hot_i)
 
-    #  ### Update Cost matrix
-
-    #  cost1 = alpha1 * loss_crossentropy(YA_hot, YBpred_hot)
-    #  cost2 = alpha2 * loss_crossentropy(ZB_hot, ZApred_hot)
-
-    #  fcost = cost1 .+ cost2'
-
-    #  C = C0 ./ maximum(C0) .+ fcost
-
-    #  YBpred = onecold(YBpred_hot)
-    #  ZApred = onecold(ZApred_hot)
-
     est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
 
 end
@@ -399,4 +517,6 @@ csv_file = joinpath("dataset.csv")
 
 data = CSV.read(csv_file, DataFrame)
 
-@time unbalanced_solver(data)
+@time println(otrecod(data, OTjoint(lambda_reg = 0.1, maxrelax = 0.1)))
+@time println(unbalanced_with_pot(data))
+@time println(unbalanced_solver(data))
