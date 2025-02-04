@@ -168,12 +168,12 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
     for iter = 1:iterations
 
 
-        if reg_m > 0.0
-            # G = PythonOT.entropic_partial_wasserstein(wa2, wb2, C, reg; m = reg_m)
-            G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
-        else
-            G = PythonOT.emd(wa2, wb2, C)
-        end
+        #if reg_m > 0.0
+        #    G = PythonOT.entropic_partial_wasserstein(wa2, wb2, C, reg; m = reg_m)
+             G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
+        #else
+        #    G = PythonOT.emd(wa2, wb2, C)
+        #end
 
         for j in eachindex(yB_pred)
             yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G, :, j))
