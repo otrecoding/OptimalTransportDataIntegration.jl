@@ -30,15 +30,13 @@ function test_ot_joint(csv_file)
     Z = Vector(data.Z)
     database = data.database
 
-    dist_choice = Hamming()
-
-    instance = Instance(database, X, Y, Z, dist_choice)
+    instance = Instance(database, X, Y, Z, Hamming())
 
     lambda_reg = 0.392
     maxrelax = 0.714
     percent_closest = 0.2
 
-    sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
+    sol = OptimalTransportDataIntegration.ot_joint(instance, maxrelax, lambda_reg, percent_closest)
     compute_pred_error!(sol, instance, false)
     return sol.errorpredavg
 
