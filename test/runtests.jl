@@ -25,7 +25,7 @@ end
     data = CSV.read(joinpath(@__DIR__, "data_good.csv"), DataFrame)
     @time est = otrecod(data, UnbalancedModality())
     println(est)
-    @time est = otrecod(data, UnbalancedModality(reg_m = 0.0))
+    @time est = otrecod(data, UnbalancedModality(reg_m1 = 0.0, reg_m2 = 0.0))
     println(est)
 
 end
@@ -36,7 +36,7 @@ end
     @time est = otrecod(data, UnbalancedModality())
     println(est)
     
-    @time est = otrecod(data, UnbalancedModality(reg_m = 0.0))
+    @time est = otrecod(data, UnbalancedModality(reg_m1 = 0.0, reg_m2 = 0.0))
     println(est)
 
 end
