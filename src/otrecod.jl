@@ -53,7 +53,8 @@ export UnbalancedModality
 @with_kw struct UnbalancedModality <: AbstractMethod
 
     reg::Float64 = 0.01
-    reg_m::Float64 = 0.01
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::AbstractVector = 1:4
     Zlevels::AbstractVector = 1:3
     iterations::Int = 10
@@ -65,7 +66,7 @@ function otrecod(data::DataFrame, method::UnbalancedModality)
     unbalanced_modality(
         data,
         method.reg,
-        method.reg_m;
+        (method.reg_m1, method.reg_m2);
         Ylevels = method.Ylevels,
         Zlevels = method.Zlevels,
         iterations = method.iterations,
