@@ -125,8 +125,9 @@ function unbalanced_with_predictors(data; iterations = 10)
 
 end
 
-json_file = joinpath("dataset.json")
-csv_file = joinpath("dataset.csv")
+println(@__DIR__)
+@show json_file = joinpath(@__DIR__, "dataset.json")
+@show csv_file = joinpath(@__DIR__, "dataset.csv")
 
 params = JSON.parsefile("dataset.json")
 
