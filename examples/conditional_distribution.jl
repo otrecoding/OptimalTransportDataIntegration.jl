@@ -46,11 +46,11 @@ function conditional_distribution(nsimulations::Int, scenarios)
                 writedlm(io, [i eps est "ot-r"])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                est = otrecod(data, UnbalancedModality(reg = 0.01, reg_m = 0.0))
+                est = otrecod(data, UnbalancedModality(reg = 0.0, reg_m1 = 0.0, reg_m2 = 0.0))
                 writedlm(io, [i eps est "ote"])
 
                 #OTE Regularized unbalanced transport 
-                est = otrecod(data, UnbalancedModality(reg = 0.01, reg_m = 0.05))
+                est = otrecod(data, UnbalancedModality(reg = 0.0, reg_m1 = 0.01, reg_m2 = 0.01))
                 writedlm(io, [i eps est "ote-r"])
 
                 #SL Simple Learning

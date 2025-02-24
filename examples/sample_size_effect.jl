@@ -20,7 +20,7 @@ using OptimalTransportDataIntegration
 # +
 function sample_size_effect(all_params, nsimulations)
 
-    outfile = "sample_size_effect_ot.csv"
+    outfile = "sample_size_effect.csv"
     header = ["id", "nA", "nB", "estimation", "method"]
 
     open(outfile, "w") do io
@@ -44,11 +44,11 @@ function sample_size_effect(all_params, nsimulations)
                 writedlm(io, [i params.nA params.nB est "ot-r"])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                est = otrecod(data, UnbalancedModality(reg = 0.01, reg_m = 0.0))
+                est = otrecod(data, UnbalancedModality(reg = 0.0, reg_m1 = 0.0, reg_m2 = 0.0))
                 writedlm(io, [i params.nA params.nB est "ote"])
 
                 #OTE Regularized unbalanced transport 
-                est = otrecod(data, UnbalancedModality(reg = 0.01, reg_m = 0.05))
+                est = otrecod(data, UnbalancedModality(reg = 0.0, reg_m1 = 0.01, reg_m2 = 0.01))
                 writedlm(io, [i params.nA params.nB est "ote-r"])
 
                 #SL Simple Learning
@@ -71,4 +71,4 @@ all_params = [
 
 nsimulations = 100
 
-@time sample_size_effect(nsimulations, all_params)
+@time sample_size_effect(all_params, nsimulations)
