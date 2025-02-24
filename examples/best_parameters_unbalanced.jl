@@ -19,11 +19,12 @@ using DelimitedFiles
 function unbalanced(start, stop)
 
     reg = [0.0, 0.001, 0.01, 0.1]
-    reg_m = [0.01 0.05 0.1 0.25 0.5 0.75 1]
+    reg_m1 = [0.01 0.05 0.1 0.25 0.5 0.75 1]
+    reg_m2 = [0.01 0.05 0.1 0.25 0.5 0.75 1]
     estimations = Float32[]
 
     outfile = "results_unbalanced.csv"
-    header = ["id" "reg" "reg_m" "estimation" "method"]
+    header = ["id" "reg" "reg_m1" "reg_m2" "estimation" "method"]
 
     open(outfile, "a") do io
 
@@ -39,10 +40,10 @@ function unbalanced(start, stop)
 
             data = CSV.read(joinpath("datasets", csv_file), DataFrame)
 
-            for r in reg, r_m in reg_m
+            for r in reg, r_m1 in reg_m1, r_m2 in reg_m2
 
-                @show est = otrecod(data, UnbalancedModality(reg = r, reg_m = r_m))
-                writedlm(io, [i r r_m est "unbalanced"])
+                @show est = otrecod(data, UnbalancedModality(reg = r, reg_m1 = r_m1, reg_m2 = r_m2))
+                writedlm(io, [i r r_m1 r_m2 est "unbalanced"])
 
             end
 
@@ -52,4 +53,4 @@ function unbalanced(start, stop)
 
 end
 
-unbalanced(968, 1000)
+unbalanced(1, 1000)
