@@ -8,9 +8,9 @@
 #       format_version: '1.5'
 #       jupytext_version: 1.16.7
 #   kernelspec:
-#     display_name: sklearn
+#     display_name: Python 3 (ipykernel)
 #     language: python
-#     name: sklearn
+#     name: python3
 # ---
 
 # +
@@ -122,6 +122,3 @@ ax = sns.boxplot(data = data,
             x = "epsilon", y = "accuracy", hue = "method", showfliers = False)
 sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
 plt.savefig("conditional_distribution.png")
-# -
-
-
