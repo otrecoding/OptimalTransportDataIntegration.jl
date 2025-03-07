@@ -99,8 +99,9 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
     wa = vec([sum(indXA[x][YA[indXA[x]].==y]) for y in Ylevels, x = 1:nbX])
     wb = vec([sum(indXB[x][ZB[indXB[x]].==z]) for z in Zlevels, x = 1:nbX])
 
-    wa2 = filter(>(0), wa) ./ nA
-    wb2 = filter(>(0), wb) ./ nB
+    wa2 = filter(>(0), wa) 
+    wb2 = filter(>(0), wb) ./ sum(wa2)
+
 
     XYA2 = Vector{T}[]
     XZB2 = Vector{T}[]
@@ -171,7 +172,7 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
         if reg_m1 > 0.0 && reg_m2 > 0.0 
             G = PythonOT.mm_unbalanced(wa2, wb2, C, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
-            G = PythonOT.emd(wa2, wb2, C)
+            G = PythonOT.sinkhorn(wa2, wb2, C, 0.01)
         end
 
 
