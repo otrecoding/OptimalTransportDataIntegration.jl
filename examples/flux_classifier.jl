@@ -19,23 +19,25 @@
 # The following page contains a step-by-step walkthrough of a classifier implementation in Julia using Flux. 
 # Let's start by importing the required Julia packages.
 
-using Statistics, DataFrames, CSV, ProgressMeter
+using Statistics, DataFrames, CSV
 using OptimalTransportDataIntegration
-import Flux: Chain, Dense, relu, softmax
+import Flux
+import Flux: Chain, Dense, relu, softmax, onehotbatch, onecold, logitcrossentropy
 
 # ## Dataset
 
 # +
 data = DataFrame(CSV.File(joinpath(@__DIR__, "..", "test", "data_good.csv")))
 
-XA = OptimalTransportDataIntegration.onehot(Matrix(dba[!, [:X1, :X2, :X3]]))
-XB = OptimalTransportDataIntegration.onehot(Matrix(dbb[!, [:X1, :X2, :X3]]))
-
 dba = subset(data, :database => ByRow(==(1)))
 dbb = subset(data, :database => ByRow(==(2)))
 
-YA = Flux.onehotbatch(dba.Y, 1:4)
-ZB = Flux.onehotbatch(dbb.Z, 1:3)
+XA = OptimalTransportDataIntegration.onehot(Matrix(dba[!, [:X1, :X2, :X3]]))
+XB = OptimalTransportDataIntegration.onehot(Matrix(dbb[!, [:X1, :X2, :X3]]))
+
+
+YA = onehotbatch(dba.Y, 1:4)
+ZB = onehotbatch(dbb.Z, 1:3)
 # -
 
 
@@ -54,11 +56,11 @@ model2 = Chain(Dense(nx, ny))
 function train!(model, x, y, epochs = 1000, batchsize = 64)
     loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
     optim = Flux.setup(Flux.Adam(0.01), model)
-    @showprogress for epoch = 1:epochs
+    for epoch = 1:epochs
         for (x, y) in loader
             grads = Flux.gradient(model) do m
                 y_hat = m(x)
-                Flux.logitcrossentropy(y_hat, y)
+                logitcrossentropy(y_hat, y)
             end
             Flux.update!(optim, model, grads[1])
         end
