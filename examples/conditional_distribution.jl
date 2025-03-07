@@ -29,7 +29,7 @@ function conditional_distribution(nsimulations::Int, scenarios)
 
         for eps in scenarios
 
-            params = DataParameters(eps = eps)
+            params = DataParameters(eps = eps, mB = [0, 0, 0])
 
             for i = 1:nsimulations
 
@@ -65,7 +65,7 @@ function conditional_distribution(nsimulations::Int, scenarios)
 
 end
 
-nsimulations = 100
+nsimulations = 1000
 scenarios = (0.0, 0.1, 0.5, 1.0)
 
 @time conditional_distribution(nsimulations, scenarios)
