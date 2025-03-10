@@ -136,7 +136,6 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
 
     ## Initialisation 
 
-    yB_pred = zeros(size(XZB2, 1)) # number of observed different values in A
     zA_pred = zeros(size(XYA2, 1)) # number of observed different values in B
     nbrvarX = size(data, 2) - 3 # size of data less Y, Z and database id
 
