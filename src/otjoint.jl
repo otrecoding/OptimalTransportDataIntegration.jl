@@ -341,8 +341,10 @@ function otjoint(data; lambda_reg = 0.392, maxrelax = 0.714, percent_closest = 0
     instance = Instance(database, X, Y, Ylevels, Z, Zlevels, Hamming())
 
     sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
-    compute_pred_error!(sol, instance, false)
+    YB, ZA = compute_pred_error!(sol, instance, false)
 
-    return round(1 - sol.errorpredavg, digits = 4)
+    @show  round(1 - sol.errorpredavg, digits = 4)
+
+    return YB, ZA
 
 end
