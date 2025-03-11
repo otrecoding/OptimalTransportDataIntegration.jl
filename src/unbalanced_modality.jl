@@ -6,15 +6,35 @@ import Distances: pairwise, Hamming
 
 onecold(X) = map(argmax, eachrow(X))
 
+"""
+    loss_crossentropy(Y, F)
+
+Cross entropy is typically used as a loss in multi-class classification, in which case the labels y are given in a one-hot format. dims specifies the dimension (or the dimensions) containing the class probabilities. The prediction ŷ is usually probabilities but in our case it is also one hot encoded vector.
+
+"""
 function loss_crossentropy(Y, F)
     ϵ = 1e-12
-    res = zeros(size(Y, 1), size(F, 1))
-    logF = log.(F .+ ϵ)
-    for i in axes(Y, 2)
-        res .+= -Y[:, i] .* logF[:, i]'
+    nf, nclasses = size(F)
+    ny = size(Y, 1)
+    @assert nclasses == size(Y, 2)
+    res = zeros(ny, nf)
+    logF = zeros(nf, nclasses)
+    for j in axes(F,2), i in axes(F,1)
+        if F[i,j] ≈ 1.0
+            logF[i,j] = log(1. - ϵ)
+        else
+            logF[i,j] = log(ϵ)
+        end
     end
-    return res
+
+    for i in axes(Y, 2)
+        res .+= -Y[:, i] .* logF[:, i]' 
+    end
+
+    return res ./ nf
+
 end
+
 
 """
     optimal_modality(values, loss, weight)
@@ -136,7 +156,8 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
 
     ## Initialisation 
 
-    zA_pred = zeros(size(XYA2, 1)) # number of observed different values in B
+    yB_pred = zeros(Int32, size(XZB2, 1)) # number of observed different values in A
+    zA_pred = zeros(Int32, size(XYA2, 1)) # number of observed different values in B
     nbrvarX = size(data, 2) - 3 # size of data less Y, Z and database id
 
     dimXZB = length(XZB2[1])
@@ -165,6 +186,8 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
     total_costs = Float32[]
     fcosts = Float32[]
     perfs = Float32[]
+    perfs_yb = Float32[]
+    perfs_za = Float32[]
     for iter = 1:iterations
 
        
@@ -207,12 +230,16 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
         YBpred .= onecold(yB_pred_hot_i)
         ZApred .= onecold(zA_pred_hot_i)
 
+        est_yb = mean(YB .== YBpred) 
+        est_za = mean(ZA .== ZApred)
         est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
 
         est_opt = max(est_opt, est)
 
         push!(total_costs, sum(G .* C))
         push!(fcosts, sum(G .* fcost))
+        push!(perfs_yb, est_yb)
+        push!(perfs_za, est_za)
         push!(perfs, est)
 
     end
@@ -222,11 +249,13 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
         println(
             rpad(round(total_costs[i], digits = 6), 15, " "),
             round(fcosts[i], digits = 6),
-            lpad(round(perfs[i], digits = 6), 15, " "),
+            lpad(round(perfs_yb[i], digits = 6), 11, " "),
+            lpad(round(perfs_za[i], digits = 6), 11, " "),
+            lpad(round(perfs[i], digits = 6), 11, " "),
         )
     end
 
-    return round(est_opt, digits = 4)
+    return YBpred, ZApred
 
 
 end
