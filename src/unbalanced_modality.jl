@@ -31,7 +31,7 @@ function loss_crossentropy(Y, F)
         res .+= -Y[:, i] .* logF[:, i]' 
     end
 
-    return res ./ nf
+    return res #./ nf
 
 end
 
@@ -49,13 +49,14 @@ function optimal_modality(values, loss, weight)
 
     cost_for_each_modality = Float64[]
     for j in eachindex(values)
-        s = 0
+        s = zero(Float64)
         for i in axes(loss, 1)
             s += loss[i, j] * weight[i]
         end
         push!(cost_for_each_modality, s)
     end
 
+    @show round.(Flux.softmax(cost_for_each_modality), digits=3)
     return values[argmin(cost_for_each_modality)]
 
 end
@@ -156,8 +157,8 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
 
     ## Initialisation 
 
-    yB_pred = zeros(Int32, size(XZB2, 1)) # number of observed different values in A
-    zA_pred = zeros(Int32, size(XYA2, 1)) # number of observed different values in B
+    yB_pred = zeros(T, size(XZB2, 1)) # number of observed different values in A
+    zA_pred = zeros(T, size(XYA2, 1)) # number of observed different values in B
     nbrvarX = size(data, 2) - 3 # size of data less Y, Z and database id
 
     dimXZB = length(XZB2[1])
@@ -194,7 +195,7 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
         if reg_m1 > 0.0 && reg_m2 > 0.0 
             G = PythonOT.mm_unbalanced(wa2, wb2, C, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
-            G = PythonOT.sinkhorn(wa2, wb2, C, 0.01)
+            G = PythonOT.sinkhorn(wa2, wb2, C, reg)
         end
 
 
