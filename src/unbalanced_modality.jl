@@ -37,18 +37,17 @@ end
 
 
 """
-    optimal_modality(values, loss, weight)
+    modality_cost(loss, weight)
 
-- values: vector of possible values
+- loss: matrix of size len(weight) * len(levels)
 - weight: vector of weights 
-- loss: matrix of size len(Weight) * len(Values)
 
-- Returns an argmin over value in values of the scalar product <loss[value,],weight> 
+Returns the scalar product <loss[level,],weight> 
 """
-function optimal_modality(values, loss, weight)
+function modality_cost(loss, weight)
 
     cost_for_each_modality = Float64[]
-    for j in eachindex(values)
+    for j in axes(loss, 2)
         s = zero(Float64)
         for i in axes(loss, 1)
             s += loss[i, j] * weight[i]
@@ -56,8 +55,7 @@ function optimal_modality(values, loss, weight)
         push!(cost_for_each_modality, s)
     end
 
-    @show round.(Flux.softmax(cost_for_each_modality), digits=3)
-    return values[argmin(cost_for_each_modality)]
+    return Flux.softmax(cost_for_each_modality)
 
 end
 
@@ -200,11 +198,11 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
 
 
         for j in eachindex(yB_pred)
-            yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G, :, j))
+            yB_pred[j] = Ylevels[argmin(modality_cost(Yloss, view(G, :, j)))]
         end
 
         for i in eachindex(zA_pred)
-            zA_pred[i] = optimal_modality(Zlevels, Zloss, view(G, i, :))
+            zA_pred[i] = Zlevels[argmin(modality_cost(Zloss, view(G, i, :)))]
         end
 
         yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
