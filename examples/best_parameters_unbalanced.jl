@@ -24,7 +24,7 @@ function unbalanced(start, stop)
     estimations = Float32[]
 
     outfile = "results_unbalanced.csv"
-    header = ["id" "reg" "reg_m1" "reg_m2" "estimation" "method"]
+    header = ["id" "reg" "reg_m1" "reg_m2" "estimation" "crossentropy" "method"]
 
     open(outfile, "a") do io
 
@@ -42,8 +42,9 @@ function unbalanced(start, stop)
 
             for r in reg, r_m1 in reg_m1, r_m2 in reg_m2
 
-                @show est = otrecod(data, UnbalancedModality(reg = r, reg_m1 = r_m1, reg_m2 = r_m2))
-                writedlm(io, [i r r_m1 r_m2 est "unbalanced"])
+                yb, za = otrecod(data, UnbalancedModality(reg = r, reg_m1 = r_m1, reg_m2 = r_m2))
+                est = accuracy(data, yb, za)
+                writedlm(io, [i r r_m1 r_m2 est crossentropy "unbalanced"])
 
             end
 

@@ -37,11 +37,11 @@ function unbalanced_with_predictors(data; iterations = 10)
     XYA = vcat(XA, YA)
     XZB = vcat(XB, ZB)
 
-    nA::Int = params["nA"]
-    nB::Int = params["nB"]
+    nA = size(XA, 2)
+    nB = size(XB, 2)
 
-    @assert nA == size(XA, 2)
-    @assert nB == size(XB, 2)
+    @assert nA == length(ZAtrue)
+    @assert nB == length(YBtrue)
 
     wa = ones(nA) ./ nA
     wb = ones(nB) ./ nB
@@ -125,15 +125,18 @@ function unbalanced_with_predictors(data; iterations = 10)
 
 end
 
-println(@__DIR__)
-@show json_file = joinpath(@__DIR__, "dataset.json")
-@show csv_file = joinpath(@__DIR__, "dataset.csv")
-
-params = JSON.parsefile("dataset.json")
-
-data = CSV.read(csv_file, DataFrame)
+# println(@__DIR__)
+# @show json_file = joinpath(@__DIR__, "dataset.json")
+# @show csv_file = joinpath(@__DIR__, "dataset.csv")
+# 
+# params = JSON.parsefile("dataset.json")
+# 
+data = CSV.read("dataset.csv", DataFrame)
 @time unbalanced_with_predictors(data, iterations = 1)
 
-@time println("OT : $(otrecod(data, OTjoint()))")
-@time println("Simple Learning : $(otrecod(data, SimpleLearning()))")
-@time println("OTE : $(otrecod(data, UnbalancedModality(iterations=0)))")
+yb, za = otrecod(data, OTjoint())
+@time println("OT : $(accuracy(data, yb, za)) ")
+yb, za = otrecod(data, SimpleLearning())
+@time println("Simple Learning : $(accuracy(data, yb, za))")
+yb, za = otrecod(data, UnbalancedModality(iterations=1))
+@time println("OTE : $(accuracy(data, yb, za ))")
