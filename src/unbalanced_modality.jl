@@ -162,15 +162,11 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
     dimXZB = length(XZB2[1])
     dimXYA = length(XYA2[1])
 
-    d_y = Float64.(abs.(yA .- Ylevels'))
-    d_y ./= maximum(d_y)
-    d_z = Float64.(abs.(zB .- Zlevels'))
-    d_z ./= maximum(d_z)
-    Yloss = d_y # loss_crossentropy(yA_hot, Ylevels_hot)
-    Zloss = d_z # loss_crossentropy(zB_hot, Zlevels_hot)
+    Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
+    Zloss = loss_crossentropy(zB_hot, Zlevels_hot)
 
-    alpha1 = 0.01 # / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
-    alpha2 = 0.01 # / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
+    alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
+    alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
 
     ## Optimal Transport
 
@@ -209,18 +205,13 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
             zA_pred[i] = Zlevels[argmin(modality_cost(Zloss, view(G, i, :)))]
         end
 
-        d_y = Float64.(abs.(yA .- yB_pred'))
-        d_y ./= maximum(d_y)
-        d_z = Float64.(abs.(zB .- zA_pred'))
-        d_z ./= maximum(d_z)
-
         yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
         zA_pred_hot = one_hot_encoder(zA_pred, Zlevels)
 
         ### Update Cost matrix
 
-        chinge1 = alpha1 * d_y #loss_crossentropy(yA_hot, yB_pred_hot)
-        chinge2 = alpha2 * d_z # loss_crossentropy(zB_hot, zA_pred_hot)
+        chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
+        chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
         fcost = chinge1 .+ chinge2'
 
         C .= C0 ./ maximum(C0) .+ fcost
