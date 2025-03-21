@@ -14,6 +14,8 @@ export to_categorical
 
 to_categorical(x) = sort(unique(x)) .== permutedims(x)
 
+to_categorical(x, levels) = levels .== permutedims(x)
+
 # Data generation functions
 include("data_parameters.jl")
 include("generate_xcat_ycat.jl")
@@ -51,7 +53,7 @@ function accuracy( data :: DataFrame, yb_pred :: AbstractVector, za_pred :: Abst
     yb_true = view(Y, indB)
     za_true = view(Z, indA)
 
-    return accuracy(yb_true, yb_pred), accuracy( za_true, za_pred )
+    return accuracy(yb_true, yb_pred), accuracy( za_true, za_pred ), accuracy( vcat(yb_pred, za_pred), vcat(yb_true, za_true))
 
 end
 

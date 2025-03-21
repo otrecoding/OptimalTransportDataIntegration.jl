@@ -31,12 +31,12 @@ function generate_XY(params, bins11, bins12, bins13)
     X22 = digitize(X_glob2[2, :], bins12)
     X23 = digitize(X_glob2[3, :], bins13)
 
-    X11c = to_categorical(X11)[2:end, :]
-    X21c = to_categorical(X21)[2:end, :]
-    X12c = to_categorical(X12)[2:end, :]
-    X22c = to_categorical(X22)[2:end, :]
-    X13c = to_categorical(X13)[2:end, :]
-    X23c = to_categorical(X23)[2:end, :]
+    X11c = to_categorical(X11, 1:2)[2:end, :]
+    X21c = to_categorical(X21, 1:2)[2:end, :]
+    X12c = to_categorical(X12, 1:3)[2:end, :]
+    X22c = to_categorical(X22, 1:3)[2:end, :]
+    X13c = to_categorical(X13, 1:4)[2:end, :]
+    X23c = to_categorical(X23, 1:4)[2:end, :]
 
     X1 = vcat(X11, X21)
     X2 = vcat(X12, X22)

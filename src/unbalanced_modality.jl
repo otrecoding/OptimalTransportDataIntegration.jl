@@ -182,11 +182,11 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
     ZApred = zeros(T, nA)
 
 
-    total_costs = Float32[]
-    fcosts = Float32[]
-    perfs = Float32[]
-    perfs_yb = Float32[]
-    perfs_za = Float32[]
+    # total_costs = Float32[]
+    # fcosts = Float32[]
+    # perfs = Float32[]
+    # perfs_yb = Float32[]
+    # perfs_za = Float32[]
     for iter = 1:iterations
 
        
@@ -229,30 +229,30 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
         YBpred .= onecold(yB_pred_hot_i)
         ZApred .= onecold(zA_pred_hot_i)
 
-        est_yb = mean(YB .== YBpred) 
-        est_za = mean(ZA .== ZApred)
-        est = mean(vcat(YB .== YBpred, ZA .== ZApred))
+        # est_yb = mean(YB .== YBpred) 
+        # est_za = mean(ZA .== ZApred)
+        # est = mean(vcat(YB .== YBpred, ZA .== ZApred))
 
-        est_opt = max(est_opt, est)
+        # est_opt = max(est_opt, est)
 
-        push!(total_costs, sum(G .* C))
-        push!(fcosts, sum(G .* fcost))
-        push!(perfs_yb, est_yb)
-        push!(perfs_za, est_za)
-        push!(perfs, est)
+        # push!(total_costs, sum(G .* C))
+        # push!(fcosts, sum(G .* fcost))
+        # push!(perfs_yb, est_yb)
+        # push!(perfs_za, est_za)
+        # push!(perfs, est)
 
     end
 
-    println(rpad("total cost", 15, " "), "fcost", lpad("estimation", 15, " "))
-    for i = 1:iterations
-        println(
-            rpad(round(total_costs[i], digits = 6), 15, " "),
-            round(fcosts[i], digits = 6),
-            lpad(round(perfs_yb[i], digits = 6), 11, " "),
-            lpad(round(perfs_za[i], digits = 6), 11, " "),
-            lpad(round(perfs[i], digits = 6), 11, " "),
-        )
-    end
+    #println(rpad("total cost", 15, " "), "fcost", lpad("estimation", 15, " "))
+    #for i = 1:iterations
+    #    println(
+    #        rpad(round(total_costs[i], digits = 6), 15, " "),
+    #        round(fcosts[i], digits = 6),
+    #        lpad(round(perfs_yb[i], digits = 6), 11, " "),
+    #        lpad(round(perfs_za[i], digits = 6), 11, " "),
+    #        lpad(round(perfs[i], digits = 6), 11, " "),
+    #    )
+    #end
 
     return YBpred, ZApred
 
