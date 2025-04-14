@@ -147,8 +147,9 @@ the function return a Dataframe with X1, X2, X3, Y, Z and the database id.
 function generate_xcat_ycat(params::DataParameters)
 
     dA = MvNormal(params.mA, params.covA)
-
     XA = rand(dA, params.nA)
+    dB = MvNormal(params.mB, params.covB)
+    XB = rand(dB, params.nB)
 
     px1cc = cumsum(params.px1c)[1:end-1]
     px2cc = cumsum(params.px2c)[1:end-1]
@@ -170,8 +171,6 @@ function generate_xcat_ycat(params::DataParameters)
     binsB2 = vcat(minimum(XB[2, :]) - 100, qxB2c, maximum(XB[2, :]) + 100)
     binsB3 = vcat(minimum(XB[3, :]) - 100, qxB3c, maximum(XB[3, :]) + 100)
 
-
-
     X1, X2, X3, Y1, Y2 = generate_XY(params, binsA1, binsA2, binsA3, binsB1, binsB2, binsB3)
 
     Y, Z = generate_YZ(params, Y1, Y2)
@@ -190,14 +189,8 @@ function generate_xcat_ycat(params::DataParameters)
 
     df = generate_dataframe(params, binsA1, binsA2, binsA3, binsB1, binsB2, binsB3, binsYA1, binsYB1, binsYA2, binsYB2)
 
-    my = length(unique(df.Y))
-    if my < 4
-        @warn "Number of modality in Y $my < 4"
-    end
-    mz = length(unique(df.Z))
-    if mz < 3
-        @warn "Number of modality in Z $mz < 3"
-    end
+    @info "Categories in Y $(sort(unique(df.Y)))"
+    @info "Catgeories in Z $(sort(unique(df.Z)))"
 
     return df
 
