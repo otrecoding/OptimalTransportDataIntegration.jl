@@ -15,29 +15,31 @@ using Test
     @test sort(unique(data.Y)) ≈ [1, 2, 3, 4]
     @test sort(unique(data.Z)) ≈ [1, 2, 3]
     
-    @test otrecod(data, OTjoint()) > 0.8
-    @test otrecod(data, SimpleLearning()) > 0.5
+    yb, za = otrecod(data, OTjoint()) 
+    @test all(accuracy(data, yb, za) .> 0.8)
+    yb, za = otrecod(data, SimpleLearning())
+    @test all(accuracy(data, yb, za) .> 0.8)
 
 end
     
 @testset "otrecod data with all levels in Y and Z" begin
 
     data = CSV.read(joinpath(@__DIR__, "data_good.csv"), DataFrame)
-    @time est = otrecod(data, UnbalancedModality())
-    println(est)
-    @time est = otrecod(data, UnbalancedModality(reg_m = 0.0))
-    println(est)
+    @time yb, za = otrecod(data, UnbalancedModality())
+    println(accuracy(data, yb, za))
+    @time yb, za = otrecod(data, UnbalancedModality(reg_m1 = 0.0, reg_m2 = 0.0))
+    println(accuracy(data, yb, za))
 
 end
 
 @testset "otrecod data with missing levels in Y or Z" begin
 
     data = CSV.read(joinpath(@__DIR__, "data_bad.csv"), DataFrame)
-    @time est = otrecod(data, UnbalancedModality())
-    println(est)
+    @time yb, za = otrecod(data, UnbalancedModality())
+    println(accuracy(data, yb, za))
     
-    @time est = otrecod(data, UnbalancedModality(reg_m = 0.0))
-    println(est)
+    @time yb, za = otrecod(data, UnbalancedModality(reg_m1 = 0.0, reg_m2 = 0.0))
+    println(accuracy(data, yb, za))
 
 end
 

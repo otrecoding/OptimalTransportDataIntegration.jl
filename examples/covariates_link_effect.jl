@@ -21,7 +21,7 @@ using OptimalTransportDataIntegration
 function covariates_link_effect(nsimulations::Int, pvalues)
 
     outfile = "covariates_link_effect.csv"
-    header = ["id", "p", "estimation", "method"]
+    header = ["id", "p", "estyb",  "estza", "estimation", "method"]
 
     open(outfile, "w") do io
 
@@ -37,25 +37,30 @@ function covariates_link_effect(nsimulations::Int, pvalues)
 
                 #OT Transport of the joint distribution of covariates and outcomes.
                 maxrelax, lambda_reg = 0.0, 0.0
-                est = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
-                writedlm(io, [i p est "ot"])
+                yb, za = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i p estyb estza est "ot"])
 
                 #OT-r Regularized Transport 
                 maxrelax, lambda_reg = 0.4, 0.1
-                est = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
-                writedlm(io, [i p est "ot-r"])
+                yb, za = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i p estyb estza est "ot-r"])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                est = otrecod(data, UnbalancedModality(reg = 0.01, reg_m = 0.0))
-                writedlm(io, [i p est "ote"])
+                yb, za = otrecod(data, UnbalancedModality(reg = 0.001, reg_m1 = 0.0, reg_m2 = 0.0))
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i p estyb estza est "ote"])
 
                 #OTE Regularized unbalanced transport 
-                est = otrecod(data, UnbalancedModality())
-                writedlm(io, [i p est "ote-r"])
+                yb, za = otrecod(data, UnbalancedModality(reg = 0.001, reg_m1 = 0.01, reg_m2 = 0.01))
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i p estyb estza est "ote-r"])
 
                 #SL Simple Learning
-                est = otrecod(data, SimpleLearning())
-                writedlm(io, [i p est "sl"])
+                yb, za = otrecod(data, SimpleLearning())
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i p estyb estza est "sl"])
 
             end
 
@@ -65,6 +70,6 @@ function covariates_link_effect(nsimulations::Int, pvalues)
 
 end
 
-nsimulations = 100
+nsimulations = 1000
 
 @time covariates_link_effect(nsimulations, (0.2, 0.4, 0.6, 0.8))

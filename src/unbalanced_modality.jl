@@ -6,43 +6,62 @@ import Distances: pairwise, Hamming
 
 onecold(X) = map(argmax, eachrow(X))
 
+"""
+    loss_crossentropy(Y, F)
+
+Cross entropy is typically used as a loss in multi-class classification, in which case the labels y are given in a one-hot format. dims specifies the dimension (or the dimensions) containing the class probabilities. The prediction ŷ is usually probabilities but in our case it is also one hot encoded vector.
+
+"""
 function loss_crossentropy(Y, F)
     ϵ = 1e-12
-    res = zeros(size(Y, 1), size(F, 1))
-    logF = log.(F .+ ϵ)
-    for i in axes(Y, 2)
-        res .+= -Y[:, i] .* logF[:, i]'
+    nf, nclasses = size(F)
+    ny = size(Y, 1)
+    @assert nclasses == size(Y, 2)
+    res = zeros(ny, nf)
+    logF = zeros(nf, nclasses)
+    for j in axes(F,2), i in axes(F,1)
+        if F[i,j] ≈ 1.0
+            logF[i,j] = log(1. - ϵ)
+        else
+            logF[i,j] = log(ϵ)
+        end
     end
-    return res
+
+    for i in axes(Y, 2)
+        res .+= -Y[:, i] .* logF[:, i]' 
+    end
+
+    return res #./ nf
+
 end
 
-"""
-    optimal_modality(values, loss, weight)
 
-- values: vector of possible values
+"""
+    modality_cost(loss, weight)
+
+- loss: matrix of size len(weight) * len(levels)
 - weight: vector of weights 
-- loss: matrix of size len(Weight) * len(Values)
 
-- Returns an argmin over value in values of the scalar product <loss[value,],weight> 
+Returns the scalar product <loss[level,],weight> 
 """
-function optimal_modality(values, loss, weight)
+function modality_cost(loss, weight)
 
     cost_for_each_modality = Float64[]
-    for j in eachindex(values)
-        s = 0
+    for j in axes(loss, 2)
+        s = zero(Float64)
         for i in axes(loss, 1)
             s += loss[i, j] * weight[i]
         end
         push!(cost_for_each_modality, s)
     end
 
-    return values[argmin(cost_for_each_modality)]
+    return Flux.softmax(cost_for_each_modality)
 
 end
 
 export unbalanced_modality
 
-function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
+function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
 
     T = Int32
 
@@ -51,7 +70,7 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
     indA = findall(base .== 1)
     indB = findall(base .== 2)
 
-    X = Matrix{T}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
+    X_hot = Matrix{T}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
     Y = Vector{T}(data.Y)
     Z = Vector{T}(data.Z)
 
@@ -60,8 +79,8 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
     ZA = view(Z, indA)
     ZB = view(Z, indB)
 
-    XA = view(X, indA, :)
-    XB = view(X, indB, :)
+    XA = view(X_hot, indA, :)
+    XB = view(X_hot, indB, :)
 
     YA_hot = one_hot_encoder(YA, Ylevels)
     ZA_hot = one_hot_encoder(ZA, Zlevels)
@@ -85,7 +104,7 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
     # Compute the indexes of individuals with same covariates
     indXA = Dict{T,Array{T}}()
     indXB = Dict{T,Array{T}}()
-    Xlevels = sort(unique(eachrow(X)))
+    Xlevels = sort(unique(eachrow(X_hot)))
 
     for (i, x) in enumerate(Xlevels)
         distA = vec(pairwise(distance, x[:, :], XA', dims = 2))
@@ -94,13 +113,15 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
         indXB[i] = findall(distB .< 0.1)
     end
 
-    nbX = length(indXA)
+    nbXA = length(indXA)
+    nbXB = length(indXB)
 
-    wa = vec([sum(indXA[x][YA[indXA[x]].==y]) for y in Ylevels, x = 1:nbX])
-    wb = vec([sum(indXB[x][ZB[indXB[x]].==z]) for z in Zlevels, x = 1:nbX])
+    wa = vec([sum(indXA[x][YA[indXA[x]].==y]) for y in Ylevels, x = 1:nbXA])
+    wb = vec([sum(indXB[x][ZB[indXB[x]].==z]) for z in Zlevels, x = 1:nbXB])
 
-    wa2 = filter(>(0), wa) ./ nA
-    wb2 = filter(>(0), wb) ./ nB
+    wa2 = filter(>(0), wa) 
+    wb2 = filter(>(0), wb) ./ sum(wa2)
+
 
     XYA2 = Vector{T}[]
     XZB2 = Vector{T}[]
@@ -119,7 +140,7 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
     Ylevels_hot = one_hot_encoder(Ylevels)
     Zlevels_hot = one_hot_encoder(Zlevels)
 
-    nx = size(X, 2) ## Nb modalités x 
+    nx = size(X_hot, 2) ## Nb modalités x 
 
     # les x parmi les XYA observés, potentiellement des valeurs repetées 
     XA_hot = stack([v[1:nx] for v in XYA2], dims = 1)
@@ -135,9 +156,8 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
 
     ## Initialisation 
 
-    yB_pred = zeros(size(XZB2, 1)) # number of observed different values in A
-    zA_pred = zeros(size(XYA2, 1)) # number of observed different values in B
-    nbrvarX = size(data, 2) - 3 # size of data less Y, Z and database id
+    yB_pred = zeros(T, size(XZB2, 1)) # number of observed different values in A
+    zA_pred = zeros(T, size(XYA2, 1)) # number of observed different values in B
 
     dimXZB = length(XZB2[1])
     dimXYA = length(XYA2[1])
@@ -162,25 +182,27 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
     ZApred = zeros(T, nA)
 
 
-    total_costs = Float32[]
-    fcosts = Float32[]
-    perfs = Float32[]
+    # total_costs = Float32[]
+    # fcosts = Float32[]
+    # perfs = Float32[]
+    # perfs_yb = Float32[]
+    # perfs_za = Float32[]
     for iter = 1:iterations
 
-
-        if reg_m > 0.0
-            # G = PythonOT.entropic_partial_wasserstein(wa2, wb2, C, reg; m = reg_m)
-            G = PythonOT.mm_unbalanced(wa2, wb2, C, reg_m; reg = reg, div = "kl")
+       
+        if reg_m1 > 0.0 && reg_m2 > 0.0 
+            G = PythonOT.mm_unbalanced(wa2, wb2, C, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
-            G = PythonOT.emd(wa2, wb2, C)
+            G = PythonOT.sinkhorn(wa2, wb2, C, reg)
         end
 
+
         for j in eachindex(yB_pred)
-            yB_pred[j] = optimal_modality(Ylevels, Yloss, view(G, :, j))
+            yB_pred[j] = Ylevels[argmin(modality_cost(Yloss, view(G, :, j)))]
         end
 
         for i in eachindex(zA_pred)
-            zA_pred[i] = optimal_modality(Zlevels, Zloss, view(G, i, :))
+            zA_pred[i] = Zlevels[argmin(modality_cost(Zloss, view(G, i, :)))]
         end
 
         yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
@@ -207,26 +229,32 @@ function unbalanced_modality(data, reg, reg_m; Ylevels = 1:4, Zlevels = 1:3, ite
         YBpred .= onecold(yB_pred_hot_i)
         ZApred .= onecold(zA_pred_hot_i)
 
-        est = (sum(YB .== YBpred) .+ sum(ZA .== ZApred)) ./ (nA + nB)
+        # est_yb = mean(YB .== YBpred) 
+        # est_za = mean(ZA .== ZApred)
+        # est = mean(vcat(YB .== YBpred, ZA .== ZApred))
 
-        est_opt = max(est_opt, est)
+        # est_opt = max(est_opt, est)
 
-        push!(total_costs, sum(G .* C))
-        push!(fcosts, sum(G .* fcost))
-        push!(perfs, est)
+        # push!(total_costs, sum(G .* C))
+        # push!(fcosts, sum(G .* fcost))
+        # push!(perfs_yb, est_yb)
+        # push!(perfs_za, est_za)
+        # push!(perfs, est)
 
     end
 
-    println(rpad("total cost", 15, " "), "fcost", lpad("estimation", 15, " "))
-    for i = 1:iterations
-        println(
-            rpad(round(total_costs[i], digits = 6), 15, " "),
-            round(fcosts[i], digits = 6),
-            lpad(round(perfs[i], digits = 6), 15, " "),
-        )
-    end
+    #println(rpad("total cost", 15, " "), "fcost", lpad("estimation", 15, " "))
+    #for i = 1:iterations
+    #    println(
+    #        rpad(round(total_costs[i], digits = 6), 15, " "),
+    #        round(fcosts[i], digits = 6),
+    #        lpad(round(perfs_yb[i], digits = 6), 11, " "),
+    #        lpad(round(perfs_za[i], digits = 6), 11, " "),
+    #        lpad(round(perfs[i], digits = 6), 11, " "),
+    #    )
+    #end
 
-    return round(est_opt, digits = 4)
+    return YBpred, ZApred
 
 
 end

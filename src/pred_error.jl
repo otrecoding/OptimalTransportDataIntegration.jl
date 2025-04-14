@@ -100,4 +100,6 @@ function compute_pred_error!(
     sol.errorpredavg =
         (inst.nA * sol.errorpredZA + inst.nB * sol.errorpredYB) / (inst.nA + inst.nB)
 
+    return predYB, predZA
+
 end

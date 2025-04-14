@@ -61,8 +61,8 @@ function ot_joint(
     # compute the neighbors of the covariates for regularization
     Xvalues = unique(eachrow(Xobserv))
     dist_X = pairwise(norme, Xvalues, Xvalues)
-    voisins_X = findall.(eachrow(dist_X .<= 1))
-    nvoisins_X = length(Xvalues)
+    voisins = findall.(eachrow(dist_X .<= 1))
+    nvoisins = length(Xvalues)
 
     # println("... computing costs")
     C = average_distance_to_closest(inst, percent_closest)
@@ -203,18 +203,18 @@ function ot_joint(
     # - regularization
     @variable(
         modelA,
-        reg_absA[x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels] >= 0
+        reg_absA[x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels] >= 0
     )
     @constraint(
         modelA,
-        [x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels],
+        [x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels],
         reg_absA[x1, x2, y, z] >=
         gammaA[x1, y, z] / (max(1, length(indXA[x1])) / nA) -
         gammaA[x2, y, z] / (max(1, length(indXA[x2])) / nA)
     )
     @constraint(
         modelA,
-        [x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels],
+        [x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels],
         reg_absA[x1, x2, y, z] >=
         gammaA[x2, y, z] / (max(1, length(indXA[x2])) / nA) -
         gammaA[x1, y, z] / (max(1, length(indXA[x1])) / nA)
@@ -223,25 +223,25 @@ function ot_joint(
         modelA,
         regterm,
         sum(
-            1 / nvoisins_X * reg_absA[x1, x2, y, z] for x1 in Xlevels, x2 in voisins_X[x1],
+            1 / nvoisins * reg_absA[x1, x2, y, z] for x1 in Xlevels, x2 in voisins[x1],
             y in Ylevels, z in Zlevels
         )
     )
 
     @variable(
         modelB,
-        reg_absB[x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels] >= 0
+        reg_absB[x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels] >= 0
     )
     @constraint(
         modelB,
-        [x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels],
+        [x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels],
         reg_absB[x1, x2, y, z] >=
         gammaB[x1, y, z] / (max(1, length(indXB[x1])) / nB) -
         gammaB[x2, y, z] / (max(1, length(indXB[x2])) / nB)
     )
     @constraint(
         modelB,
-        [x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels],
+        [x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels],
         reg_absB[x1, x2, y, z] >=
         gammaB[x2, y, z] / (max(1, length(indXB[x2])) / nB) -
         gammaB[x1, y, z] / (max(1, length(indXB[x1])) / nB)
@@ -250,7 +250,7 @@ function ot_joint(
         modelB,
         regterm,
         sum(
-            1 / nvoisins_X * reg_absB[x1, x2, y, z] for x1 in Xlevels, x2 in voisins_X[x1],
+            1 / nvoisins * reg_absB[x1, x2, y, z] for x1 in Xlevels, x2 in voisins[x1],
             y in Ylevels, z in Zlevels
         )
     )
@@ -261,7 +261,7 @@ function ot_joint(
         Min,
         sum(C[y, z] * gammaA[x, y, z] for y in Ylevels, z in Zlevels, x in Xlevels) +
         lambda_reg * sum(
-            1 / nvoisins_X * reg_absA[x1, x2, y, z] for x1 in Xlevels, x2 in voisins_X[x1],
+            1 / nvoisins * reg_absA[x1, x2, y, z] for x1 in Xlevels, x2 in voisins[x1],
             y in Ylevels, z in Zlevels
         )
     )
@@ -271,7 +271,7 @@ function ot_joint(
         Min,
         sum(C[y, z] * gammaB[x, y, z] for y in Ylevels, z in Zlevels, x in Xlevels) +
         lambda_reg * sum(
-            1 / nvoisins_X * reg_absB[x1, x2, y, z] for x1 in Xlevels, x2 in voisins_X[x1],
+            1 / nvoisins * reg_absB[x1, x2, y, z] for x1 in Xlevels, x2 in voisins[x1],
             y in Ylevels, z in Zlevels
         )
     )
@@ -286,30 +286,28 @@ function ot_joint(
 
     # compute the resulting estimators for the distributions of Z 
     # conditional to X and Y in base A and of Y conditional to X and Z in base B
-    estimatorZA =
-        1 / length(Zlevels) * ones(length(Xlevels), length(Ylevels), length(Zlevels))
+    estimatorZA = ones(length(Xlevels), length(Ylevels), length(Zlevels)) ./ length(Zlevels)
     for x in Xlevels
         for y in Ylevels
-            proba_c_mA = sum(gammaA_val[x, y, z] for z in Zlevels)
+            proba_c_mA = sum(gammaA_val[x, y, Zlevels])
             if proba_c_mA > 1e-6
-                estimatorZA[x, y, :] = 1 / proba_c_mA * gammaA_val[x, y, :]
+                estimatorZA[x, y, :] = gammaA_val[x, y, :] ./ proba_c_mA
             end
         end
     end
-    estimatorYB =
-        1 / length(Ylevels) * ones(length(Xlevels), length(Ylevels), length(Zlevels))
+    estimatorYB = ones(length(Xlevels), length(Ylevels), length(Zlevels)) ./ length(Ylevels)
     for x in Xlevels
         for z in Zlevels
-            proba_c_mB = sum(gammaB_val[x, y, z] for y in Ylevels)
+            proba_c_mB = sum(view(gammaB_val, x, Ylevels, z))
             if proba_c_mB > 1e-6
-                estimatorYB[x, :, z] = 1 / proba_c_mB * gammaB_val[x, :, z]
+                estimatorYB[x, :, z] = view(gammaB_val, x, :, z) ./ proba_c_mB
             end
         end
     end
 
     # Display the solution
     # println("Solution of the joint probability transport")
-    # println("Distance cost = ", sum(C[y,z] * (gammaA_val[x,y,z]+gammaB_val[x,y,z]) for y in Y, z in Z, x in Xlevels))
+    # println("Distance cost = ", sum(C[y,z] * (gammaA_val[x,y,z]+gammaB_val[x,y,z]) for y in Ylevels, z in Zlevels, x in Xlevels))
     # println("Regularization cost = ", lambda_reg * value(regterm))
 
     if full_disp
@@ -319,8 +317,8 @@ function ot_joint(
 
     Solution(
         time() - tstart,
-        [sum(gammaA_val[x, y, z] for x in Xlevels) for y in Ylevels, z in Zlevels],
-        [sum(gammaB_val[x, y, z] for x in Xlevels) for y in Ylevels, z in Zlevels],
+        [sum(gammaA_val[:, y, z]) for y in Ylevels, z in Zlevels],
+        [sum(gammaB_val[:, y, z]) for y in Ylevels, z in Zlevels],
         estimatorZA,
         estimatorYB,
     )
@@ -343,8 +341,8 @@ function otjoint(data; lambda_reg = 0.392, maxrelax = 0.714, percent_closest = 0
     instance = Instance(database, X, Y, Ylevels, Z, Zlevels, Hamming())
 
     sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
-    compute_pred_error!(sol, instance, false)
+    YB, ZA = compute_pred_error!(sol, instance, false)
 
-    return round(1 - sol.errorpredavg, digits = 4)
+    return YB, ZA
 
 end

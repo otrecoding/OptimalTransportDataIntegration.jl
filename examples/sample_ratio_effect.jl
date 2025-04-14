@@ -14,6 +14,7 @@
 #     name: julia-1.11
 # ---
 
+
 using DelimitedFiles
 using OptimalTransportDataIntegration
 
@@ -21,7 +22,7 @@ using OptimalTransportDataIntegration
 function sample_ratio_effect(nsimulations::Int, ratios)
 
     outfile = "sample_ratio_effect.csv"
-    header = ["id", "nA", "nB", "estimation", "method"]
+    header = ["id", "nA", "nB", "estya", "estzb", "estimation", "method"]
 
     open(outfile, "w") do io
 
@@ -39,25 +40,30 @@ function sample_ratio_effect(nsimulations::Int, ratios)
 
                 #OT Transport of the joint distribution of covariates and outcomes.
                 maxrelax, lambda_reg = 0.0, 0.0
-                est = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
-                writedlm(io, [i params.nA params.nB est "ot"])
+                yb, za = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i params.nA params.nB estyb estza est "ot"])
 
                 #OT-r Regularized Transport 
                 maxrelax, lambda_reg = 0.4, 0.1
-                est = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
-                writedlm(io, [i params.nA params.nB est "ot-r"])
+                yb, za = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i params.nA params.nB estyb estza est "ot-r"])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                est = otrecod(data, UnbalancedModality(reg = 0.01, reg_m = 0.0))
-                writedlm(io, [i params.nA params.nB est "ote"])
+                yb, za = otrecod(data, UnbalancedModality(reg = 0.0, reg_m1 = 0.0, reg_m2 = 0.0))
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i params.nA params.nB estyb estza est "ote"])
 
                 #OTE Regularized unbalanced transport 
-                est = otrecod(data, UnbalancedModality(reg = 0.01, reg_m = 0.05))
-                writedlm(io, [i params.nA params.nB est "ote-r"])
+                yb, za = otrecod(data, UnbalancedModality(reg = 0.0, reg_m1 = 0.01, reg_m2 = 0.01))
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i params.nA params.nB estyb estza est "ote-r"])
 
                 #SL Simple Learning
-                est = otrecod(data, SimpleLearning())
-                writedlm(io, [i params.nA params.nB est "sl"])
+                yb, za = otrecod(data, SimpleLearning())
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i params.nA params.nB estyb estza est "sl"])
 
             end
 
@@ -67,6 +73,6 @@ function sample_ratio_effect(nsimulations::Int, ratios)
 
 end
 
-nsimulations = 100
+nsimulations = 1000
 
-@time sample_ratio_effect(nsimulations, (1, 2, 10))
+@time sample_ratio_effect(nsimulations, (1, 2, 5, 10))
