@@ -21,7 +21,7 @@ using OptimalTransportDataIntegration
 function covariates_shift_assumption(nsimulations::Int, scenarios)
 
     outfile = "covariates_shift_assumption.csv"
-    header = ["id", "mB", "estimation", "method"]
+    header = ["id", "mB", "estyb", "estza", "estimation", "method"]
 
     open(outfile, "w") do io
 
@@ -37,25 +37,30 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
 
                 #OT Transport of the joint distribution of covariates and outcomes.
                 maxrelax, lambda_reg = 0.0, 0.0
-                est = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
-                writedlm(io, [i j est "ot"])
+                yb, za = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i j estyb estza est "ot"])
 
                 #OT-r Regularized Transport 
                 maxrelax, lambda_reg = 0.4, 0.1
-                est = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
-                writedlm(io, [i j est "ot-r"])
+                yb, za = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i j estyb estza est "ot-r"])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                est = otrecod(data, UnbalancedModality(reg = 0.0, reg_m1 = 0.0, reg_m2 = 0.0))
-                writedlm(io, [i j est "ote"])
+                yb, za = otrecod(data, UnbalancedModality(reg = 0.001, reg_m1 = 0.0, reg_m2 = 0.0))
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i j estyb estza est "ote"])
 
                 #OTE Regularized unbalanced transport 
-                est = otrecod(data, UnbalancedModality(reg = 0.0, reg_m1 = 0.01, reg_m2 = 0.01))
-                writedlm(io, [i j est "ote-r"])
+                yb, za = otrecod(data, UnbalancedModality(reg = 0.001, reg_m1 = 0.01, reg_m2 = 0.01))
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i j estyb estza est "ote-r"])
 
                 #SL Simple Learning
-                est = otrecod(data, SimpleLearning())
-                writedlm(io, [i j est "sl"])
+                yb, za = otrecod(data, SimpleLearning())
+                estyb, estza, est = accuracy(data, yb, za)
+                writedlm(io, [i j estyb estza est "sl"])
 
             end
 
@@ -65,7 +70,7 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
 
 end
 
-nsimulations = 100
+nsimulations = 1000
 scenarios = ([0, 0, 0], [1, 0, 0], [1, 1, 0], [1, 2, 0])
 
 @time covariates_shift_assumption(nsimulations, scenarios)

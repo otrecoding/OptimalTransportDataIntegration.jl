@@ -21,7 +21,7 @@ using OptimalTransportDataIntegration
 function conditional_distribution(nsimulations::Int, scenarios)
 
     outfile = "conditional_distribution.csv"
-    header = ["id", "epsilon", "estimation", "method"]
+    header = ["id", "epsilon", "estyb", "estza", "accuracy", "method"]
 
     open(outfile, "w") do io
 
@@ -37,25 +37,30 @@ function conditional_distribution(nsimulations::Int, scenarios)
 
                 #OT Transport of the joint distribution of covariates and outcomes.
                 maxrelax, lambda_reg = 0.0, 0.0
-                est = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
-                writedlm(io, [i eps est "ot"])
+                yb, za = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
+                estyb, estza, est = accuracy( data, yb, za )
+                writedlm(io, [i eps estyb estza est "ot"])
 
                 #OT-r Regularized Transport 
                 maxrelax, lambda_reg = 0.4, 0.1
-                est = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
-                writedlm(io, [i eps est "ot-r"])
+                yb, za = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
+                estyb, estza, est = accuracy( data, yb, za )
+                writedlm(io, [i eps estyb estza est "ot-r"])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                est = otrecod(data, UnbalancedModality(reg = 0.0, reg_m1 = 0.0, reg_m2 = 0.0))
-                writedlm(io, [i eps est "ote"])
+                yb, za = otrecod(data, UnbalancedModality(reg = 0.001, reg_m1 = 0.0, reg_m2 = 0.0))
+                estyb, estza, est = accuracy( data, yb, za )
+                writedlm(io, [i eps estyb estza est "ote"])
 
                 #OTE Regularized unbalanced transport 
-                est = otrecod(data, UnbalancedModality(reg = 0.0, reg_m1 = 0.01, reg_m2 = 0.01))
-                writedlm(io, [i eps est "ote-r"])
+                yb, za = otrecod(data, UnbalancedModality(reg = 0.001, reg_m1 = 0.01, reg_m2 = 0.01))
+                estyb, estza, est = accuracy( data, yb, za )
+                writedlm(io, [i eps estyb estza est "ote-r"])
 
                 #SL Simple Learning
-                est = otrecod(data, SimpleLearning())
-                writedlm(io, [i eps est "sl"])
+                yb, za = otrecod(data, SimpleLearning())
+                estyb, estza, est = accuracy( data, yb, za )
+                writedlm(io, [i eps estyb estza est "sl"])
 
             end
 
