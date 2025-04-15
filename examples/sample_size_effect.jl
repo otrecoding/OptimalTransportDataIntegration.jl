@@ -37,12 +37,15 @@ function sample_size_effect(all_params, nsimulations)
                 maxrelax, lambda_reg = 0.0, 0.0
                 yb, za = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
                 estyb, estza, est = accuracy(data, yb, za)
+
                 writedlm(io, [i params.nA params.nB estyb estza est "ot"])
+          
 
                 #OT-r Regularized Transport 
                 maxrelax, lambda_reg = 0.4, 0.1
                 yb, za = otrecod(data, OTjoint(maxrelax = maxrelax, lambda_reg = lambda_reg))
                 estyb, estza, est = accuracy(data, yb, za)
+
                 writedlm(io, [i params.nA params.nB estyb estza est "ot-r"])
 
                 #OTE Balanced transport of covariates and estimated outcomes
@@ -58,7 +61,9 @@ function sample_size_effect(all_params, nsimulations)
                 #SL Simple Learning
                 yb, za = otrecod(data, SimpleLearning())
                 estyb, estza, est = accuracy(data, yb, za)
+
                 writedlm(io, [i params.nA params.nB estyb estza est "sl"])
+
 
             end
 
