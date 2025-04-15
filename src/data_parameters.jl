@@ -8,7 +8,7 @@ export save_params
     nA::Int = 1000
     nB::Int = 1000
     mA::Vector{Float64} = [0.0, 0.0, 0.0]
-    mB::Vector{Float64} = [1.0, 1.0, 1.0]
+    mB::Vector{Float64} = [0.0, 0.0, 0.0]
     covA::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
     covB::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
     px1c::Vector{Float64} = [0.5, 0.5]
