@@ -51,80 +51,35 @@ function generate_XY(params, binsA1, binsA2, binsA3, binsB1, binsB2, binsB3)
     X1 = vcat(X11, X21)
     X2 = vcat(X12, X22)
     X3 = vcat(X13, X23)
+    R2 = params.r2
 
-    Y1 = vcat(X11c, X12c, X13c)' * params.aA
-    Y2 = vcat(X21c, X22c, X23c)' * params.aB
+    dimU = 3
+
+	varerrorA =
+        (1 / R2 - 1) * sum([params.aA[i] * params.aA[j] * params.covA[i, j] for i = 1:dimU, j = 1:dimU])
+  	varerrorB =
+        (1 / R2 - 1) * sum([params.aB[i] * params.aB[j] * params.covB[i, j] for i = 1:dimU, j = 1:dimU])
+
+   	Y1 = vcat(X11c, X12c, X13c)' * params.aA .+ rand(Normal(0.0, sqrt(varerrorA)), params.nA)
+
+    Y2 = vcat(X21c, X22c, X23c)' * params.aB .+ rand(Normal(0.0, sqrt(varerrorB)), params.nB)
 
     X1, X2, X3, Y1, Y2
-
-end
-
-function generate_YZ(params, Y1, Y2)
-
-    p = params.p
-
-    py = [
-        1 - p,
-        (p - p^2) / 2,
-        (p - p^2) / 2,
-        (p^2 - p^3) / 2,
-        (p^2 - p^3) / 2,
-        p^3 / 4,
-        p^3 / 4,
-        p^3 / 4,
-        p^3 / 4,
-    ]
-
-    Y = Float64.(collect(0:(params.nA-1)))
-    Z = Float64.(collect(0:(params.nB-1)))
-
-    U = rand(Multinomial(1, py), params.nA)
-    V = rand(Multinomial(1, py), params.nB)
-
-    UU = vec(sum(U .* collect(0:8), dims = 1))
-    VV = vec(sum(V .* collect(0:8), dims = 1))
-
-    Y[UU.==0] .= Y1[UU.==0]
-    Y[UU.==1] .= Y1[UU.==1] .- 1
-    Y[UU.==2] .= Y1[UU.==2] .+ 1
-    Y[UU.==3] .= Y1[UU.==3] .+ 2
-    Y[UU.==4] .= Y1[UU.==4] .- 2
-    Y[UU.==5] .= 0
-    Y[UU.==6] .= 1
-    Y[UU.==7] .= 2
-    Y[UU.==8] .= 3
-    Y[Y.>3] .= 3
-    Y[Y.<0] .= 0
-
-    Z[VV.==0] .= Y2[VV.==0]
-    Z[VV.==1] .= Y2[VV.==1] .- 1
-    Z[VV.==2] .= Y2[VV.==2] .+ 1
-    Z[VV.==3] .= Y2[VV.==3] .+ 2
-    Z[VV.==4] .= Y2[VV.==4] .- 2
-    Z[VV.==5] .= 0
-    Z[VV.==6] .= 1
-    Z[VV.==7] .= 2
-    Z[VV.==8] .= 3
-    Z[Z.>3] .= 3
-    Z[Z.<0] .= 0
-
-    return Y, Z
 
 end
 
 function generate_dataframe(params, binsA1, binsA2, binsA3, binsB1, binsB2, binsB3, binsYA1, binsYB1, binsYA2, binsYB2)
 
     X1, X2, X3, Y1, Y2 = generate_XY(params, binsA1, binsA2, binsA3, binsB1, binsB2, binsB3)
-    Y, Z = generate_YZ(params, Y1, Y2)
 
-    YA1 = digitize(Y, binsYA1)
-    YA2 = digitize(Y, binsYA2)
+    YA1 = digitize(Y1, binsYA1)
+    YA2 = digitize(Y1, binsYA2)
 
     binsYB1eps = binsYB1 .+ params.eps
     binsYB2eps = binsYB2 .+ params.eps
 
-    YB1 = digitize(Z, binsYB1eps)
-    YB2 = digitize(Z, binsYB2eps)
+    YB1 = digitize(Y2, binsYB1eps)
+    YB2 = digitize(Y2, binsYB2eps)
 
     df = DataFrame(hcat(X1, X2, X3) .- 1, [:X1, :X2, :X3])
     df.Y = vcat(YA1, YB1)
@@ -173,21 +128,20 @@ function generate_xcat_ycat(params::DataParameters)
 
     X1, X2, X3, Y1, Y2 = generate_XY(params, binsA1, binsA2, binsA3, binsB1, binsB2, binsB3)
 
-    Y, Z = generate_YZ(params, Y1, Y2)
-    bA1 = quantile(Y, [0.25, 0.5, 0.75])
-    bB1 = quantile(Z, [0.25, 0.5, 0.75])
-    bA2 = quantile(Y, [1 / 3, 2 / 3])
-    bB2 = quantile(Z, [1 / 3, 2 / 3])
+    bA1 = quantile(Y1, [0.25, 0.5, 0.75])
+    bB1 = quantile(Y2, [0.25, 0.5, 0.75])
+    bA2 = quantile(Y1, [1 / 3, 2 / 3])
+    bB2 = quantile(Y2, [1 / 3, 2 / 3])
+
+    binsYA1 = vcat(minimum(Y1) - 100, bA1, maximum(Y1) + 100)
+    binsYB1 = vcat(minimum(Y1) - 100, bB1, maximum(Y1) + 100)
+
+    binsYA2 = vcat(minimum(Y2) - 100, bA2, maximum(Y2) + 100)
+    binsYB2 = vcat(minimum(Y2) - 100, bB2, maximum(Y2) + 100)
 
 
-    binsYA1 = vcat(minimum(Y) - 100, bA1, maximum(Y) + 100)
-    binsYB1 = vcat(minimum(Y) - 100, bB1, maximum(Y) + 100)
-
-    binsYA2 = vcat(minimum(Z) - 100, bA2, maximum(Z) + 100)
-    binsYB2 = vcat(minimum(Z) - 100, bB2, maximum(Z) + 100)
-
-
-    df = generate_dataframe(params, binsA1, binsA2, binsA3, binsB1, binsB2, binsB3, binsYA1, binsYB1, binsYA2, binsYB2)
+    df = generate_dataframe(params, binsA1, binsA2, binsA3, binsB1, binsB2, 
+                            binsB3, binsYA1, binsYB1, binsYA2, binsYB2)
 
     @info "Categories in Y $(sort(unique(df.Y)))"
     @info "Catgeories in Z $(sort(unique(df.Z)))"
