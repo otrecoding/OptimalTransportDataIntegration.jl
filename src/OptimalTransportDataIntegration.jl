@@ -18,6 +18,7 @@ to_categorical(x, levels) = levels .== permutedims(x)
 
 # Data generation functions
 include("data_parameters.jl")
+include("generate_data.jl")
 include("generate_xcat_ycat.jl")
 include("one_hot_encoder.jl")
 
