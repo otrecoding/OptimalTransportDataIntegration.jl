@@ -139,12 +139,14 @@ function generate_xcat_ycat(params::DataParameters)
     binsYA2 = vcat(minimum(Y2) - 100, bA2, maximum(Y2) + 100)
     binsYB2 = vcat(minimum(Y2) - 100, bB2, maximum(Y2) + 100)
 
-
-    df = generate_dataframe(params, binsA1, binsA2, binsA3, binsB1, binsB2, 
-                            binsB3, binsYA1, binsYB1, binsYA2, binsYB2)
+    df = generate_dataframe(params, 
+                            binsA1, binsA2, binsA3, 
+                            binsB1, binsB2, binsB3, 
+                            binsYA1, binsYB1, 
+                            binsYA2, binsYB2)
 
     @info "Categories in Y $(sort(unique(df.Y)))"
-    @info "Catgeories in Z $(sort(unique(df.Z)))"
+    @info "Categories in Z $(sort(unique(df.Z)))"
 
     return df
 
