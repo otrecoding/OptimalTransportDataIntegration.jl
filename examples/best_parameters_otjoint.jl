@@ -18,14 +18,14 @@ using DelimitedFiles
 
 function otjoint(start, stop)
 
-    maxrelax = collect(0:0.1:2)
-    lambda_reg = collect(0:0.1:1)
+    alpha = collect(0:0.1:2)
+    lambda = collect(0:0.1:1)
     estimations = Float32[]
 
     params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], eps = 0.0, p = 0.2)
 
     outfile = "results_otjoint.csv"
-    header = ["id", "maxrelax", "lambda_reg", "estimation", "method"]
+    header = ["id", "alpha", "lambda", "estimation", "method"]
 
     open(outfile, "a") do io
 
@@ -43,9 +43,9 @@ function otjoint(start, stop)
 
             CSV.write(joinpath("datasets", csv_file), data)
 
-            for m in maxrelax, λ in lambda_reg
+            for m in alpha, λ in lambda
 
-                est = otrecod(data, OTjoint(maxrelax = m, lambda_reg = λ))
+                est = otrecod(data, JointOTWithinBase(alpha = m, lambda = λ))
                 writedlm(io, [i m λ est "otjoint"])
 
             end
@@ -62,11 +62,11 @@ otjoint(1, 1000)
 data = CSV.read("results_otjoint.csv", DataFrame)
 
 sort(
-    combine(groupby(data, ["maxrelax", "lambda_reg"]), :estimation => mean),
+    combine(groupby(data, ["alpha", "lambda"]), :estimation => mean),
     order(:estimation_mean, rev = true),
 )
 
 # equivalent with pandas
 # import pandas as pd
 # data = pd.read_csv("results_otjoint.csv", sep="\t")
-# data.groupby(["maxrelax", "lambda_reg"]).estimation.mean().sort_values(ascending=False)
+# data.groupby(["alpha", "lambda"]).estimation.mean().sort_values(ascending=False)

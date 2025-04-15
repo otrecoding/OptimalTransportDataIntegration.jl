@@ -41,11 +41,11 @@ let
 
         instance = Instance(database, X, Y, Ylevels, Z, Zlevels, dist_choice)
 
-        lambda_reg = 0.392
-        maxrelax = 0.714
+        lambda = 0.392
+        alpha = 0.714
         percent_closest = 0.2
 
-        @time sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
+        @time sol = ot_joint(instance, alpha, lambda, percent_closest)
         println(compute_pred_error!(sol, instance, false))
 
     end

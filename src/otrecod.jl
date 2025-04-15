@@ -4,22 +4,22 @@ export otrecod
 
 abstract type AbstractMethod end
 
-export OTjoint
+export JointOTWithinBase
 
-@with_kw struct OTjoint <: AbstractMethod
+@with_kw struct JointOTWithinBase <: AbstractMethod
 
-    lambda_reg::Float64 = 0.392
-    maxrelax::Float64 = 0.714
+    lambda::Float64 = 0.392
+    alpha::Float64 = 0.714
     percent_closest::Float64 = 0.2
 
 end
 
-function otrecod(data::DataFrame, method::OTjoint)
+function otrecod(data::DataFrame, method::JointOTWithinBase)
 
     otjoint(
         data;
-        lambda_reg = method.lambda_reg,
-        maxrelax = method.maxrelax,
+        lambda = method.lambda,
+        alpha = method.alpha,
         percent_closest = method.percent_closest,
     )
 
@@ -48,9 +48,9 @@ function otrecod(data::DataFrame, method::SimpleLearning)
 
 end
 
-export UnbalancedModality
+export JointOTBetweenBases
 
-@with_kw struct UnbalancedModality <: AbstractMethod
+@with_kw struct JointOTBetweenBases <: AbstractMethod
 
     reg::Float64 = 0.01
     reg_m1::Float64 = 0.01
@@ -61,7 +61,7 @@ export UnbalancedModality
 
 end
 
-function otrecod(data::DataFrame, method::UnbalancedModality)
+function otrecod(data::DataFrame, method::JointOTBetweenBases)
 
     unbalanced_modality(
         data,

@@ -12,9 +12,9 @@ for mB = mB_values
     data = generate_xcat_ycat(params)
 
         
-    yb_ot, za_ot = otrecod(data, OTjoint())
+    yb_ot, za_ot = otrecod(data, JointOTWithinBase())
     ot = accuracy(data, yb_ot, za_ot)
-    yb_ote, za_ote = otrecod(data, UnbalancedModality(iterations=5))
+    yb_ote, za_ote = otrecod(data, JointOTBetweenBases(iterations=5))
     ote = accuracy(data, yb_ote, za_ote)
     yb_sl, za_sl = otrecod(data, SimpleLearning())
     sl = accuracy(data, yb_sl, za_sl)

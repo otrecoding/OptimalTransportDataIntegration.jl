@@ -30,8 +30,8 @@ unique(data.Y), unique(data.Z)
 data = CSV.read(csv_file, DataFrame) # generated with Python code
 @time OptimalTransportDataIntegration.otjoint(
     data;
-    lambda_reg = 0.0,
-    maxrelax = 0.0,
+    lambda = 0.0,
+    alpha = 0.0,
     percent_closest = 0.2,
 )
 
@@ -39,15 +39,15 @@ data = generate_xcat_ycat(read_params(json_file))
 
 @time OptimalTransportDataIntegration.otjoint(
     data;
-    lambda_reg = 0.0,
-    maxrelax = 0.0,
+    lambda = 0.0,
+    alpha = 0.0,
     percent_closest = 0.2,
 )
 
 @time OptimalTransportDataIntegration.otjoint(
     data;
-    lambda_reg = 0.7,
-    maxrelax = 0.4,
+    lambda = 0.7,
+    alpha = 0.4,
     percent_closest = 0.2,
 )
 
@@ -74,8 +74,8 @@ function run_simulations(simulations)
         err1 = OptimalTransportDataIntegration.unbalanced_modality(data)
         err2 = OptimalTransportDataIntegration.otjoint(
             data;
-            lambda_reg = 0.392,
-            maxrelax = 0.714,
+            lambda = 0.392,
+            alpha = 0.714,
             percent_closest = 0.2,
         )
         err3 = OptimalTransportDataIntegration.simple_learning(
