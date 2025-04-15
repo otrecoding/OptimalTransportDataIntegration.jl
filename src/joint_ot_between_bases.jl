@@ -59,9 +59,7 @@ function modality_cost(loss, weight)
 
 end
 
-export unbalanced_modality
-
-function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
+function joint_ot_between_bases(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
 
     T = Int32
 

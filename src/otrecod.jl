@@ -16,7 +16,7 @@ end
 
 function otrecod(data::DataFrame, method::JointOTWithinBase)
 
-    otjoint(
+    joint_ot_within_base(
         data;
         lambda = method.lambda,
         alpha = method.alpha,
@@ -63,7 +63,7 @@ end
 
 function otrecod(data::DataFrame, method::JointOTBetweenBases)
 
-    unbalanced_modality(
+    joint_ot_between_bases(
         data,
         method.reg,
         method.reg_m1, method.reg_m2;

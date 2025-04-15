@@ -325,7 +325,7 @@ function ot_joint(
 
 end
 
-function otjoint(data; lambda = 0.392, alpha = 0.714, percent_closest = 0.2)
+function joint_ot_within_base(data; lambda = 0.392, alpha = 0.714, percent_closest = 0.2)
 
     database = data.database
 

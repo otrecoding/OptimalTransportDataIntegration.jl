@@ -27,11 +27,11 @@ include("instance.jl")
 include("solution.jl")
 include("average_distance_closest.jl")
 include("pred_error.jl")
-include("otjoint.jl")
+include("joint_ot_within_base.jl")
 
 # Data integration functions
 include("entropic_partial_wasserstein.jl")
-include("unbalanced_modality.jl")
+include("joint_ot_between_bases.jl")
 include("simple_learning.jl")
 
 # Generic interface
