@@ -15,8 +15,8 @@ export save_params
     px2c::Vector{Float64} = [0.333, 0.334, 0.333]
     px3c::Vector{Float64} = [0.25, 0.25, 0.25, 0.25]
     p::Float64 = 0.2
-    aA::Vector{Int} = [1, 1, 1, 1, 1, 1]
-    aB::Vector{Int} = [1, 1, 1, 1, 1, 1]
+    aA::Vector{Float64} = [1., 1., 1.5, 1, 1.5, 2]
+    aB::Vector{Float64} = [1., 1., 1.5, 1, 1.5, 2]
     eps::Float64 = 0.0
 end
 

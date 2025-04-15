@@ -5,38 +5,57 @@ using Documenter
 using OptimalTransportDataIntegration
 using Test
 
-
-@testset "otrecod generated data" begin
-
-    params = DataParameters(nA = 1000, nB = 1000)
+params = DataParameters(nA = 1000, nB = 1000)
     
-    data = generate_xcat_ycat(params)
-    
+data = generate_xcat_ycat(params)
+
+@testset "check generated data" begin
+
     @test sort(unique(data.Y)) ≈ [1, 2, 3, 4]
     @test sort(unique(data.Z)) ≈ [1, 2, 3]
+
+end
     
+@testset "OTjoint method" begin
+
     yb, za = otrecod(data, OTjoint()) 
     @test all(accuracy(data, yb, za) .> 0.8)
+
+end
+
+@testset "SimpleLearning method" begin
+
     yb, za = otrecod(data, SimpleLearning())
     @test all(accuracy(data, yb, za) .> 0.8)
 
 end
-    
-@testset "otrecod data with all levels in Y and Z" begin
 
-    data = CSV.read(joinpath(@__DIR__, "data_good.csv"), DataFrame)
+data = CSV.read(joinpath(@__DIR__, "data_good.csv"), DataFrame)
+
+@testset "Unbalanced method with good data" begin
+
     @time yb, za = otrecod(data, UnbalancedModality())
     println(accuracy(data, yb, za))
+
+end
+
+@testset "Balanced method with good data" begin
+
     @time yb, za = otrecod(data, UnbalancedModality(reg_m1 = 0.0, reg_m2 = 0.0))
     println(accuracy(data, yb, za))
 
 end
 
-@testset "otrecod data with missing levels in Y or Z" begin
+data = CSV.read(joinpath(@__DIR__, "data_bad.csv"), DataFrame)
 
-    data = CSV.read(joinpath(@__DIR__, "data_bad.csv"), DataFrame)
+@testset "Unbalanced method with bad data" begin
+
     @time yb, za = otrecod(data, UnbalancedModality())
     println(accuracy(data, yb, za))
+
+end
+
+@testset "Balanced method with bad data" begin
     
     @time yb, za = otrecod(data, UnbalancedModality(reg_m1 = 0.0, reg_m2 = 0.0))
     println(accuracy(data, yb, za))

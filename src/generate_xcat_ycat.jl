@@ -56,7 +56,7 @@ function generate_XY(params, binsA1, binsA2, binsA3, binsB1, binsB2, binsB3)
     Y2 = vcat(X21c, X22c, X23c)' * params.aB
 
     X1, X2, X3, Y1, Y2
-#####ou X11, X21,X12, X22,X13, X23
+
 end
 
 function generate_YZ(params, Y1, Y2)
@@ -75,8 +75,8 @@ function generate_YZ(params, Y1, Y2)
         p^3 / 4,
     ]
 
-    Y = collect(0:(params.nA-1))
-    Z = collect(0:(params.nB-1))
+    Y = Float64.(collect(0:(params.nA-1)))
+    Z = Float64.(collect(0:(params.nB-1)))
 
     U = rand(Multinomial(1, py), params.nA)
     V = rand(Multinomial(1, py), params.nB)
