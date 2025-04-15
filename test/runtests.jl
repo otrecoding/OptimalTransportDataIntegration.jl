@@ -16,6 +16,8 @@ data = generate_data(params)
 
 end
     
+@testset "JointOTWithinBase method" begin
+
     yb, za = otrecod(data, JointOTWithinBase()) 
     @test all(accuracy(data, yb, za) .> 0.8)
 
@@ -27,20 +29,27 @@ end
     @test all(accuracy(data, yb, za) .> 0.8)
 
 end
-    
-@testset "otrecod data with all levels in Y and Z" begin
 
-    data = CSV.read(joinpath(@__DIR__, "data_good.csv"), DataFrame)
+data = CSV.read(joinpath(@__DIR__, "data_good.csv"), DataFrame)
+
+@testset "Unbalanced method with good data" begin
+
     @time yb, za = otrecod(data, JointOTBetweenBases())
     println(accuracy(data, yb, za))
+
+end
+
+@testset "Balanced method with good data" begin
+
     @time yb, za = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
     println(accuracy(data, yb, za))
 
 end
 
-@testset "otrecod data with missing levels in Y or Z" begin
+data = CSV.read(joinpath(@__DIR__, "data_bad.csv"), DataFrame)
 
-    data = CSV.read(joinpath(@__DIR__, "data_bad.csv"), DataFrame)
+@testset "Unbalanced method with bad data" begin
+
     @time yb, za = otrecod(data, JointOTBetweenBases())
     println(accuracy(data, yb, za))
 
