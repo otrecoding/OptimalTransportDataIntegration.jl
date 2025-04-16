@@ -16,12 +16,17 @@ end
 
 function otrecod(data::DataFrame, method::JointOTWithinBase)
 
-    joint_ot_within_base(
+    yb_pred, za_pred = joint_ot_within_base(
         data;
         lambda = method.lambda,
         alpha = method.alpha,
         percent_closest = method.percent_closest,
     )
+
+    yb_true = data.Y[data.database .== 2]
+    za_true = data.Z[data.database .== 1]
+
+    JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
 end
 
@@ -38,13 +43,18 @@ end
 
 function otrecod(data::DataFrame, method::SimpleLearning)
 
-    simple_learning(
+    yb_pred, za_pred = simple_learning(
         data;
         hidden_layer_size = method.hidden_layer_size,
         learning_rate = method.learning_rate,
         batchsize = method.batchsize,
         epochs = method.epochs,
     )
+
+    yb_true = data.Y[data.database .== 2]
+    za_true = data.Z[data.database .== 1]
+
+    JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
 end
 
@@ -63,7 +73,7 @@ end
 
 function otrecod(data::DataFrame, method::JointOTBetweenBases)
 
-    joint_ot_between_bases(
+    yb_pred, za_pred = joint_ot_between_bases(
         data,
         method.reg,
         method.reg_m1, method.reg_m2;
@@ -71,5 +81,10 @@ function otrecod(data::DataFrame, method::JointOTBetweenBases)
         Zlevels = method.Zlevels,
         iterations = method.iterations,
     )
+
+    yb_true = data.Y[data.database .== 2]
+    za_true = data.Z[data.database .== 1]
+
+    JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
 end
