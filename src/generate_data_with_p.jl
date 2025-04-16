@@ -211,8 +211,8 @@ function generate_data(generator::PDataGenerator; eps = 0.0)
     Y11 = digitize(Y, generator.binsY11)
     Y12 = digitize(Y, generator.binsY22)
 
-    binsY11eps = generator.binsY11 .+ params.eps
-    binsY22eps = generator.binsY22 .+ params.eps
+    binsY11eps = generator.binsY11 .+ eps
+    binsY22eps = generator.binsY22 .+ eps
 
     Y21 = digitize(Z, binsY11eps)
     Y22 = digitize(Z, binsY22eps)
