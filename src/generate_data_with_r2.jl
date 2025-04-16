@@ -113,7 +113,7 @@ the function return a Dataframe with X1, X2, X3, Y, Z and the database id.
 r2 is the coefficient of determination 
 
 """
-function generate_data(generator::R2DataGenerator)
+function generate_data(generator::R2DataGenerator; eps = 0.0)
 
     params = generator.params
 
@@ -158,8 +158,8 @@ function generate_data(generator::R2DataGenerator)
     YA1 = digitize(Y1, generator.binsYA1)
     YA2 = digitize(Y1, generator.binsYA2)
 
-    binsYB1eps = generator.binsYB1 .+ params.eps
-    binsYB2eps = generator.binsYB2 .+ params.eps
+    binsYB1eps = generator.binsYB1 .+ eps
+    binsYB2eps = generator.binsYB2 .+ eps
 
     YB1 = digitize(Y2, binsYB1eps)
     YB2 = digitize(Y2, binsYB2eps)

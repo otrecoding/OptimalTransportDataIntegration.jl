@@ -129,7 +129,7 @@ Function to generate data where X and (Y,Z) are categoricals
 the function return a Dataframe with X1, X2, X3, Y, Z and the database id.
 
 """
-function generate_data(generator::PDataGenerator)
+function generate_data(generator::PDataGenerator; eps = 0.0)
 
     params = generator.params
 
