@@ -20,22 +20,25 @@ using DataFrames
 using OptimalTransportDataIntegration
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], p = 0.2)
-rng = PDataGenerator(params)
-data = generate_data(rng)
 
-result = otrecod(data, JointOTWithinBase())
-est = accuracy(result)
+for rng in (PDataGenerator(params), R2DataGenerator(params))
 
-print(" OT-r : $est")
-est = otrecod(data, JointOTBetweenBases(reg = 0.1, reg_m1 = 0.0, reg_m2 = 0.0))
-est = accuracy(result)
-print(" OTE : $est")
-est = otrecod(data, JointOTBetweenBases(iterations = 10))
-est = accuracy(result)
-print(" OTE-r : $est")
-est = otrecod(data, SimpleLearning())
-est = accuracy(result)
-println(" SL : $est")
+    data = generate_data(rng)
+    result = otrecod(data, JointOTWithinBase())
+    est = accuracy(result)
+    
+    print(" OT-r : $est")
+    est = otrecod(data, JointOTBetweenBases(reg = 0.1, reg_m1 = 0.0, reg_m2 = 0.0))
+    est = accuracy(result)
+    print(" OTE : $est")
+    est = otrecod(data, JointOTBetweenBases(iterations = 10))
+    est = accuracy(result)
+    print(" OTE-r : $est")
+    est = otrecod(data, SimpleLearning())
+    est = accuracy(result)
+    println(" SL : $est")
+
+end
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [2, 0, 0], p = 0.2)
 rng = PDataGenerator(params)
