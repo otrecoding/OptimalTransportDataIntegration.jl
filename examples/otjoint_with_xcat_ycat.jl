@@ -25,9 +25,9 @@ let
 
         params = DataParameters(nA = 1000, nB = 1000)
 
-        data = generate_data(params)
+        rng = PDataGenerator(params)
 
-        # +
+        data = generate_data(rng)
 
         X = Matrix(data[!, ["X1", "X2", "X3"]])
         Y = Vector(data.Y)

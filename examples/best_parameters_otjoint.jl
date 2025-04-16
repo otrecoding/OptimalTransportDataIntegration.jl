@@ -24,6 +24,8 @@ function otjoint(start, stop)
 
     params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], eps = 0.0, p = 0.2)
 
+    rng = PDataGenerator(params)
+
     outfile = "results_otjoint.csv"
     header = ["id", "alpha", "lambda", "estimation", "method"]
 
@@ -37,7 +39,7 @@ function otjoint(start, stop)
                 writedlm(io, hcat(header...))
             end
 
-            data = generate_data(params)
+            data = generate_data(rng)
             csv_file = @sprintf "dataset%04i.csv" i
             @show csv_file
 
@@ -45,7 +47,8 @@ function otjoint(start, stop)
 
             for m in alpha, λ in lambda
 
-                est = otrecod(data, JointOTWithinBase(alpha = m, lambda = λ))
+                result = otrecod(data, JointOTWithinBase(alpha = m, lambda = λ))
+                est_yb, est_za, est = accuracy(result)
                 writedlm(io, [i m λ est "otjoint"])
 
             end

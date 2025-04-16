@@ -64,27 +64,37 @@ using ProgressMeter
 
 function run_simulations(simulations)
 
-    params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], eps = 0, p = 0.3)
+    params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], p = 0.3)
+
+    rng = PDataGenerator(params)
     prediction_quality = []
 
     @showprogress 1 for i = 1:simulations
 
-        data = generate_data(params)
+        data = generate_data(rng)
 
-        err1 = OptimalTransportDataIntegration.unbalanced_modality(data)
-        err2 = OptimalTransportDataIntegration.otjoint(
+        yb, za = OptimalTransportDataIntegration.unbalanced_modality(data)
+        
+        err1 = accuracy(data, yb, za)
+
+        yb, za = OptimalTransportDataIntegration.otjoint(
             data;
             lambda = 0.392,
             alpha = 0.714,
             percent_closest = 0.2,
         )
-        err3 = OptimalTransportDataIntegration.simple_learning(
+
+        err3 = accuracy(data, yb, za)
+
+        yb, za = OptimalTransportDataIntegration.simple_learning(
             data;
             hidden_layer_size = 10,
             learning_rate = 0.01,
             batchsize = 64,
             epochs = 500,
         )
+
+        err3 = accuracy(data, yb, za)
 
         push!(prediction_quality, (err1, err2, err3))
 
