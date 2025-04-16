@@ -18,8 +18,8 @@ to_categorical(x, levels) = levels .== permutedims(x)
 
 # Data generation functions
 include("data_parameters.jl")
-include("generate_data.jl")
-include("generate_xcat_ycat.jl")
+include("generate_data_with_r2.jl")
+include("generate_data_with_p.jl")
 include("one_hot_encoder.jl")
 
 # OTRecod functions
@@ -27,11 +27,11 @@ include("instance.jl")
 include("solution.jl")
 include("average_distance_closest.jl")
 include("pred_error.jl")
-include("otjoint.jl")
+include("joint_ot_within_base.jl")
 
 # Data integration functions
 include("entropic_partial_wasserstein.jl")
-include("unbalanced_modality.jl")
+include("joint_ot_between_bases.jl")
 include("simple_learning.jl")
 
 # Generic interface

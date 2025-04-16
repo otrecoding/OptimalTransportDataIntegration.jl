@@ -9,14 +9,14 @@ individual or for sets of indviduals that similar values of covariates
 - aggregate_tol: quantify how much individuals' covariates must be close for aggregation
 - reg_norm: norm1, norm2 or entropy depending on the type of regularization
 - percent_closest: percent of closest neighbors taken into consideration in regularization
-- lambda_reg: coefficient measuring the importance of the regularization term
+- lambda: coefficient measuring the importance of the regularization term
 - full_disp: if true, write the transported value of each individual; otherwise, juste write the number of missed transports
 - solver_disp: if false, do not display the outputs of the solver
 """
 function ot_joint(
     inst::Instance,
-    maxrelax::Float64 = 0.0,
-    lambda_reg::Float64 = 0.0,
+    alpha::Float64 = 0.0,
+    lambda::Float64 = 0.0,
     percent_closest::Float64 = 0.2,
     norme::Metric = Cityblock(),
     aggregate_tol::Float64 = 0.5,
@@ -26,7 +26,7 @@ function ot_joint(
 
     if full_disp
         @info " AGGREGATE INDIVIDUALS WRT COVARIATES               "
-        @info " Reg. weight           = $(lambda_reg)              "
+        @info " Reg. weight           = $(lambda)              "
         @info " Percent closest       = $(100.0 * percent_closest) % "
         @info " Aggregation tolerance = $(aggregate_tol)           "
     end
@@ -162,7 +162,7 @@ function ot_joint(
     )
     @constraint(
         modelA,
-        sum(abserrorA_XY[x, y] for x in Xlevels, y in Ylevels) <= maxrelax / 2.0
+        sum(abserrorA_XY[x, y] for x in Xlevels, y in Ylevels) <= alpha / 2.0
     )
     @constraint(modelA, sum(errorA_XY[x, y] for x in Xlevels, y in Ylevels) == 0.0)
     @constraint(modelA, [x in Xlevels, z in Zlevels], errorA_XZ[x, z] <= abserrorA_XZ[x, z])
@@ -173,7 +173,7 @@ function ot_joint(
     )
     @constraint(
         modelA,
-        sum(abserrorA_XZ[x, z] for x in Xlevels, z in Zlevels) <= maxrelax / 2.0
+        sum(abserrorA_XZ[x, z] for x in Xlevels, z in Zlevels) <= alpha / 2.0
     )
     @constraint(modelA, sum(errorA_XZ[x, z] for x in Xlevels, z in Zlevels) == 0.0)
 
@@ -185,7 +185,7 @@ function ot_joint(
     )
     @constraint(
         modelB,
-        sum(abserrorB_XY[x, y] for x in Xlevels, y in Ylevels) <= maxrelax / 2.0
+        sum(abserrorB_XY[x, y] for x in Xlevels, y in Ylevels) <= alpha / 2.0
     )
     @constraint(modelB, sum(errorB_XY[x, y] for x in Xlevels, y in Ylevels) == 0.0)
     @constraint(modelB, [x in Xlevels, z in Zlevels], errorB_XZ[x, z] <= abserrorB_XZ[x, z])
@@ -196,7 +196,7 @@ function ot_joint(
     )
     @constraint(
         modelB,
-        sum(abserrorB_XZ[x, z] for x in Xlevels, z in Zlevels) <= maxrelax / 2.0
+        sum(abserrorB_XZ[x, z] for x in Xlevels, z in Zlevels) <= alpha / 2.0
     )
     @constraint(modelB, sum(errorB_XZ[x, z] for x in Xlevels, z in Zlevels) == 0.0)
 
@@ -260,7 +260,7 @@ function ot_joint(
         modelA,
         Min,
         sum(C[y, z] * gammaA[x, y, z] for y in Ylevels, z in Zlevels, x in Xlevels) +
-        lambda_reg * sum(
+        lambda * sum(
             1 / nvoisins * reg_absA[x1, x2, y, z] for x1 in Xlevels, x2 in voisins[x1],
             y in Ylevels, z in Zlevels
         )
@@ -270,7 +270,7 @@ function ot_joint(
         modelB,
         Min,
         sum(C[y, z] * gammaB[x, y, z] for y in Ylevels, z in Zlevels, x in Xlevels) +
-        lambda_reg * sum(
+        lambda * sum(
             1 / nvoisins * reg_absB[x1, x2, y, z] for x1 in Xlevels, x2 in voisins[x1],
             y in Ylevels, z in Zlevels
         )
@@ -308,7 +308,7 @@ function ot_joint(
     # Display the solution
     # println("Solution of the joint probability transport")
     # println("Distance cost = ", sum(C[y,z] * (gammaA_val[x,y,z]+gammaB_val[x,y,z]) for y in Ylevels, z in Zlevels, x in Xlevels))
-    # println("Regularization cost = ", lambda_reg * value(regterm))
+    # println("Regularization cost = ", lambda * value(regterm))
 
     if full_disp
         solution_summary(modelA; verbose = solver_disp)
@@ -325,7 +325,7 @@ function ot_joint(
 
 end
 
-function otjoint(data; lambda_reg = 0.392, maxrelax = 0.714, percent_closest = 0.2)
+function joint_ot_within_base(data; lambda = 0.392, alpha = 0.714, percent_closest = 0.2)
 
     database = data.database
 
@@ -340,7 +340,7 @@ function otjoint(data; lambda_reg = 0.392, maxrelax = 0.714, percent_closest = 0
 
     instance = Instance(database, X, Y, Ylevels, Z, Zlevels, Hamming())
 
-    sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
+    sol = ot_joint(instance, alpha, lambda, percent_closest)
     YB, ZA = compute_pred_error!(sol, instance, false)
 
     return YB, ZA

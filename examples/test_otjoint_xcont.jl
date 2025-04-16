@@ -79,11 +79,11 @@ function compute_pred_error_with_otjoint(csv_file)
 
     instance = Instance(database, X, Y, Z, dist_choice)
 
-    lambda_reg = 0.0
-    maxrelax = 0.0
+    lambda = 0.0
+    alpha = 0.0
     percent_closest = 0.2
 
-    sol = ot_joint(instance, maxrelax, lambda_reg, percent_closest)
+    sol = ot_joint(instance, alpha, lambda, percent_closest)
     OTRecod.compute_pred_error!(sol, instance, false)
     return sol.errorpredavg
 

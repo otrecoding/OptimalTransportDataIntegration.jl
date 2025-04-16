@@ -18,11 +18,11 @@ function main(nsimulations::Int)
 
                 @show mB
                 params = DataParameters(mB = mB)
-                data = generate_xcat_ycat(params)
+                data = generate_data(params)
 
                 for reg_m1 in reg_m_values, reg_m2 in reg_m_values
 
-                      yb, za  = otrecod(data, UnbalancedModality(reg = 0.001, reg_m1 = reg_m1, reg_m2 = reg_m2))
+                      yb, za  = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = reg_m1, reg_m2 = reg_m2))
                       estyb, estza, est = accuracy( data, yb, za )
                       writedlm(io, [i repr(mB) reg_m1 reg_m2 estyb estza est ])
 

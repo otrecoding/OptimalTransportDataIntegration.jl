@@ -3,6 +3,7 @@ using DataFrames
 import PythonOT
 import .Iterators: product
 import Distances: pairwise, Hamming
+import LinearAlgebra: norm
 
 onecold(X) = map(argmax, eachrow(X))
 
@@ -59,9 +60,7 @@ function modality_cost(loss, weight)
 
 end
 
-export unbalanced_modality
-
-function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
+function joint_ot_between_bases(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
 
     T = Int32
 
@@ -181,20 +180,21 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
     YBpred = zeros(T, nB)
     ZApred = zeros(T, nA)
 
+    G = ones(length(wa2), length(wb2))
+    cost = Inf
 
-    # total_costs = Float32[]
-    # fcosts = Float32[]
-    # perfs = Float32[]
-    # perfs_yb = Float32[]
-    # perfs_za = Float32[]
     for iter = 1:iterations
 
+        Gold = G
+        costold = cost
        
         if reg_m1 > 0.0 && reg_m2 > 0.0 
             G = PythonOT.mm_unbalanced(wa2, wb2, C, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
             G = PythonOT.sinkhorn(wa2, wb2, C, reg)
         end
+
+        delta = norm( G .- Gold)
 
 
         for j in eachindex(yB_pred)
@@ -214,6 +214,10 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
         chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
         fcost = chinge1 .+ chinge2'
 
+        cost = sum( G .* fcost)
+
+        println("Delta: $(delta) \t  Loss: $(cost) ")
+
         C .= C0 ./ maximum(C0) .+ fcost
 
         for i in axes(XYA, 1)
@@ -229,30 +233,12 @@ function unbalanced_modality(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels =
         YBpred .= onecold(yB_pred_hot_i)
         ZApred .= onecold(zA_pred_hot_i)
 
-        # est_yb = mean(YB .== YBpred) 
-        # est_za = mean(ZA .== ZApred)
-        # est = mean(vcat(YB .== YBpred, ZA .== ZApred))
-
-        # est_opt = max(est_opt, est)
-
-        # push!(total_costs, sum(G .* C))
-        # push!(fcosts, sum(G .* fcost))
-        # push!(perfs_yb, est_yb)
-        # push!(perfs_za, est_za)
-        # push!(perfs, est)
+        if delta < 1e-16 || abs(costold - cost) < 1e-7
+            @info "converged at iter $iter "
+            break
+        end
 
     end
-
-    #println(rpad("total cost", 15, " "), "fcost", lpad("estimation", 15, " "))
-    #for i = 1:iterations
-    #    println(
-    #        rpad(round(total_costs[i], digits = 6), 15, " "),
-    #        round(fcosts[i], digits = 6),
-    #        lpad(round(perfs_yb[i], digits = 6), 11, " "),
-    #        lpad(round(perfs_za[i], digits = 6), 11, " "),
-    #        lpad(round(perfs[i], digits = 6), 11, " "),
-    #    )
-    #end
 
     return YBpred, ZApred
 

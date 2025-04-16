@@ -16,9 +16,9 @@ data = generate_data(params)
 
 end
     
-@testset "OTjoint method" begin
+@testset "JointOTWithinBase method" begin
 
-    yb, za = otrecod(data, OTjoint()) 
+    yb, za = otrecod(data, JointOTWithinBase()) 
     @test all(accuracy(data, yb, za) .> 0.8)
 
 end
@@ -34,14 +34,14 @@ data = CSV.read(joinpath(@__DIR__, "data_good.csv"), DataFrame)
 
 @testset "Unbalanced method with good data" begin
 
-    @time yb, za = otrecod(data, UnbalancedModality())
+    @time yb, za = otrecod(data, JointOTBetweenBases())
     println(accuracy(data, yb, za))
 
 end
 
 @testset "Balanced method with good data" begin
 
-    @time yb, za = otrecod(data, UnbalancedModality(reg_m1 = 0.0, reg_m2 = 0.0))
+    @time yb, za = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
     println(accuracy(data, yb, za))
 
 end
@@ -50,14 +50,14 @@ data = CSV.read(joinpath(@__DIR__, "data_bad.csv"), DataFrame)
 
 @testset "Unbalanced method with bad data" begin
 
-    @time yb, za = otrecod(data, UnbalancedModality())
+    @time yb, za = otrecod(data, JointOTBetweenBases())
     println(accuracy(data, yb, za))
 
 end
 
 @testset "Balanced method with bad data" begin
     
-    @time yb, za = otrecod(data, UnbalancedModality(reg_m1 = 0.0, reg_m2 = 0.0))
+    @time yb, za = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
     println(accuracy(data, yb, za))
 
 end

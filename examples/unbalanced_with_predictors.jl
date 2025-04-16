@@ -134,9 +134,9 @@ end
 data = CSV.read("dataset.csv", DataFrame)
 @time unbalanced_with_predictors(data, iterations = 1)
 
-yb, za = otrecod(data, OTjoint())
+yb, za = otrecod(data, JointOTWithinBase())
 @time println("OT : $(accuracy(data, yb, za)) ")
 yb, za = otrecod(data, SimpleLearning())
 @time println("Simple Learning : $(accuracy(data, yb, za))")
-yb, za = otrecod(data, UnbalancedModality(iterations=1))
+yb, za = otrecod(data, JointOTBetweenBases(iterations=1))
 @time println("OTE : $(accuracy(data, yb, za ))")

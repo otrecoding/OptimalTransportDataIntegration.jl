@@ -63,7 +63,7 @@ end
 
 # -
 
-function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
+function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
 
     T = Int
 
@@ -213,7 +213,7 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
         )
         @constraint(
             model,
-            sum(abserror_XY[x1, y] for x1 in Xlevels, y in Ylevels) <= maxrelax / 2.0
+            sum(abserror_XY[x1, y] for x1 in Xlevels, y in Ylevels) <= alpha / 2.0
         )
         @constraint(model, sum(error_XY[x1, y] for x1 in Xlevels, y in Ylevels) == 0.0)
         @constraint(model, [x2 in Xlevels, z in Zlevels], error_XZ[x2, z] <= abserror_XZ[x2, z])
@@ -224,7 +224,7 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
         )
         @constraint(
             model,
-            sum(abserror_XZ[x2, z] for x2 in Xlevels, z in Zlevels) <= maxrelax / 2.0
+            sum(abserror_XZ[x2, z] for x2 in Xlevels, z in Zlevels) <= alpha / 2.0
         )
         @constraint(model, sum(error_XZ[x2, z] for x2 in Xlevels, z in Zlevels) == 0.0)
 
@@ -289,11 +289,11 @@ function unbalanced_solver(data; lambda_reg = 0.0, maxrelax = 0.0)
             model,
             Min,
             sum(c[x1, y, x2, z] * Ω[x1, y, x2, z] for y in Ylevels, z in Zlevels, x1 = Xlevels, x2 = Xlevels) +
-            lambda_reg * sum(
+            lambda * sum(
                 1 / nX * reg_absA[x1, x2, y, z] for x1 = Xlevels,
                 x2 in voisins_X[x1], y in Ylevels, z in Zlevels
             ) +
-            lambda_reg * sum(
+            lambda * sum(
                 1 / nX * reg_absB[x1, x2, y, z] for x1 = Xlevels,
                 x2 in voisins_X[x1], y in Ylevels, z in Zlevels
             )
@@ -386,17 +386,17 @@ end
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [2, 0, 0], eps = 0.0, p = 0.2)
 
-data = generate_xcat_ycat(params)
+data = generate_data(params)
 
-@time println(unbalanced_solver(data, lambda_reg = 0.01, maxrelax = 0.1 ))
-#@time println(otrecod(data, OTjoint(lambda_reg = 0.1, maxrelax = 0.1)))
-@time println(otrecod(data, UnbalancedModality()))
+@time println(unbalanced_solver(data, lambda = 0.01, alpha = 0.1 ))
+#@time println(otrecod(data, JointOTWithinBase(lambda = 0.1, alpha = 0.1)))
+@time println(otrecod(data, JointOTBetweenBases()))
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], eps = 0.0, p = 0.4)
 
-data = generate_xcat_ycat(params)
+data = generate_data(params)
 
-@time println(unbalanced_solver(data, lambda_reg = 0.01, maxrelax = 0.1 ))
-# @time println(otrecod(data, OTjoint(lambda_reg = 0.1, maxrelax = 0.1)))
+@time println(unbalanced_solver(data, lambda = 0.01, alpha = 0.1 ))
+# @time println(otrecod(data, JointOTWithinBase(lambda = 0.1, alpha = 0.1)))
 
-@time println(otrecod(data, UnbalancedModality()))
+@time println(otrecod(data, JointOTBetweenBases()))
