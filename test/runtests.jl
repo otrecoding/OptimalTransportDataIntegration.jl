@@ -7,14 +7,28 @@ using Test
 
 params = DataParameters(nA = 1000, nB = 1000)
     
-data = generate_data(params)
+rng = R2DataGenerator(params)
 
-@testset "check generated data" begin
+data = generate_data(rng)
+
+@testset "check generated data with R2 generator" begin
 
     @test sort(unique(data.Y)) ≈ [1, 2, 3, 4]
     @test sort(unique(data.Z)) ≈ [1, 2, 3]
 
 end
+
+rng = PDataGenerator(params)
+
+data = generate_data(rng)
+
+@testset "check generated data with P generator" begin
+
+    @test sort(unique(data.Y)) ≈ [1, 2, 3, 4]
+    @test sort(unique(data.Z)) ≈ [1, 2, 3]
+
+end
+
     
 @testset "JointOTWithinBase method" begin
 

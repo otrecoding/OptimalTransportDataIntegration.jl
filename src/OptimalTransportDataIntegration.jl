@@ -5,21 +5,10 @@ using DocStringExtensions
 using Parameters
 using Printf
 
-
-export digitize
-
-digitize(x, bins) = searchsortedlast.(Ref(bins), x)
-
-export to_categorical
-
-to_categorical(x) = sort(unique(x)) .== permutedims(x)
-
-to_categorical(x, levels) = levels .== permutedims(x)
-
 # Data generation functions
 include("data_parameters.jl")
-include("generate_data_with_r2.jl")
 include("generate_data_with_p.jl")
+include("generate_data_with_r2.jl")
 include("one_hot_encoder.jl")
 
 # OTRecod functions
