@@ -3,7 +3,7 @@ using DataFrames
 
 export generate_data
 
-function generate_data_XY(params, bins11, bins12, bins13)
+function generate_XY(params, bins11, bins12, bins13 )
 
     dA = MvNormal(params.mA, params.covA)
     dB = MvNormal(params.mB, params.covB)
@@ -49,7 +49,7 @@ function generate_data_XY(params, bins11, bins12, bins13)
 
 end
 
-function generate_data_YZ(params, Y1, Y2)
+function generate_YZ(params, Y1, Y2)
 
     p = params.p
 
@@ -132,7 +132,8 @@ function generate_data(params::DataParameters)
 
     X1, X2, X3, Y1, Y2 = generate_data_XY(params, bins11, bins12, bins13)
 
-    Y, Z = generate_data_YZ(params, Y1, Y2)
+    Y, Z = generate_YZ(params, Y1, Y2)
+
     b11 = quantile(Y, [0.25, 0.5, 0.75])
     b22 = quantile(Z, [1 / 3, 2 / 3])
 
@@ -140,7 +141,7 @@ function generate_data(params::DataParameters)
     binsY22 = vcat(minimum(Z) - 100, b22, maximum(Z) + 100)
 
     X1, X2, X3, Y1, Y2 = generate_data_XY(params, bins11, bins12, bins13)
-    Y, Z = generate_data_YZ(params, Y1, Y2)
+    Y, Z = generate_YZ(params, Y1, Y2)
 
     Y11 = digitize(Y, binsY11)
     Y12 = digitize(Y, binsY22)

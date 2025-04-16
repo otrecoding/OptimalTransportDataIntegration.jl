@@ -29,7 +29,7 @@ function write_datasets(M, all_params, outdir)
 
         for i = 1:M
 
-            df = generate_xcat_ycat(params)
+            df = generate_data(params)
 
             if length(unique(df.Y)) == 4 && length(unique(df.Z)) == 3
 

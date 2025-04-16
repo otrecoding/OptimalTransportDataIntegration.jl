@@ -25,7 +25,7 @@ let
 
         params = DataParameters(nA = 1000, nB = 1000)
 
-        data = generate_xcat_ycat(params)
+        data = generate_data(params)
 
         # +
 

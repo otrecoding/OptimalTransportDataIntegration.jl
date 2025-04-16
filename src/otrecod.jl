@@ -57,7 +57,7 @@ export JointOTBetweenBases
     reg_m2::Float64 = 0.01
     Ylevels::AbstractVector = 1:4
     Zlevels::AbstractVector = 1:3
-    iterations::Int = 2
+    iterations::Int = 10
 
 end
 

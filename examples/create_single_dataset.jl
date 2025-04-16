@@ -21,7 +21,7 @@ using OptimalTransportDataIntegration
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [0, 0, 0], eps = 0.00, p = 0.2)
 
-data = generate_xcat_ycat(params)
+data = generate_data(params)
 
 outdir = @__DIR__
 json_file = "dataset.json"

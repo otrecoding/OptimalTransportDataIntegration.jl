@@ -35,7 +35,7 @@ data = CSV.read(csv_file, DataFrame) # generated with Python code
     percent_closest = 0.2,
 )
 
-data = generate_xcat_ycat(read_params(json_file))
+data = generate_data(read_params(json_file))
 
 @time OptimalTransportDataIntegration.otjoint(
     data;
@@ -69,7 +69,7 @@ function run_simulations(simulations)
 
     @showprogress 1 for i = 1:simulations
 
-        data = generate_xcat_ycat(params)
+        data = generate_data(params)
 
         err1 = OptimalTransportDataIntegration.unbalanced_modality(data)
         err2 = OptimalTransportDataIntegration.otjoint(

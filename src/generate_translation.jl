@@ -1,7 +1,7 @@
 using Distributions
 using DataFrames
 
-export generate_xcat_ycat
+export generate_data
 
 
 function generate_xcat_constant_x(params)
@@ -124,7 +124,7 @@ Function to generate data where X and (Y,Z) are categoricals
 the function return a Dataframe with X1, X2, X3, Y, Z and the database id.
 
 """
-function generate_xcat_ycat(params)
+function generate_data(params)
 
     bins11, bins12, bins13 = generate_xcat_constant_x(params)
     binsY11, binsY22 = generate_xcat_constant_y(params, bins11, bins12, bins13)

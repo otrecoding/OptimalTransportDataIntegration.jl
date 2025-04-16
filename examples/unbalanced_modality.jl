@@ -20,7 +20,7 @@ using DataFrames
 using OptimalTransportDataIntegration
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], eps = 0.0, p = 0.2)
-data = generate_xcat_ycat(params)
+data = generate_data(params)
 
 est = otrecod(data, JointOTWithinBase())
 
@@ -33,7 +33,7 @@ est = otrecod(data, SimpleLearning())
 println(" SL : $est")
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [2, 0, 0], eps = 0.0, p = 0.2)
-data = generate_xcat_ycat(params)
+data = generate_data(params)
 
 est = otrecod(data, JointOTWithinBase())
 print(" OT-r : $est")
@@ -66,7 +66,7 @@ est = otrecod(data, SimpleLearning())
 println(" SL : $est")
 
 params = DataParameters(nA = 1000, nB = 1000)
-data = generate_xcat_ycat(params)
+data = generate_data(params)
 
 est = otrecod(data, JointOTWithinBase())
 print(" OT-r : $est")

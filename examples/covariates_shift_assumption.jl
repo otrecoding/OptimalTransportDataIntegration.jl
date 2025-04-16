@@ -33,7 +33,7 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
 
             for i = 1:nsimulations
 
-                data = generate_xcat_ycat(params)
+                data = generate_data(params)
 
                 #OT Transport of the joint distribution of covariates and outcomes.
                 alpha, lambda = 0.0, 0.0

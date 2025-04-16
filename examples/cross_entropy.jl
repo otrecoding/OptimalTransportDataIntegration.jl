@@ -9,7 +9,7 @@ for mB = mB_values
 
     params = DataParameters(nA = 1000, nB = 1000, mB = mB)
         
-    data = generate_xcat_ycat(params)
+    data = generate_data(params)
 
         
     yb_ot, za_ot = otrecod(data, JointOTWithinBase())
