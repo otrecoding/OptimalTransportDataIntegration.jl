@@ -22,8 +22,8 @@ function main(nsimulations::Int)
 
                 for reg_m1 in reg_m_values, reg_m2 in reg_m_values
 
-                      yb, za  = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = reg_m1, reg_m2 = reg_m2))
-                      estyb, estza, est = accuracy( data, yb, za )
+                      result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = reg_m1, reg_m2 = reg_m2))
+                      estyb, estza, est = accuracy( result )
                       writedlm(io, [i repr(mB) reg_m1 reg_m2 estyb estza est ])
 
                 end

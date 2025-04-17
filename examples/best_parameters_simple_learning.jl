@@ -38,7 +38,9 @@ function simple_learning(start, stop)
 
             data = CSV.read(joinpath("datasets", csv_file), DataFrame)
 
-            @show est = otrecod(data, SimpleLearning())
+            result = otrecod(data, SimpleLearning())
+            est_yb, est_za, est = accuracy(result)
+
             writedlm(io, [i est "learning"])
 
         end

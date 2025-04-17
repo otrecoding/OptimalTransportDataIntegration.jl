@@ -185,7 +185,7 @@ function joint_ot_between_bases(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevel
 
     for iter = 1:iterations
 
-        Gold = G
+        Gold = copy(G)
         costold = cost
        
         if reg_m1 > 0.0 && reg_m2 > 0.0 
@@ -216,7 +216,7 @@ function joint_ot_between_bases(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevel
 
         cost = sum( G .* fcost)
 
-        println("Delta: $(delta) \t  Loss: $(cost) ")
+        @info "Delta: $(delta) \t  Loss: $(cost) "
 
         C .= C0 ./ maximum(C0) .+ fcost
 

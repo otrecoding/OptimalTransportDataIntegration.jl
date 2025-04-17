@@ -45,7 +45,6 @@ end
 
 errorpredavg = Float64[]
 p = Float64[]
-eps = Float64[]
 nA = Int[]
 nB = Int[]
 mB = Vector{Float64}[]
@@ -56,19 +55,18 @@ for (csv_file, json_file) in zip(csv_files, json_files)
     params = JSON.parsefile(json_file)
 
     push!(p, params["p"])
-    push!(eps, params["eps"])
     push!(nA, params["nA"])
     push!(nB, params["nB"])
     push!(mB, params["mB"])
     push!(errorpredavg, test_ot_joint(csv_file))
     println("nA = $(nA[end]), nB = $(nB[end])")
     println(
-        "p = $(p[end]), eps = $(eps[end]), mB = $(mB[end]), est = $(1 - errorpredavg[end])",
+        "p = $(p[end]), mB = $(mB[end]), est = $(1 - errorpredavg[end])",
     )
 
 end
 # -
 
-df = DataFrame(nA = nA, nB = nB, mB = mB, eps = eps, p = p, errorpred = errorpredavg)
+df = DataFrame(nA = nA, nB = nB, mB = mB, p = p, errorpred = errorpredavg)
 
 CSV.write(joinpath("results_M5max.csv"), df)

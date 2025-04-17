@@ -384,17 +384,18 @@ end
 #csv_file = joinpath("dataset.csv")
 #data = CSV.read(csv_file, DataFrame)
 
-params = DataParameters(nA = 1000, nB = 1000, mB = [2, 0, 0], eps = 0.0, p = 0.2)
+params = DataParameters(nA = 1000, nB = 1000, mB = [2, 0, 0], p = 0.2)
 
-data = generate_data(params)
+rng = PDataGenerator(params)
+data = generate_data(rng)
 
 @time println(unbalanced_solver(data, lambda = 0.01, alpha = 0.1 ))
 #@time println(otrecod(data, JointOTWithinBase(lambda = 0.1, alpha = 0.1)))
 @time println(otrecod(data, JointOTBetweenBases()))
 
-params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], eps = 0.0, p = 0.4)
-
-data = generate_data(params)
+params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], p = 0.4)
+rng = PDataGenerator(params)
+data = generate_data(rng)
 
 @time println(unbalanced_solver(data, lambda = 0.01, alpha = 0.1 ))
 # @time println(otrecod(data, JointOTWithinBase(lambda = 0.1, alpha = 0.1)))

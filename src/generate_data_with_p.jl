@@ -18,7 +18,7 @@ struct PDataGenerator
     binsY11 :: Vector{Float64}
     binsY22 :: Vector{Float64}
 
-    function PDataGenerator(params, n = 10000)
+    function PDataGenerator(params; n = 10000)
 
         dA = MvNormal(params.mA, params.covA)
         dB = MvNormal(params.mB, params.covB)
@@ -34,9 +34,9 @@ struct PDataGenerator
         qx2c = quantile.(Normal(0.0, 1.0), px2cc)
         qx3c = quantile.(Normal(0.0, 1.0), px3cc)
 
-        bins11 = vcat(minimum(XA[1, :]) - 100, qx1c, maximum(XA[1, :]) + 100)
-        bins12 = vcat(minimum(XA[2, :]) - 100, qx2c, maximum(XA[2, :]) + 100)
-        bins13 = vcat(minimum(XA[3, :]) - 100, qx3c, maximum(XA[3, :]) + 100)
+        bins11 = vcat(minimum(view(XA,1, :)) - 100, qx1c, maximum(XA[1, :]) + 100)
+        bins12 = vcat(minimum(view(XA,2, :)) - 100, qx2c, maximum(XA[2, :]) + 100)
+        bins13 = vcat(minimum(view(XA,3, :)) - 100, qx3c, maximum(XA[3, :]) + 100)
 
         X11 = digitize(XA[1, :], bins11)
         X12 = digitize(XA[2, :], bins12)
@@ -52,10 +52,6 @@ struct PDataGenerator
         X22c = to_categorical(X22, 1:3)[2:end, :]
         X13c = to_categorical(X13, 1:4)[2:end, :]
         X23c = to_categorical(X23, 1:4)[2:end, :]
-
-        X1 = vcat(X11, X21)
-        X2 = vcat(X12, X22)
-        X3 = vcat(X13, X23)
 
         Y1 = vcat(X11c, X12c, X13c)' * params.aA
         Y2 = vcat(X21c, X22c, X23c)' * params.aB

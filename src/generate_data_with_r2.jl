@@ -158,11 +158,11 @@ function generate_data(generator::R2DataGenerator; eps = 0.0)
     YA1 = digitize(Y1, generator.binsYA1)
     YA2 = digitize(Y1, generator.binsYA2)
 
-    binsYB1eps = generator.binsYB1 .+ eps
-    binsYB2eps = generator.binsYB2 .+ eps
+    binsYB1 = generator.binsYB1 .+ eps
+    binsYB2 = generator.binsYB2 .+ eps
 
-    YB1 = digitize(Y2, binsYB1eps)
-    YB2 = digitize(Y2, binsYB2eps)
+    YB1 = digitize(Y2, binsYB1)
+    YB2 = digitize(Y2, binsYB2)
 
     df = DataFrame(hcat(X1, X2, X3) .- 1, [:X1, :X2, :X3])
     df.Y = vcat(YA1, YB1)
