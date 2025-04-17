@@ -21,7 +21,7 @@ struct DataGenerator
     binsYA2::Vector{Float64}
     binsYB2::Vector{Float64}
 
-    function DataGenerator(params; n = 10000)
+    function DataGenerator(params; n = 10000, scenario = 0)
 
         dA = MvNormal(params.mA, params.covA)
         dB = MvNormal(params.mB, params.covB)
@@ -98,10 +98,15 @@ struct DataGenerator
         bB2 = quantile(Y2, [1 / 3, 2 / 3])
 
         binsYA1 = vcat(minimum(Y1) - 100, bA1, maximum(Y1) + 100)
-        binsYB1 = vcat(minimum(Y1) - 100, bB1, maximum(Y1) + 100)
-
         binsYA2 = vcat(minimum(Y2) - 100, bA2, maximum(Y2) + 100)
-        binsYB2 = vcat(minimum(Y2) - 100, bB2, maximum(Y2) + 100)
+
+        if scenario == 1 
+            binsYB1 = binsYA1
+            binsYB2 = binsYA2
+        else
+            binsYB1 = vcat(minimum(Y1) - 100, bB1, maximum(Y1) + 100)
+            binsYB2 = vcat(minimum(Y2) - 100, bB2, maximum(Y2) + 100)
+        end
 
         new(
             params,
@@ -134,7 +139,7 @@ the function return a Dataframe with X1, X2, X3, Y, Z and the database id.
 r2 is the coefficient of determination 
 
 """
-function generate_data(generator::DataGenerator)
+function generate_data(generator::DataGenerator; eps = 0.0)
 
     params = generator.params
 
@@ -182,6 +187,12 @@ function generate_data(generator::DataGenerator)
 
     YA1 = digitize(Y1, generator.binsYA1)
     YA2 = digitize(Y1, generator.binsYA2)
+
+    binsYB1 = generator.binsYA1 .+ eps
+    binsYB2 = generator.binsYA2 .+ eps
+
+    YB1 = digitize(Y2, binsYB1)
+    YB2 = digitize(Y2, binsYB2)
 
     YB1 = digitize(Y2, generator.binsYB1)
     YB2 = digitize(Y2, generator.binsYB2)
