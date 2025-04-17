@@ -188,6 +188,8 @@ function generate_data(generator::DataGenerator; eps = 0.0)
     YA1 = digitize(Y1, generator.binsYA1)
     YA2 = digitize(Y1, generator.binsYA2)
 
+    scenario == 0 && ( eps = 0.0 )
+
     binsYB1 = generator.binsYA1 .+ eps
     binsYB2 = generator.binsYA2 .+ eps
 
