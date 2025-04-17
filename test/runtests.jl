@@ -7,7 +7,7 @@ using Test
 
 params = DataParameters(nA = 1000, nB = 1000)
     
-rng = R2DataGenerator(params)
+rng = R2DataGenerator(params, n = 1000)
 
 data = generate_data(rng)
 
@@ -18,7 +18,7 @@ data = generate_data(rng)
 
 end
 
-rng = PDataGenerator(params)
+rng = PDataGenerator(params, n = 1000)
 
 data = generate_data(rng)
 
