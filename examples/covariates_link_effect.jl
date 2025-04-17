@@ -31,7 +31,7 @@ function covariates_link_effect(nsimulations::Int, pvalues)
 
             params = DataParameters(p = p)
 
-            rng = PDataGenerator(params)
+            rng = DataGenerator(params)
 
             for i = 1:nsimulations
 

@@ -18,12 +18,16 @@ The function considers the following problem:
 ```math
     \gamma = \mathop{\arg \min}_\gamma \quad \langle \gamma,
              \mathbf{M} \rangle_F + \mathrm{reg} \cdot\Omega(\gamma)
+```
 
-    s.t. \gamma \mathbf{1} &\leq \mathbf{a} \\
-         \gamma^T \mathbf{1} &\leq \mathbf{b} \\
-         \gamma &\geq 0 \\
+```math
+\begin{aligned}
+     s. t.  \qquad \gamma \mathbf{1} &  \leq \mathbf{a} \\
+     \gamma^T \mathbf{1} &\leq \mathbf{b} \\
+     \gamma &\geq 0 \\
          \mathbf{1}^T \gamma^T \mathbf{1} = m
          &\leq \min\{\|\mathbf{a}\|_1, \|\mathbf{b}\|_1\} \\
+\end{aligned}
 ```
 
 where :

@@ -21,30 +21,27 @@ using OptimalTransportDataIntegration
 using Printf
 
 # +
-function write_datasets(M, all_params, outdir)
+function write_datasets(nsimulations, all_params, outdir)
 
     mkpath(outdir)
 
-    for (p, params) in enumerate(all_params)
+    for (j, params) in enumerate(all_params)
 
-        rng = PDataGenerator(p)
+        rng = DataGenerator(params)
 
-        for i = 1:M
+        for i = 1:nsimulations
 
-            for eps in [0.0, 0.01, 0.05, 0.1]
+            df = generate_data(rng)
 
-                df = generate_data(rng, eps = eps)
+            if length(unique(df.Y)) == 4 && length(unique(df.Z)) == 3
 
-                if length(unique(df.Y)) == 4 && length(unique(df.Z)) == 3
+                json_file = @sprintf "tab_otjoint_%02i_%02i.json" j i
+                save_params(joinpath(outdir, json_file), params)
 
-                    json_file = @sprintf "tab_otjoint_%02i_%02i.json" p i
-                    save_params(joinpath(outdir, json_file), params)
+                csv_file = @sprintf "tab_otjoint_%02i_%02i.csv" j i
 
-                    csv_file = @sprintf "tab_otjoint_%02i_%02i.csv" p i
+                CSV.write(joinpath(outdir, csv_file), df)
 
-                    CSV.write(joinpath(outdir, csv_file), df)
-
-                end
             end
 
         end
@@ -55,19 +52,19 @@ end
 # -
 
 all_params = [
-    DataParameters(nA = 1000, nB = 1000, mB = [0, 0, 0], p = 0.2),
-    DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], p = 0.2),
-    DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], p = 0.4),
-    DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], p = 0.6),
-    DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], p = 0.8),
-    DataParameters(nA = 1000, nB = 1000, mB = [1, 1, 0], p = 0.2),
-    DataParameters(nA = 1000, nB = 1000, mB = [1, 2, 0], p = 0.2),
-    DataParameters(nA = 100, nB = 100, mB = [1, 0, 0],  p = 0.2),
-    DataParameters(nA = 5000, nB = 5000, mB = [1, 0, 0], p = 0.2),
-    DataParameters(nA = 1000, nB = 500, mB = [1, 0, 0], p = 0.2),
-    DataParameters(nA = 1000, nB = 100, mB = [1, 0, 0], p = 0.2),
+    DataParameters(nA = 1000, nB = 1000, mB = [0, 0, 0]),
+    DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0]),
+    DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0]),
+    DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0]),
+    DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0]),
+    DataParameters(nA = 1000, nB = 1000, mB = [1, 1, 0]),
+    DataParameters(nA = 1000, nB = 1000, mB = [1, 2, 0]),
+    DataParameters(nA = 100,  nB = 100,  mB = [1, 0, 0]),
+    DataParameters(nA = 5000, nB = 5000, mB = [1, 0, 0]),
+    DataParameters(nA = 1000, nB = 500,  mB = [1, 0, 0]),
+    DataParameters(nA = 1000, nB = 100,  mB = [1, 0, 0]),
 ]
 
-M = 10
+nsimulations = 10
 outdir = joinpath("datasets")
 write_datasets(M, all_params, outdir)

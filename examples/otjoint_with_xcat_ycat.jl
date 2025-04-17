@@ -25,7 +25,7 @@ let
 
         params = DataParameters(nA = 1000, nB = 1000)
 
-        rng = PDataGenerator(params)
+        rng = DataGenerator(params)
 
         data = generate_data(rng)
 

@@ -386,7 +386,7 @@ end
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [2, 0, 0], p = 0.2)
 
-rng = PDataGenerator(params)
+rng = DataGenerator(params)
 data = generate_data(rng)
 
 @time println(unbalanced_solver(data, lambda = 0.01, alpha = 0.1 ))
@@ -394,7 +394,7 @@ data = generate_data(rng)
 @time println(otrecod(data, JointOTBetweenBases()))
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], p = 0.4)
-rng = PDataGenerator(params)
+rng = DataGenerator(params)
 data = generate_data(rng)
 
 @time println(unbalanced_solver(data, lambda = 0.01, alpha = 0.1 ))

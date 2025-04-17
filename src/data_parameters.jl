@@ -14,7 +14,6 @@ export save_params
     px1c::Vector{Float64} = [0.5, 0.5]
     px2c::Vector{Float64} = [0.333, 0.334, 0.333]
     px3c::Vector{Float64} = [0.25, 0.25, 0.25, 0.25]
-    p::Float64 = 0.2
     aA::Vector{Float64} = [1., 1., 1.5, 1, 1.5, 2]
     aB::Vector{Float64} = [1., 1., 1.5, 1, 1.5, 2]
     r2::Float64 = 0.6
@@ -45,7 +44,6 @@ function read_params(jsonfile::AbstractString)
     px1c = Float64.(data["px1c"])
     px2c = Float64.(data["px2c"])
     px3c = Float64.(data["px3c"])
-    p = Float64(data["p"])
     r2 = Float64(data["r2"])
 
     DataParameters(nA, nB, mA, mB, covA, covB, px1c, px2c, px3c, p, aA, aB, r2)
