@@ -113,7 +113,7 @@ the function return a Dataframe with X1, X2, X3, Y, Z and the database id.
 r2 is the coefficient of determination 
 
 """
-function generate_data(generator::R2DataGenerator; eps = 0.0)
+function generate_data(generator::R2DataGenerator)
 
     params = generator.params
 
@@ -158,11 +158,8 @@ function generate_data(generator::R2DataGenerator; eps = 0.0)
     YA1 = digitize(Y1, generator.binsYA1)
     YA2 = digitize(Y1, generator.binsYA2)
 
-    binsYB1 = generator.binsYB1 .+ eps
-    binsYB2 = generator.binsYB2 .+ eps
-
-    YB1 = digitize(Y2, binsYB1)
-    YB2 = digitize(Y2, binsYB2)
+    YB1 = digitize(Y2, generator.binsYB1 )
+    YB2 = digitize(Y2, generator.binsYB2 )
 
     df = DataFrame(hcat(X1, X2, X3) .- 1, [:X1, :X2, :X3])
     df.Y = vcat(YA1, YB1)
