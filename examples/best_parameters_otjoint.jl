@@ -24,7 +24,7 @@ function otjoint(start, stop)
 
     params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], eps = 0.0, p = 0.2)
 
-    rng = PDataGenerator(params)
+    rng = DataGenerator(params)
 
     outfile = "results_otjoint.csv"
     header = ["id", "alpha", "lambda", "estimation", "method"]

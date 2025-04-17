@@ -1,11 +1,11 @@
 using Distributions
 using DataFrames
 
-export R2DataGenerator
+export DataGenerator
 
 export generate_data
 
-struct R2DataGenerator
+struct DataGenerator
 
     params::DataParameters
     binsA1::Vector{Float64}
@@ -21,7 +21,7 @@ struct R2DataGenerator
     binsYA2::Vector{Float64}
     binsYB2::Vector{Float64}
 
-    function R2DataGenerator(params; n = 10000)
+    function DataGenerator(params; n = 10000)
 
         dA = MvNormal(params.mA, params.covA)
         dB = MvNormal(params.mB, params.covB)
@@ -113,7 +113,7 @@ the function return a Dataframe with X1, X2, X3, Y, Z and the database id.
 r2 is the coefficient of determination 
 
 """
-function generate_data(generator::R2DataGenerator)
+function generate_data(generator::DataGenerator)
 
     params = generator.params
 

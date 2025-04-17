@@ -9,7 +9,7 @@ function otjoint(csv_file)
     estimations = Float32[]
 
     params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], p = 0.2)
-    rng = PDataGenerator(params)
+    rng = DataGenerator(params)
 
     data = CSV.read(joinpath("datasets", csv_file), DataFrame)
     @show csv_file

@@ -66,7 +66,7 @@ function run_simulations(simulations)
 
     params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], p = 0.3)
 
-    rng = PDataGenerator(params)
+    rng = DataGenerator(params)
     prediction_quality = []
 
     @showprogress 1 for i = 1:simulations
