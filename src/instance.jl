@@ -96,20 +96,15 @@ struct Instance
 end
 
 function Instance(
-            base::AbstractVector,
-            X::AbstractMatrix,
-            Y::AbstractVector,
-            Z::AbstractVector,
-            distance::Distances.Metric,
+    base::AbstractVector,
+    X::AbstractMatrix,
+    Y::AbstractVector,
+    Z::AbstractVector,
+    distance::Distances.Metric,
 )
     Ylevels = sort(unique(Y))
     Zlevels = sort(unique(Z))
 
-    Instance( base, X, Y, Ylevels, Z, Zlevels, distance)
+    Instance(base, X, Y, Ylevels, Z, Zlevels, distance)
 
 end
-
-
- 
-
-

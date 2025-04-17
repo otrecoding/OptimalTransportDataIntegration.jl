@@ -20,16 +20,16 @@ function loss_crossentropy(Y, F)
     @assert nclasses == size(Y, 2)
     res = zeros(ny, nf)
     logF = zeros(nf, nclasses)
-    for j in axes(F,2), i in axes(F,1)
-        if F[i,j] ≈ 1.0
-            logF[i,j] = log(1. - ϵ)
+    for j in axes(F, 2), i in axes(F, 1)
+        if F[i, j] ≈ 1.0
+            logF[i, j] = log(1.0 - ϵ)
         else
-            logF[i,j] = log(ϵ)
+            logF[i, j] = log(ϵ)
         end
     end
 
     for i in axes(Y, 2)
-        res .+= -Y[:, i] .* logF[:, i]' 
+        res .+= -Y[:, i] .* logF[:, i]'
     end
 
     return res #./ nf
@@ -60,7 +60,15 @@ function modality_cost(loss, weight)
 
 end
 
-function joint_ot_between_bases(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevels = 1:3, iterations = 1)
+function joint_ot_between_bases(
+    data,
+    reg,
+    reg_m1,
+    reg_m2;
+    Ylevels = 1:4,
+    Zlevels = 1:3,
+    iterations = 1,
+)
 
     T = Int32
 
@@ -118,7 +126,7 @@ function joint_ot_between_bases(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevel
     wa = vec([sum(indXA[x][YA[indXA[x]].==y]) for y in Ylevels, x = 1:nbXA])
     wb = vec([sum(indXB[x][ZB[indXB[x]].==z]) for z in Zlevels, x = 1:nbXB])
 
-    wa2 = filter(>(0), wa) 
+    wa2 = filter(>(0), wa)
     wb2 = filter(>(0), wb) ./ sum(wa2)
 
 
@@ -187,14 +195,14 @@ function joint_ot_between_bases(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevel
 
         Gold = copy(G)
         costold = cost
-       
-        if reg_m1 > 0.0 && reg_m2 > 0.0 
+
+        if reg_m1 > 0.0 && reg_m2 > 0.0
             G = PythonOT.mm_unbalanced(wa2, wb2, C, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
             G = PythonOT.sinkhorn(wa2, wb2, C, reg)
         end
 
-        delta = norm( G .- Gold)
+        delta = norm(G .- Gold)
 
 
         for j in eachindex(yB_pred)
@@ -214,7 +222,7 @@ function joint_ot_between_bases(data, reg, reg_m1, reg_m2; Ylevels = 1:4, Zlevel
         chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
         fcost = chinge1 .+ chinge2'
 
-        cost = sum( G .* fcost)
+        cost = sum(G .* fcost)
 
         @info "Delta: $(delta) \t  Loss: $(cost) "
 

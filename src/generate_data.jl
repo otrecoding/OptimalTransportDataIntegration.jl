@@ -1,6 +1,13 @@
 using Distributions
 using DataFrames
 
+digitize(x, bins) = searchsortedlast.(Ref(bins), x)
+
+to_categorical(x) = sort(unique(x)) .== permutedims(x)
+
+to_categorical(x, levels) = levels .== permutedims(x)
+
+
 export DataGenerator
 
 export generate_data
@@ -79,15 +86,11 @@ struct DataGenerator
         covB = params.covB
 
         varerrorA =
-            cr2 * sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(
-                covA,
-                2,
-            )])
+            cr2 *
+            sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
         varerrorB =
-            cr2 * sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(
-                covB,
-                2,
-            )])
+            cr2 *
+            sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
 
         Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(varerrorA)), n)
         Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(varerrorB)), n)
@@ -100,7 +103,7 @@ struct DataGenerator
         binsYA1 = vcat(minimum(Y1) - 100, bA1, maximum(Y1) + 100)
         binsYA2 = vcat(minimum(Y2) - 100, bA2, maximum(Y2) + 100)
 
-        if scenario == 1 
+        if scenario == 1
             binsYB1 = binsYA1
             binsYB2 = binsYA2
         else
@@ -175,20 +178,14 @@ function generate_data(generator::DataGenerator; eps = 0.0)
     covA = generator.covAemp
     covB = generator.covBemp
 
-    varerrorA =
-        cr2 * sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
-    varerrorB =
-        cr2 * sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
+    σA = cr2 * sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
+    σB = cr2 * sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
 
-    Y1 =
-        vcat(X11c, X12c, X13c)' * params.aA .+ rand(Normal(0.0, sqrt(varerrorA)), params.nA)
-    Y2 =
-        vcat(X21c, X22c, X23c)' * params.aB .+ rand(Normal(0.0, sqrt(varerrorB)), params.nB)
+    Y1 = vcat(X11c, X12c, X13c)' * aA .+ rand(Normal(0.0, sqrt(σA)), params.nA)
+    Y2 = vcat(X21c, X22c, X23c)' * aB .+ rand(Normal(0.0, sqrt(σB)), params.nB)
 
     YA1 = digitize(Y1, generator.binsYA1)
     YA2 = digitize(Y1, generator.binsYA2)
-
-    scenario == 0 && ( eps = 0.0 )
 
     binsYB1 = generator.binsYA1 .+ eps
     binsYB2 = generator.binsYA2 .+ eps

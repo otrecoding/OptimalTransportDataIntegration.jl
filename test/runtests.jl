@@ -11,7 +11,7 @@ rng = DataGenerator(params, n = 1000)
 
 data = generate_data(rng)
 
-@testset "check generated data with R2 generator" begin
+@testset "check data generator" begin
 
     @test sort(unique(data.Y)) ≈ [1, 2, 3, 4]
     @test sort(unique(data.Z)) ≈ [1, 2, 3]

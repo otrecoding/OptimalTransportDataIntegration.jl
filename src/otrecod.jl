@@ -23,8 +23,8 @@ function otrecod(data::DataFrame, method::JointOTWithinBase)
         percent_closest = method.percent_closest,
     )
 
-    yb_true = data.Y[data.database .== 2]
-    za_true = data.Z[data.database .== 1]
+    yb_true = data.Y[data.database.==2]
+    za_true = data.Z[data.database.==1]
 
     JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
@@ -51,8 +51,8 @@ function otrecod(data::DataFrame, method::SimpleLearning)
         epochs = method.epochs,
     )
 
-    yb_true = data.Y[data.database .== 2]
-    za_true = data.Z[data.database .== 1]
+    yb_true = data.Y[data.database.==2]
+    za_true = data.Z[data.database.==1]
 
     JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
@@ -76,14 +76,15 @@ function otrecod(data::DataFrame, method::JointOTBetweenBases)
     yb_pred, za_pred = joint_ot_between_bases(
         data,
         method.reg,
-        method.reg_m1, method.reg_m2;
+        method.reg_m1,
+        method.reg_m2;
         Ylevels = method.Ylevels,
         Zlevels = method.Zlevels,
         iterations = method.iterations,
     )
 
-    yb_true = data.Y[data.database .== 2]
-    za_true = data.Z[data.database .== 1]
+    yb_true = data.Y[data.database.==2]
+    za_true = data.Z[data.database.==1]
 
     JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
