@@ -18,14 +18,11 @@ struct DataGenerator
     binsA1::Vector{Float64}
     binsA2::Vector{Float64}
     binsA3::Vector{Float64}
-    binsB1::Vector{Float64}
-    binsB2::Vector{Float64}
-    binsB3::Vector{Float64}
     covAemp::Matrix{Float64}
     covBemp::Matrix{Float64}
     binsYA1::Vector{Float64}
-    binsYB1::Vector{Float64}
     binsYA2::Vector{Float64}
+    binsYB1::Vector{Float64}
     binsYB2::Vector{Float64}
 
     function DataGenerator(params; n = 10000, scenario = 0)
@@ -51,10 +48,6 @@ struct DataGenerator
         binsA1 = vcat(minimum(XA[1, :]) - 100, qxA1c, maximum(XA[1, :]) + 100)
         binsA2 = vcat(minimum(XA[2, :]) - 100, qxA2c, maximum(XA[2, :]) + 100)
         binsA3 = vcat(minimum(XA[3, :]) - 100, qxA3c, maximum(XA[3, :]) + 100)
-
-        binsB1 = vcat(minimum(XB[1, :]) - 100, qxB1c, maximum(XB[1, :]) + 100)
-        binsB2 = vcat(minimum(XB[2, :]) - 100, qxB2c, maximum(XB[2, :]) + 100)
-        binsB3 = vcat(minimum(XB[3, :]) - 100, qxB3c, maximum(XB[3, :]) + 100)
 
         X11 = digitize(XA[1, :], binsA1)
         X12 = digitize(XA[2, :], binsA2)
@@ -116,14 +109,11 @@ struct DataGenerator
             binsA1,
             binsA2,
             binsA3,
-            binsB1,
-            binsB2,
-            binsB3,
             covAemp,
             covBemp,
             binsYA1,
-            binsYB1,
             binsYA2,
+            binsYB1,
             binsYB2,
         )
 
@@ -187,14 +177,8 @@ function generate_data(generator::DataGenerator; eps = 0.0)
     YA1 = digitize(Y1, generator.binsYA1)
     YA2 = digitize(Y1, generator.binsYA2)
 
-    binsYB1 = generator.binsYA1 .+ eps
-    binsYB2 = generator.binsYA2 .+ eps
-
-    YB1 = digitize(Y2, binsYB1)
-    YB2 = digitize(Y2, binsYB2)
-
-    YB1 = digitize(Y2, generator.binsYB1)
-    YB2 = digitize(Y2, generator.binsYB2)
+    YB1 = digitize(Y2, generator.binsYA1 .+ eps)
+    YB2 = digitize(Y2, generator.binsYA2 .+ eps)
 
     df = DataFrame(hcat(X1, X2, X3) .- 1, [:X1, :X2, :X3])
     df.Y = vcat(YA1, YB1)

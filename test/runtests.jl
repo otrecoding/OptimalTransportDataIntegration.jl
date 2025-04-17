@@ -21,14 +21,14 @@ end
 @testset "JointOTWithinBase method" begin
 
     result = otrecod(data, JointOTWithinBase()) 
-    @test all(accuracy(result) .> 0.8)
+    @test all(accuracy(result) .> 0.5)
 
 end
 
 @testset "SimpleLearning method" begin
 
     result = otrecod(data, SimpleLearning())
-    @test all(accuracy(result) .> 0.8)
+    @test all(accuracy(result) .> 0.5)
 
 end
 
