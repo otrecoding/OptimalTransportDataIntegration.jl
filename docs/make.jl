@@ -6,8 +6,13 @@ makedocs(
     authors = "Jeremy Omer, Valérie Garès and Pierre Navaro",
     format = Documenter.HTML(),
     modules = [OptimalTransportDataIntegration],
-    pages = ["Documentation" => "index.md"],
-    doctest = false
+    pages = ["Quickstart" => "index.md", 
+             "Transport within a data source" => "joint_ot_within_base.md",
+             "Transport between data sources" => "joint_ot_between_bases.md",
+             "Numerical experiments" => "simulations.md",
+            ],
+    doctest = false,
+    warnonly = Documenter.except(),
 )
 
 deploydocs(repo = "github.com/otrecoding/OptimalTransportDataIntegration.jl.git")

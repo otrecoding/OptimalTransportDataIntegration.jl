@@ -4,9 +4,10 @@
 CurrentModule = OptimalTransportDataIntegration
 ```
 
-```@index
-```
-
 ```@autodocs
 Modules = [OptimalTransportDataIntegration]
+Pages=["generate_data.jl"]
+```
+
+```@index
 ```
