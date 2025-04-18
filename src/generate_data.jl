@@ -1,5 +1,6 @@
 using Distributions
 using DataFrames
+import StatsBase: countmap
 
 digitize(x, bins) = searchsortedlast.(Ref(bins), x)
 
@@ -185,8 +186,8 @@ function generate_data(generator::DataGenerator; eps = 0.0)
     df.Z = vcat(YA2, YB2)
     df.database = vcat(fill(1, params.nA), fill(2, params.nB))
 
-    @info "Categories in Y $(sort(unique(df.Y)))"
-    @info "Categories in Z $(sort(unique(df.Z)))"
+    @info "Categories in Y $(countmap(df.Y))"
+    @info "Categories in Z $(countmap(df.Z))"
 
     return df
 
