@@ -25,8 +25,9 @@ struct DataGenerator
     binsYA2::Vector{Float64}
     binsYB1::Vector{Float64}
     binsYB2::Vector{Float64}
+    discrete::Bool
 
-    function DataGenerator(params; n = 10000, scenario = 0)
+    function DataGenerator(params; n = 10000, scenario = 0, discrete = true)
 
         dA = MvNormal(params.mA, params.covA)
         dB = MvNormal(params.mB, params.covB)
@@ -50,6 +51,8 @@ struct DataGenerator
         binsA2 = vcat(minimum(XA[2, :]) - 100, qxA2c, maximum(XA[2, :]) + 100)
         binsA3 = vcat(minimum(XA[3, :]) - 100, qxA3c, maximum(XA[3, :]) + 100)
 
+        if discrete
+
         X11 = digitize(XA[1, :], binsA1)
         X12 = digitize(XA[2, :], binsA2)
         X13 = digitize(XA[3, :], binsA3)
@@ -70,6 +73,13 @@ struct DataGenerator
 
         covAemp = cov(X1, dims = 2)
         covBemp = cov(X2, dims = 2)
+
+        else
+
+            X1 = XA
+            X2 = XB
+
+        end
 
         cr2 = 1 / params.r2 - 1
 
@@ -142,6 +152,8 @@ function generate_data(generator::DataGenerator; eps = 0.0)
     dB = MvNormal(params.mB, params.covB)
     XB = rand(dB, params.nB)
 
+    if generator.discrete
+
     X11 = digitize(XA[1, :], generator.binsA1)
     X12 = digitize(XA[2, :], generator.binsA2)
     X13 = digitize(XA[3, :], generator.binsA3)
@@ -157,23 +169,42 @@ function generate_data(generator::DataGenerator; eps = 0.0)
     X13c = to_categorical(X13, 1:4)[2:end, :]
     X23c = to_categorical(X23, 1:4)[2:end, :]
 
-    X1 = vcat(X11, X21)
-    X2 = vcat(X12, X22)
-    X3 = vcat(X13, X23)
+    XX1 = vcat(X11, X21)
+    XX2 = vcat(X12, X22)
+    XX3 = vcat(X13, X23)
+
+    X1 = vcat(X11c, X12c, X13c)
+    X2 = vcat(X21c, X22c, X23c)
+
+    else
+
+    X1 = XA
+    X2 = XB
+
+    end
 
     cr2 = 1.0 / params.r2 - 1
 
     aA = params.aA
     aB = params.aB
 
-    covA = generator.covAemp
-    covB = generator.covBemp
+    if generator.discrete 
+
+        covA = generator.covAemp
+        covB = generator.covBemp
+
+    else
+
+        covA = params.covA
+        covB = params.covB
+
+    end
 
     σA = cr2 * sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
     σB = cr2 * sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
 
-    Y1 = vcat(X11c, X12c, X13c)' * aA .+ rand(Normal(0.0, sqrt(σA)), params.nA)
-    Y2 = vcat(X21c, X22c, X23c)' * aB .+ rand(Normal(0.0, sqrt(σB)), params.nB)
+    Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(σA)), params.nA)
+    Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(σB)), params.nB)
 
     YA1 = digitize(Y1, generator.binsYA1)
     YA2 = digitize(Y1, generator.binsYA2)
@@ -181,7 +212,7 @@ function generate_data(generator::DataGenerator; eps = 0.0)
     YB1 = digitize(Y2, generator.binsYA1 .+ eps)
     YB2 = digitize(Y2, generator.binsYA2 .+ eps)
 
-    df = DataFrame(hcat(X1, X2, X3) .- 1, [:X1, :X2, :X3])
+    df = DataFrame(hcat(XX1, XX2, XX3) .- 1, [:X1, :X2, :X3])
     df.Y = vcat(YA1, YB1)
     df.Z = vcat(YA2, YB2)
     df.database = vcat(fill(1, params.nA), fill(2, params.nB))
