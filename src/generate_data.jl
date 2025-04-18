@@ -53,38 +53,45 @@ struct DataGenerator
 
         if discrete
 
-        X11 = digitize(XA[1, :], binsA1)
-        X12 = digitize(XA[2, :], binsA2)
-        X13 = digitize(XA[3, :], binsA3)
+            X11 = digitize(XA[1, :], binsA1)
+            X12 = digitize(XA[2, :], binsA2)
+            X13 = digitize(XA[3, :], binsA3)
 
-        X21 = digitize(XB[1, :], binsA1)
-        X22 = digitize(XB[2, :], binsA2)
-        X23 = digitize(XB[3, :], binsA3)
+            X21 = digitize(XB[1, :], binsA1)
+            X22 = digitize(XB[2, :], binsA2)
+            X23 = digitize(XB[3, :], binsA3)
 
-        X11c = to_categorical(X11, 1:2)[2:end, :]
-        X21c = to_categorical(X21, 1:2)[2:end, :]
-        X12c = to_categorical(X12, 1:3)[2:end, :]
-        X22c = to_categorical(X22, 1:3)[2:end, :]
-        X13c = to_categorical(X13, 1:4)[2:end, :]
-        X23c = to_categorical(X23, 1:4)[2:end, :]
+            X11c = to_categorical(X11, 1:2)[2:end, :]
+            X21c = to_categorical(X21, 1:2)[2:end, :]
+            X12c = to_categorical(X12, 1:3)[2:end, :]
+            X22c = to_categorical(X22, 1:3)[2:end, :]
+            X13c = to_categorical(X13, 1:4)[2:end, :]
+            X23c = to_categorical(X23, 1:4)[2:end, :]
 
-        X1 = vcat(X11c, X12c, X13c)
-        X2 = vcat(X21c, X22c, X23c)
+            X1 = vcat(X11c, X12c, X13c)
+            X2 = vcat(X21c, X22c, X23c)
 
-        covAemp = cov(X1, dims = 2)
-        covBemp = cov(X2, dims = 2)
+            covAemp = cov(X1, dims = 2)
+            covBemp = cov(X2, dims = 2)
+
+            aA = params.aA
+            aB = params.aB
 
         else
 
             X1 = XA
             X2 = XB
 
+            aA = params.aA[1:3]
+            aB = params.aB[1:3]
+
+            covAemp = diagm(ones(3))
+            covBemp = diagm(ones(3))
+
         end
 
         cr2 = 1 / params.r2 - 1
 
-        aA = params.aA
-        aB = params.aB
 
         covA = params.covA
         covB = params.covB
@@ -154,47 +161,49 @@ function generate_data(generator::DataGenerator; eps = 0.0)
 
     if generator.discrete
 
-    X11 = digitize(XA[1, :], generator.binsA1)
-    X12 = digitize(XA[2, :], generator.binsA2)
-    X13 = digitize(XA[3, :], generator.binsA3)
+        X11 = digitize(XA[1, :], generator.binsA1)
+        X12 = digitize(XA[2, :], generator.binsA2)
+        X13 = digitize(XA[3, :], generator.binsA3)
 
-    X21 = digitize(XB[1, :], generator.binsA1)
-    X22 = digitize(XB[2, :], generator.binsA2)
-    X23 = digitize(XB[3, :], generator.binsA3)
+        X21 = digitize(XB[1, :], generator.binsA1)
+        X22 = digitize(XB[2, :], generator.binsA2)
+        X23 = digitize(XB[3, :], generator.binsA3)
 
-    X11c = to_categorical(X11, 1:2)[2:end, :]
-    X21c = to_categorical(X21, 1:2)[2:end, :]
-    X12c = to_categorical(X12, 1:3)[2:end, :]
-    X22c = to_categorical(X22, 1:3)[2:end, :]
-    X13c = to_categorical(X13, 1:4)[2:end, :]
-    X23c = to_categorical(X23, 1:4)[2:end, :]
+        X11c = to_categorical(X11, 1:2)[2:end, :]
+        X21c = to_categorical(X21, 1:2)[2:end, :]
+        X12c = to_categorical(X12, 1:3)[2:end, :]
+        X22c = to_categorical(X22, 1:3)[2:end, :]
+        X13c = to_categorical(X13, 1:4)[2:end, :]
+        X23c = to_categorical(X23, 1:4)[2:end, :]
 
-    XX1 = vcat(X11, X21)
-    XX2 = vcat(X12, X22)
-    XX3 = vcat(X13, X23)
+        XX1 = vcat(X11, X21)
+        XX2 = vcat(X12, X22)
+        XX3 = vcat(X13, X23)
 
-    X1 = vcat(X11c, X12c, X13c)
-    X2 = vcat(X21c, X22c, X23c)
+        X1 = vcat(X11c, X12c, X13c)
+        X2 = vcat(X21c, X22c, X23c)
 
     else
 
-    X1 = XA
-    X2 = XB
+        X1 = XA
+        X2 = XB
 
     end
 
     cr2 = 1.0 / params.r2 - 1
 
-    aA = params.aA
-    aB = params.aB
 
     if generator.discrete 
 
+        aA = params.aA
+        aB = params.aB
         covA = generator.covAemp
         covB = generator.covBemp
 
     else
 
+        aA = params.aA[1:3]
+        aB = params.aB[1:3]
         covA = params.covA
         covB = params.covB
 
@@ -212,7 +221,12 @@ function generate_data(generator::DataGenerator; eps = 0.0)
     YB1 = digitize(Y2, generator.binsYA1 .+ eps)
     YB2 = digitize(Y2, generator.binsYA2 .+ eps)
 
-    df = DataFrame(hcat(XX1, XX2, XX3) .- 1, [:X1, :X2, :X3])
+    if generator.discrete 
+        df = DataFrame(hcat(XX1, XX2, XX3) .- 1, [:X1, :X2, :X3])
+    else
+        df = DataFrame(hcat(X1, X2)', [:X1, :X2, :X3])
+    end
+
     df.Y = vcat(YA1, YB1)
     df.Z = vcat(YA2, YB2)
     df.database = vcat(fill(1, params.nA), fill(2, params.nB))

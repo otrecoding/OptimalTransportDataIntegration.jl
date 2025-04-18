@@ -68,6 +68,7 @@ export JointOTBetweenBases
     Ylevels::AbstractVector = 1:4
     Zlevels::AbstractVector = 1:3
     iterations::Int = 10
+    distance::Distances.Metric = Hamming()
 
 end
 
@@ -81,6 +82,7 @@ function otrecod(data::DataFrame, method::JointOTBetweenBases)
         Ylevels = method.Ylevels,
         Zlevels = method.Zlevels,
         iterations = method.iterations,
+        distance = method.distance
     )
 
     yb_true = data.Y[data.database.==2]

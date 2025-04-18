@@ -68,6 +68,7 @@ function joint_ot_between_bases(
     Ylevels = 1:4,
     Zlevels = 1:3,
     iterations = 1,
+    distance = Hamming()
 )
 
     T = Int32
@@ -97,7 +98,6 @@ function joint_ot_between_bases(
     XYA = hcat(XA, YA)
     XZB = hcat(XB, ZB)
 
-    distance = Hamming()
 
     # Compute data for aggregation of the individuals
 
