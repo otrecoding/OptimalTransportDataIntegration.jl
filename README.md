@@ -37,7 +37,7 @@ using OptimalTransportDataIntegration # import the package
 
 params = DataParameters()  # Create the parameters set
 
-rng = PDataGenerator(params)  # Create the random generator
+rng = DataGenerator(params)  # Create the random generator
 
 data = generate_data( rng ) # Generate a dataset 
 
