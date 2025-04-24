@@ -47,9 +47,9 @@ struct DataGenerator
         qxB2c = quantile.(Normal(params.mB[2], sqrt(params.covA[2, 2])), px2cc)
         qxB3c = quantile.(Normal(params.mB[3], sqrt(params.covA[3, 3])), px3cc)
 
-        binsA1 = vcat(minimum(XA[1, :]) - 100, qxA1c, maximum(XA[1, :]) + 100)
-        binsA2 = vcat(minimum(XA[2, :]) - 100, qxA2c, maximum(XA[2, :]) + 100)
-        binsA3 = vcat(minimum(XA[3, :]) - 100, qxA3c, maximum(XA[3, :]) + 100)
+        binsA1 = vcat( -Inf, qxA1c, Inf)
+        binsA2 = vcat( -Inf, qxA2c, Inf)
+        binsA3 = vcat( -Inf, qxA3c, Inf)
 
         if discrete
 
@@ -60,6 +60,8 @@ struct DataGenerator
             X21 = digitize(XB[1, :], binsA1)
             X22 = digitize(XB[2, :], binsA2)
             X23 = digitize(XB[3, :], binsA3)
+
+            @show unique(X11)
 
             X11c = to_categorical(X11, 1:2)[2:end, :]
             X21c = to_categorical(X21, 1:2)[2:end, :]
@@ -111,15 +113,15 @@ struct DataGenerator
         bA2 = quantile(Y1, [1 / 3, 2 / 3])
         bB2 = quantile(Y2, [1 / 3, 2 / 3])
 
-        binsYA1 = vcat(minimum(Y1) - 100, bA1, maximum(Y1) + 100)
-        binsYA2 = vcat(minimum(Y2) - 100, bA2, maximum(Y2) + 100)
+        binsYA1 = vcat(-Inf, bA1, Inf)
+        binsYA2 = vcat(-Inf, bA2, Inf)
 
         if scenario == 1
             binsYB1 = binsYA1
             binsYB2 = binsYA2
         else
-            binsYB1 = vcat(minimum(Y1) - 100, bB1, maximum(Y1) + 100)
-            binsYB2 = vcat(minimum(Y2) - 100, bB2, maximum(Y2) + 100)
+            binsYB1 = vcat(-Inf, bB1, Inf)
+            binsYB2 = vcat(-Inf, bB2, Inf)
         end
 
         new(
