@@ -18,7 +18,7 @@ using DelimitedFiles
 using OptimalTransportDataIntegration
 
 # +
-function conditional_distribution(nsimulations::Int, scenarios)
+function conditional_distribution(nsimulations::Int, epsilons)
 
     outfile = "conditional_distribution.csv"
     header = ["id", "epsilon", "estyb", "estza", "accuracy", "method"]
@@ -29,9 +29,9 @@ function conditional_distribution(nsimulations::Int, scenarios)
 
         params = DataParameters(mB = [0, 0, 0])
 
-        rng = PDataGenerator( params, scenario = 1 )
+        rng = DataGenerator( params, scenario = 1 )
 
-        for eps in scenarios
+        for eps in epsilons
 
             for i = 1:nsimulations
 
@@ -44,18 +44,17 @@ function conditional_distribution(nsimulations::Int, scenarios)
                 writedlm(io, [i eps estyb estza est "ot"])
 
                 #OT-r Regularized Transport 
-                alpha, lambda = 0.4, 0.1
-                result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
+                result = otrecod(data, JointOTWithinBase())
                 estyb, estza, est = accuracy( result )
                 writedlm(io, [i eps estyb estza est "ot-r"])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = 0.0, reg_m2 = 0.0))
+                result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
                 estyb, estza, est = accuracy( result )
                 writedlm(io, [i eps estyb estza est "ote"])
 
                 #OTE Regularized unbalanced transport 
-                result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = 0.01, reg_m2 = 0.01))
+                result = otrecod(data, JointOTBetweenBases())
                 estyb, estza, est = accuracy( result )
                 writedlm(io, [i eps estyb estza est "ote-r"])
 
@@ -73,6 +72,6 @@ function conditional_distribution(nsimulations::Int, scenarios)
 end
 
 nsimulations = 1000
-scenarios = (0.0, 0.1, 0.5, 1.0)
+epsilons = (0.0, 0.1, 0.5, 1.0)
 
-@time conditional_distribution(nsimulations, scenarios)
+@time conditional_distribution(nsimulations, epsilons)

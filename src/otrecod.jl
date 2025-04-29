@@ -8,8 +8,8 @@ export JointOTWithinBase
 
 @with_kw struct JointOTWithinBase <: AbstractMethod
 
-    lambda::Float64 = 0.392
-    alpha::Float64 = 0.714
+    lambda::Float64 = 0.1
+    alpha::Float64 = 0.1
     percent_closest::Float64 = 0.2
 
 end
@@ -64,7 +64,7 @@ export JointOTBetweenBases
 
     reg::Float64 = 0.01
     reg_m1::Float64 = 0.01
-    reg_m2::Float64 = 0.01
+    reg_m2::Float64 = 0.05
     Ylevels::AbstractVector = 1:4
     Zlevels::AbstractVector = 1:3
     iterations::Int = 10

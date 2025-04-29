@@ -43,18 +43,17 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
                 writedlm(io, [i j estyb estza est "ot"])
 
                 #OT-r Regularized Transport 
-                alpha, lambda = 0.4, 0.1
-                result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
+                result = otrecod(data, JointOTWithinBase())
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i j estyb estza est "ot-r"])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = 0.0, reg_m2 = 0.0))
+                result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i j estyb estza est "ote"])
 
                 #OTE Regularized unbalanced transport 
-                result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = 0.01, reg_m2 = 0.01))
+                result = otrecod(data, JointOTBetweenBases())
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i j estyb estza est "ote-r"])
 

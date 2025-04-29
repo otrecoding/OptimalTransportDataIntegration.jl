@@ -18,13 +18,13 @@ using DelimitedFiles
 
 function unbalanced(start, stop)
 
-    reg = [0.001, 0.01, 0.1]
+    reg = [0.001, 0.01, 0.1, 10.0]
     reg_m1 = [0.0]
     reg_m2 = [0.0]
     estimations = Float32[]
 
     outfile = "results_balanced.csv"
-    header = ["id" "reg" "estimation" "method"]
+    header = ["id" "reg" "estyb" "estza" "est" "method"]
 
     open(outfile, "a") do io
 

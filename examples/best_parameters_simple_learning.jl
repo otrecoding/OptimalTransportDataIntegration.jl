@@ -49,4 +49,4 @@ function simple_learning(start, stop)
 
 end
 
-simple_learning(985, 1000)
+simple_learning(1, 1000)

@@ -314,7 +314,7 @@ function ot_joint(
     estimatorYB = ones(length(Xlevels), length(Ylevels), length(Zlevels)) ./ length(Ylevels)
 
     for x in Xlevels, z in Zlevels
-        proba_c_B = sum(view(gammaB_val, x, Ylevels, z))
+        proba_c_mB = sum(view(gammaB_val, x, Ylevels, z))
         if proba_c_mB > 1e-6
             estimatorYB[x, :, z] = view(gammaB_val, x, :, z) ./ proba_c_mB
         end

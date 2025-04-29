@@ -33,16 +33,12 @@ function write_datasets(nsimulations, all_params, outdir)
 
             df = generate_data(rng)
 
-            if length(unique(df.Y)) == 4 && length(unique(df.Z)) == 3
+            json_file = @sprintf "tab_otjoint_%02i_%02i.json" j i
+            save_params(joinpath(outdir, json_file), params)
 
-                json_file = @sprintf "tab_otjoint_%02i_%02i.json" j i
-                save_params(joinpath(outdir, json_file), params)
+            csv_file = @sprintf "tab_otjoint_%02i_%02i.csv" j i
 
-                csv_file = @sprintf "tab_otjoint_%02i_%02i.csv" j i
-
-                CSV.write(joinpath(outdir, csv_file), df)
-
-            end
+            CSV.write(joinpath(outdir, csv_file), df)
 
         end
 
@@ -67,4 +63,4 @@ all_params = [
 
 nsimulations = 10
 outdir = joinpath("datasets")
-write_datasets(M, all_params, outdir)
+write_datasets(nsimulations, all_params, outdir)

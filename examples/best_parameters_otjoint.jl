@@ -15,6 +15,7 @@ using DataFrames
 using CSV
 using Printf
 using DelimitedFiles
+import Statistics: mean
 
 function otjoint(start, stop)
 
@@ -22,7 +23,7 @@ function otjoint(start, stop)
     lambda = collect(0:0.1:1)
     estimations = Float32[]
 
-    params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], eps = 0.0, p = 0.2)
+    params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0])
 
     rng = DataGenerator(params)
 
@@ -32,7 +33,7 @@ function otjoint(start, stop)
     open(outfile, "a") do io
 
 
-        for i = 1:nsimulations
+        for i = start:stop
 
             if i == 1
                 seekstart(io)
@@ -62,12 +63,12 @@ end
 otjoint(1, 1000)
 
 ##
-data = CSV.read("results_otjoint.csv", DataFrame)
+# data = CSV.read("results_otjoint.csv", DataFrame)
 
-sort(
-    combine(groupby(data, ["alpha", "lambda"]), :estimation => mean),
-    order(:estimation_mean, rev = true),
-)
+# sort(
+#     combine(groupby(data, ["alpha", "lambda"]), :estimation => mean),
+#     order(:estimation_mean, rev = true),
+# )
 
 # equivalent with pandas
 # import pandas as pd

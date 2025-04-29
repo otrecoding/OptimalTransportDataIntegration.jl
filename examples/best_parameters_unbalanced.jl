@@ -18,10 +18,9 @@ using DelimitedFiles
 
 function unbalanced(start, stop)
 
-    reg = [0.0, 0.001, 0.01, 0.1]
-    reg_m1 = [0.01 0.05 0.1 0.25 0.5 0.75 1]
-    reg_m2 = [0.01 0.05 0.1 0.25 0.5 0.75 1]
-    estimations = Float32[]
+    reg = [0.0, 0.001, 0.01, 0.1, 1., 10.0]
+    reg_m1 = [0.01,0.05,0.1,0.25,0.5,0.75,1]
+    reg_m2 = [0.01,0.05,0.1,0.25,0.5,0.75,1]
 
     outfile = "results_unbalanced.csv"
     header = ["id" "reg" "reg_m1" "reg_m2" "estyb" "estza" "est"  "method"]
