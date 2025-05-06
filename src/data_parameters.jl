@@ -20,22 +20,22 @@ export save_params
 
 end
 
-function Base.show(io::IO, params::DataParameters)
-
-    println(io, "nA \t : $(params.nA)")
-    println(io, "nB \t :  $(params.nB)")
-    println(io, "mA \t :  $(params.mA)")
-    println(io, "mB \t :  $(params.mB)")
-    println(io, "covA \t :  $(params.covA)")
-    println(io, "covB \t :  $(params.covB)")
-    println(io, "px1c \t :  $(params.px1c)")
-    println(io, "px2c \t :  $(params.px2c)")
-    println(io, "px3c \t :  $(params.px3c)")
-    println(io, "aA \t :  $(params.aA)")
-    println(io, "aB \t :  $(params.aB)")
-    println(io, "r2 \t :  $(params.r2)")
-
-end
+# function Base.show(io::IO, params::DataParameters)
+# 
+#     println(io, "nA \t : $(params.nA)")
+#     println(io, "nB \t :  $(params.nB)")
+#     println(io, "mA \t :  $(params.mA)")
+#     println(io, "mB \t :  $(params.mB)")
+#     println(io, "covA \t :  $(params.covA)")
+#     println(io, "covB \t :  $(params.covB)")
+#     println(io, "px1c \t :  $(params.px1c)")
+#     println(io, "px2c \t :  $(params.px2c)")
+#     println(io, "px3c \t :  $(params.px3c)")
+#     println(io, "aA \t :  $(params.aA)")
+#     println(io, "aB \t :  $(params.aB)")
+#     println(io, "r2 \t :  $(params.r2)")
+# 
+# end
 
 """
 $(SIGNATURES)
