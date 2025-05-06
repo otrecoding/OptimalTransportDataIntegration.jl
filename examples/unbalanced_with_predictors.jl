@@ -9,12 +9,17 @@ using Distances
 using JSON
 using Flux
 using OptimalTransportDataIntegration
+import OptimalTransportDataIntegration: loss_crossentropy
 using Test
 import PythonOT
+import LinearAlgebra: norm
 
 function unbalanced_with_predictors(data; iterations = 10)
 
     T = Int32
+
+    Ylevels = 1:4
+    Zlevels = 1:3
 
     base = data.database
 
@@ -28,8 +33,8 @@ function unbalanced_with_predictors(data; iterations = 10)
     YBtrue = view(Y, indB)
     ZAtrue = view(Z, indA)
 
-    YA = Flux.onehotbatch(Y[indA], 1:4)
-    ZB = Flux.onehotbatch(Z[indB], 1:3)
+    YA = Flux.onehotbatch(Y[indA], Ylevels)
+    ZB = Flux.onehotbatch(Z[indB], Zlevels)
 
     XA = view(X, :, indA)
     XB = view(X, :, indB)
@@ -76,22 +81,41 @@ function unbalanced_with_predictors(data; iterations = 10)
 
     end
 
-
-    alpha1, alpha2 = 0.25, 0.33
-
     function loss_crossentropy(Y, F)
+
+        ϵ = 1e-12
         res = zeros(size(Y, 2), size(F, 2))
-        logF = log.(F)
+        logF = similar(F)
+        for i in eachindex(F)
+            if F[i] ≈ 1.0
+                logF[i] = log(1.0 - ϵ)
+            else
+                logF[i] = log(ϵ)
+            end
+        end
+
         for i in axes(Y, 1)
             res .+= -Y[i, :] .* logF[i, :]'
         end
         return res
     end
 
-    for i = 1:iterations # BCD algorithm
 
-        reg = 0.1
-        G = PythonOT.entropic_partial_wasserstein(wa, wb, C, reg)
+    alpha1, alpha2 = 0.25, 0.33
+
+    G = ones(length(wa), length(wb))
+    cost = Inf
+
+    for iter = 1:iterations # BCD algorithm
+
+
+        Gold = copy(G)
+        costold = cost
+
+        G = PythonOT.emd(wa, wb, C)
+
+        delta = norm(G .- Gold)
+
 
         YB = nB .* YA * G
         ZA = nA .* ZB * G'
@@ -113,30 +137,30 @@ function unbalanced_with_predictors(data; iterations = 10)
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
 
+        @show size(loss_y)
+        @show size(loss_z)
+
         fcost = loss_y .+ loss_z'
 
-        println("fcost = $(sum(G .* fcost))")
+        cost = sum(G .* fcost)
+
+        @info "Delta: $(delta) \t  Loss: $(cost) "
+
+        if delta < 1e-16 || abs(costold - cost) < 1e-7
+            @info "converged at iter $iter "
+            break
+        end
 
         C .= C0 ./ maximum(C0) .+ fcost
-
-        println("total cost = $(sum(G .* C))")
 
     end
 
 end
 
-# println(@__DIR__)
-# @show json_file = joinpath(@__DIR__, "dataset.json")
-# @show csv_file = joinpath(@__DIR__, "dataset.csv")
-# 
-# params = JSON.parsefile("dataset.json")
-# 
 data = CSV.read("dataset.csv", DataFrame)
-@time unbalanced_with_predictors(data, iterations = 1)
 
-result = otrecod(data, JointOTWithinBase())
-@time println("OT : $(accuracy(result)) ")
 result = otrecod(data, SimpleLearning())
 @time println("Simple Learning : $(accuracy(result))")
-result = otrecod(data, JointOTBetweenBases(iterations=1))
-@time println("OTE : $(accuracy(result))")
+
+@time unbalanced_with_predictors(data, iterations = 10)
+
