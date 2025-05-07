@@ -9,7 +9,6 @@ using Distances
 using JSON
 using Flux
 using OptimalTransportDataIntegration
-import OptimalTransportDataIntegration: loss_crossentropy
 using Test
 import PythonOT
 import LinearAlgebra: norm
@@ -22,32 +21,20 @@ function unbalanced_with_predictors(data; iterations = 10)
     Ylevels = 1:4
     Zlevels = 1:3
 
-    base = data.database
+    dba = subset(data, :database => ByRow(==(1)))
+    dbb = subset(data, :database => ByRow(==(2)))
 
-    indA = findall(base .== 1)
-    indB = findall(base .== 2)
+    XA = transpose(Matrix{Float32}(dba[!, [:X1, :X2, :X3]]))
+    XB = transpose(Matrix{Float32}(dbb[!, [:X1, :X2, :X3]]))
 
-    X = OptimalTransportDataIntegration.onehot(Matrix(data[!, [:X1, :X2, :X3]]))
-    Y = Vector{T}(data.Y)
-    Z = Vector{T}(data.Z)
-
-    YBtrue = view(Y, indB)
-    ZAtrue = view(Z, indA)
-
-    YA = Flux.onehotbatch(Y[indA], Ylevels)
-    ZB = Flux.onehotbatch(Z[indB], Zlevels)
-
-    XA = view(X, :, indA)
-    XB = view(X, :, indB)
+    YA = Flux.onehotbatch(dba.Y, Ylevels)
+    ZB = Flux.onehotbatch(dbb.Z, Zlevels)
 
     XYA = vcat(XA, YA)
     XZB = vcat(XB, ZB)
 
-    nA = size(XA, 2)
-    nB = size(XB, 2)
-
-    @assert nA == length(ZAtrue)
-    @assert nB == length(YBtrue)
+    nA = size(dba, 1)
+    nB = size(dbb, 1)
 
     wa = ones(nA) ./ nA
     wb = ones(nB) ./ nB
@@ -61,7 +48,7 @@ function unbalanced_with_predictors(data; iterations = 10)
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
 
-    hidden_layer_size = 160
+    hidden_layer_size = 100
     modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
     modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
 
@@ -151,7 +138,7 @@ function unbalanced_with_predictors(data; iterations = 10)
 
 end
 
-rng = DataGenerator(DataParameters(), discrete = false)
+rng = DataGenerator(DataParameters(), scenario = 1, discrete = false)
 
 data = generate(rng)
 
