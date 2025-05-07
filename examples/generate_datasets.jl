@@ -31,7 +31,7 @@ function write_datasets(nsimulations, all_params, outdir)
 
         for i = 1:nsimulations
 
-            df = generate_data(rng)
+            df = generate(rng)
 
             json_file = @sprintf "tab_otjoint_%02i_%02i.json" j i
             save_params(joinpath(outdir, json_file), params)

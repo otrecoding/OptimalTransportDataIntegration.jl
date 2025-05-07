@@ -27,7 +27,7 @@ let
 
         rng = DataGenerator(params)
 
-        data = generate_data(rng)
+        data = generate(rng)
 
         X = Matrix(data[!, ["X1", "X2", "X3"]])
         Y = Vector(data.Y)

@@ -154,7 +154,9 @@ function unbalanced_with_predictors(data; iterations = 10)
 
 end
 
-data = CSV.read("dataset.csv", DataFrame)
+rng = DataGenerator(DataParameters())
+
+data = generate(rng, discrete = false)
 
 result = otrecod(data, SimpleLearning())
 @time println("Simple Learning : $(accuracy(result))")

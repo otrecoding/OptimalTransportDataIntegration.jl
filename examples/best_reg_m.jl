@@ -18,7 +18,7 @@ function main(nsimulations::Int)
 
                 @show mB
                 params = DataParameters(mB = mB)
-                data = generate_data(params)
+                data = generate(params)
 
                 for reg_m1 in reg_m_values, reg_m2 in reg_m_values
 

@@ -37,7 +37,7 @@ function sample_ratio_effect(nsimulations::Int, ratios)
 
             for i = 1:nsimulations
 
-                data = generate_data(rng)
+                data = generate(rng)
 
                 #OT Transport of the joint distribution of covariates and outcomes.
                 alpha, lambda = 0.0, 0.0

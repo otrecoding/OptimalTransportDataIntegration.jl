@@ -35,7 +35,7 @@ function conditional_distribution(nsimulations::Int, epsilons)
 
             for i = 1:nsimulations
 
-                data = generate_data(rng, eps = eps)
+                data = generate(rng, eps = eps)
 
                 #OT Transport of the joint distribution of covariates and outcomes.
                 alpha, lambda = 0.0, 0.0

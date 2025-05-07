@@ -10,7 +10,7 @@ for mB = mB_values
     params = DataParameters(nA = 1000, nB = 1000, mB = mB)
         
     rng = DataGenerator(params)
-    data = generate_data(rng)
+    data = generate(rng)
 
         
     result_ot = otrecod(data, JointOTWithinBase())

@@ -11,7 +11,7 @@ to_categorical(x, levels) = levels .== permutedims(x)
 
 export DataGenerator
 
-export generate_data
+export generate
 
 struct DataGenerator
 
@@ -152,7 +152,7 @@ the function return a Dataframe with X1, X2, X3, Y, Z and the database id.
 r2 is the coefficient of determination 
 
 """
-function generate_data(generator::DataGenerator; eps = 0.0)
+function generate(generator::DataGenerator; eps = 0.0)
 
     params = generator.params
 

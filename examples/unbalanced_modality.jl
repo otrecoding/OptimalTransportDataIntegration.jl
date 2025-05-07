@@ -23,7 +23,7 @@ params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], p = 0.2)
 
 rng = DataGenerator(params)
 
-data = generate_data(rng)
+data = generate(rng)
 result = otrecod(data, JointOTWithinBase())
 est = accuracy(result)
 
@@ -41,7 +41,7 @@ println(" SL : $est")
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [2, 0, 0], p = 0.2)
 rng = DataGenerator(params)
-data = generate_data(rng)
+data = generate(rng)
 
 result = otrecod(data, JointOTWithinBase())
 est = accuracy(result)
@@ -87,7 +87,7 @@ println(" SL : $est")
 
 params = DataParameters(nA = 1000, nB = 1000)
 rng = DataGenerator(params)
-data = generate_data(rng)
+data = generate(rng)
 
 result = otrecod(data, JointOTWithinBase())
 est = accuracy(result)

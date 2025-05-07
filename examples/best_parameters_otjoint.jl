@@ -40,7 +40,7 @@ function otjoint(start, stop)
                 writedlm(io, hcat(header...))
             end
 
-            data = generate_data(rng)
+            data = generate(rng)
             csv_file = @sprintf "dataset%04i.csv" i
             @show csv_file
 
