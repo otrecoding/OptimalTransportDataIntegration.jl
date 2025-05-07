@@ -60,7 +60,7 @@ function unbalanced_with_predictors(data; iterations = 10)
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
 
-    hidden_layer_size = 10
+    hidden_layer_size = 160
     modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
     modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
 
@@ -152,14 +152,13 @@ function unbalanced_with_predictors(data; iterations = 10)
 
     end
 
+    return Flux.onecold(YBpred), Flux.onecold(ZApred)
+
 end
 
-rng = DataGenerator(DataParameters())
+rng = DataGenerator(DataParameters(), discrete = false)
 
-data = generate(rng, discrete = false)
-
-result = otrecod(data, SimpleLearning())
-@time println("Simple Learning : $(accuracy(result))")
+data = generate(rng)
 
 @time unbalanced_with_predictors(data, iterations = 10)
 
