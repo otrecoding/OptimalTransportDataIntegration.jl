@@ -13,6 +13,7 @@ import OptimalTransportDataIntegration: loss_crossentropy
 using Test
 import PythonOT
 import LinearAlgebra: norm
+using ProgressMeter
 
 function unbalanced_with_predictors(data; iterations = 10)
 
@@ -64,12 +65,12 @@ function unbalanced_with_predictors(data; iterations = 10)
     modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
     modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
 
-    function train!(model, x, y; learning_rate = 0.01, batchsize = 16, epochs = 500)
+    function train!(model, x, y; learning_rate = 0.01, batchsize = 512, epochs = 500)
 
         loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
         optim = Flux.setup(Flux.Adam(learning_rate), model)
 
-        for epoch = 1:epochs
+        @showprogress 1 for epoch = 1:epochs
             for (x, y) in loader
                 grads = Flux.gradient(model) do m
                     y_hat = m(x)
@@ -100,39 +101,33 @@ function unbalanced_with_predictors(data; iterations = 10)
         return res
     end
 
+    YBpred = Flux.softmax(modelXZB(XZB))
+    ZApred = Flux.softmax(modelXYA(XYA))
 
     alpha1, alpha2 = 0.25, 0.33
 
     G = ones(length(wa), length(wb))
-    cost = Inf
+    @show cost = Inf
 
     for iter = 1:iterations # BCD algorithm
-
 
         Gold = copy(G)
         costold = cost
 
         G = PythonOT.emd(wa, wb, C)
 
-        delta = norm(G .- Gold)
-
+        @show delta = norm(G .- Gold)
 
         YB = nB .* YA * G
         ZA = nA .* ZB * G'
 
+        @info "Train on base A"
         train!(modelXYA, XYA, ZA)
+        @info "Train on base B"
         train!(modelXZB, XZB, YB)
 
-        YBpred = Flux.softmax(modelXZB(XZB))
-        ZApred = Flux.softmax(modelXYA(XYA))
-
-        est_y = sum(YBtrue .== Flux.onecold(YBpred)) / nB
-        est_z = sum(ZAtrue .== Flux.onecold(ZApred)) / nA
-        est =
-            (sum(YBtrue .== Flux.onecold(YBpred)) + sum(ZAtrue .== Flux.onecold(ZApred))) /
-            (nA + nB)
-
-        println("est_y = $est_y ,  est_z = $est_z, est = $est")
+        YBpred .= Flux.softmax(modelXZB(XZB))
+        ZApred .= Flux.softmax(modelXYA(XYA))
 
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
@@ -160,5 +155,7 @@ rng = DataGenerator(DataParameters(), discrete = false)
 
 data = generate(rng)
 
-@time unbalanced_with_predictors(data, iterations = 10)
+@time yb, za = unbalanced_with_predictors(data, iterations = 10)
+
+println(accuracy(data, yb, za))
 
