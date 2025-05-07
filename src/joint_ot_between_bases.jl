@@ -19,20 +19,17 @@ function loss_crossentropy(Y, F)
     ny = size(Y, 1)
     @assert nclasses == size(Y, 2)
     res = zeros(ny, nf)
-    logF = zeros(nf, nclasses)
-    for j in axes(F, 2), i in axes(F, 1)
-        if F[i, j] ≈ 1.0
-            logF[i, j] = log(1.0 - ϵ)
-        else
-            logF[i, j] = log(ϵ)
-        end
+    logF = similar(F)
+
+    for i in eachindex(F)
+        logF[i] = F[i] ≈ 1.0 ? log(1.0 - ϵ) : log(ϵ)
     end
 
     for i in axes(Y, 2)
-        res .+= -Y[:, i] .* logF[:, i]'
+        res .+= - view(Y,:, i) .* view(logF,:, i)'
     end
 
-    return res #./ nf
+    return res
 
 end
 
