@@ -137,9 +137,6 @@ function unbalanced_with_predictors(data; iterations = 10)
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
 
-        @show size(loss_y)
-        @show size(loss_z)
-
         fcost = loss_y .+ loss_z'
 
         cost = sum(G .* fcost)
