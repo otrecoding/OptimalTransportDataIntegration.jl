@@ -39,7 +39,7 @@ function unbalanced_with_predictors(data; iterations = 10)
     wa = ones(nA) ./ nA
     wb = ones(nB) ./ nB
 
-    C0 = pairwise(Hamming(), XA, XB)
+    C0 = pairwise(Euclidean(), XA, XB)
 
     C = C0 ./ maximum(C0)
 
@@ -48,7 +48,7 @@ function unbalanced_with_predictors(data; iterations = 10)
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
 
-    hidden_layer_size = 100
+    hidden_layer_size = 10
     modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
     modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
 
