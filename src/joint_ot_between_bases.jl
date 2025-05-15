@@ -18,7 +18,7 @@ function loss_crossentropy(Y::AbstractMatrix{T}, F::AbstractMatrix{T}) where T
     nf, nclasses = size(F)
     ny = size(Y, 1)
     @assert nclasses == size(Y, 2)
-    res = zeros(ny, nf)
+    res = zeros(Float32, ny, nf)
     logF = zeros(Float32, size(F))
 
     for i in eachindex(F)
