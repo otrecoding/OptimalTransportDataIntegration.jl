@@ -1,24 +1,6 @@
-using OptimalTransportDataIntegration
-
 import Flux
 import Flux: Chain, Dense
 
-function train!(model, x, y; learning_rate = 0.01, batchsize = 64, epochs = 500)
-
-    loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
-    optim = Flux.setup(Flux.Adam(learning_rate), model)
-
-    for epoch = 1:epochs
-        for (x, y) in loader
-            grads = Flux.gradient(model) do m
-                y_hat = m(x)
-                Flux.logitcrossentropy(y_hat, y)
-            end
-            Flux.update!(optim, model, grads[1])
-        end
-    end
-
-end
 
 function learning_with_continuous_data(
     data;
@@ -48,6 +30,23 @@ function learning_with_continuous_data(
     modelA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
     modelB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
 
+    function train!(model, x, y)
+    
+        loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
+        optim = Flux.setup(Flux.Adam(learning_rate), model)
+    
+        for epoch = 1:epochs
+            for (x, y) in loader
+                grads = Flux.gradient(model) do m
+                    y_hat = m(x)
+                    Flux.logitcrossentropy(y_hat, y)
+                end
+                Flux.update!(optim, model, grads[1])
+            end
+        end
+    
+    end
+
     train!(
         modelA,
         XA,
@@ -71,10 +70,3 @@ function learning_with_continuous_data(
     YB, ZA
 
 end
-
-
-@time yb, za = learning_with_continuous_data(data)
-
-println(accuracy(data, yb, za))
-
-

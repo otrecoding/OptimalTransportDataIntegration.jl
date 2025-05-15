@@ -1,20 +1,5 @@
-# # OT method using predictors
-#
-# ## Data parameters
-#
-# The parameters we used to generate the dataset
-using CSV
-using DataFrames
-using Distances
-using JSON
-using Flux
-using OptimalTransportDataIntegration
-using Test
-import PythonOT
-import LinearAlgebra: norm
-using ProgressMeter
-
-function unbalanced_with_predictors(data; iterations = 10)
+function joint_within_with_predictors(data; iterations = 10,
+    learning_rate = 0.01, batchsize = 512, epochs = 500)
 
     T = Int32
 
@@ -52,12 +37,12 @@ function unbalanced_with_predictors(data; iterations = 10)
     modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
     modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
 
-    function train!(model, x, y; learning_rate = 0.01, batchsize = 512, epochs = 500)
+    function train!(model, x, y)
 
         loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
         optim = Flux.setup(Flux.Adam(learning_rate), model)
 
-        @showprogress 1 for epoch = 1:epochs
+        for epoch = 1:epochs
             for (x, y) in loader
                 grads = Flux.gradient(model) do m
                     y_hat = m(x)
@@ -72,8 +57,9 @@ function unbalanced_with_predictors(data; iterations = 10)
     function loss_crossentropy(Y, F)
 
         ϵ = 1e-12
-        res = zeros(size(Y, 2), size(F, 2))
-        logF = similar(F)
+        res = zeros(Float32, size(Y, 2), size(F, 2))
+        logF = zeros(Float32, size(F))
+
         for i in eachindex(F)
             if F[i] ≈ 1.0
                 logF[i] = log(1.0 - ϵ)
@@ -85,7 +71,9 @@ function unbalanced_with_predictors(data; iterations = 10)
         for i in axes(Y, 1)
             res .+= -Y[i, :] .* logF[i, :]'
         end
+
         return res
+
     end
 
     YBpred = Flux.softmax(modelXZB(XZB))
@@ -94,7 +82,7 @@ function unbalanced_with_predictors(data; iterations = 10)
     alpha1, alpha2 = 0.25, 0.33
 
     G = ones(length(wa), length(wb))
-    @show cost = Inf
+    cost = Inf
 
     for iter = 1:iterations # BCD algorithm
 
@@ -103,14 +91,12 @@ function unbalanced_with_predictors(data; iterations = 10)
 
         G = PythonOT.emd(wa, wb, C)
 
-        @show delta = norm(G .- Gold)
+        delta = norm(G .- Gold)
 
         YB = nB .* YA * G
         ZA = nA .* ZB * G'
 
-        @info "Train on base A"
         train!(modelXYA, XYA, ZA)
-        @info "Train on base B"
         train!(modelXZB, XZB, YB)
 
         YBpred .= Flux.softmax(modelXZB(XZB))
@@ -137,12 +123,3 @@ function unbalanced_with_predictors(data; iterations = 10)
     return Flux.onecold(YBpred), Flux.onecold(ZApred)
 
 end
-
-rng = DataGenerator(DataParameters(), scenario = 1, discrete = false)
-
-data = generate(rng)
-
-@time yb, za = unbalanced_with_predictors(data, iterations = 10)
-
-println(accuracy(data, yb, za))
-

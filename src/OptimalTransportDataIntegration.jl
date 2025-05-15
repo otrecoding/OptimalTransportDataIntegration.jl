@@ -20,7 +20,9 @@ include("joint_ot_within_base.jl")
 # Data integration functions
 include("entropic_partial_wasserstein.jl")
 include("joint_ot_between_bases.jl")
+include("joint_ot_between_bases_with_predictors.jl")
 include("simple_learning.jl")
+include("simple_learning_with_continuous_data.jl")
 
 # Generic interface
 

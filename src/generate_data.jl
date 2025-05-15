@@ -61,8 +61,6 @@ struct DataGenerator
             X22 = digitize(XB[2, :], binsA2)
             X23 = digitize(XB[3, :], binsA3)
 
-            @show unique(X11)
-
             X11c = to_categorical(X11, 1:2)[2:end, :]
             X21c = to_categorical(X21, 1:2)[2:end, :]
             X12c = to_categorical(X12, 1:3)[2:end, :]
@@ -135,6 +133,7 @@ struct DataGenerator
             binsYA2,
             binsYB1,
             binsYB2,
+            discrete
         )
 
     end
@@ -235,6 +234,13 @@ function generate(generator::DataGenerator; eps = 0.0)
 
     @info "Categories in Y $(countmap(df.Y))"
     @info "Categories in Z $(countmap(df.Z))"
+
+     
+    if generator.discrete 
+        metadata!(df, "covariable type", "discrete")
+    else
+        metadata!(df, "covariable type", "continuous")
+    end
 
     return df
 
