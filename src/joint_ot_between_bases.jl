@@ -13,13 +13,13 @@ onecold(X) = map(argmax, eachrow(X))
 Cross entropy is typically used as a loss in multi-class classification, in which case the labels y are given in a one-hot format. dims specifies the dimension (or the dimensions) containing the class probabilities. The prediction ŷ is usually probabilities but in our case it is also one hot encoded vector.
 
 """
-function loss_crossentropy(Y, F)
+function loss_crossentropy(Y::AbstractMatrix{T}, F::AbstractMatrix{T}) where T
     ϵ = 1e-12
     nf, nclasses = size(F)
     ny = size(Y, 1)
     @assert nclasses == size(Y, 2)
     res = zeros(ny, nf)
-    logF = similar(F)
+    logF = zeros(Float32, size(F))
 
     for i in eachindex(F)
         logF[i] = F[i] ≈ 1.0 ? log(1.0 - ϵ) : log(ϵ)
