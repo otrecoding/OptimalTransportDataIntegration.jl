@@ -56,13 +56,24 @@ end
 
 function otrecod(data::DataFrame, method::SimpleLearning)
 
-    yb_pred, za_pred = simple_learning(
-        data;
-        hidden_layer_size = method.hidden_layer_size,
-        learning_rate = method.learning_rate,
-        batchsize = method.batchsize,
-        epochs = method.epochs,
-    )
+
+    if metadata(data, "discrete")
+        yb_pred, za_pred = simple_learning(
+            data;
+            hidden_layer_size = method.hidden_layer_size,
+            learning_rate = method.learning_rate,
+            batchsize = method.batchsize,
+            epochs = method.epochs,
+        )
+    else
+        yb_pred, za_pred = simple_learning(
+            data;
+            hidden_layer_size = method.hidden_layer_size,
+            learning_rate = method.learning_rate,
+            batchsize = method.batchsize,
+            epochs = method.epochs,
+        )
+    end
 
     yb_true = data.Y[data.database.==2]
     za_true = data.Z[data.database.==1]
