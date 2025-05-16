@@ -16,12 +16,25 @@ end
 
 function otrecod(data::DataFrame, method::JointOTWithinBase)
 
-    yb_pred, za_pred = joint_ot_within_base(
-        data;
-        lambda = method.lambda,
-        alpha = method.alpha,
-        percent_closest = method.percent_closest,
-    )
+    if metadata(data, "discrete")
+
+        yb_pred, za_pred = joint_ot_within_base_discrete(
+            data;
+            lambda = method.lambda,
+            alpha = method.alpha,
+            percent_closest = method.percent_closest,
+        )
+
+    else
+
+        yb_pred, za_pred = joint_ot_within_base_continuous(
+            data;
+            lambda = method.lambda,
+            alpha = method.alpha,
+            percent_closest = method.percent_closest,
+        )
+
+    end
 
     yb_true = data.Y[data.database.==2]
     za_true = data.Z[data.database.==1]

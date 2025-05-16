@@ -340,7 +340,7 @@ function ot_joint(
 
 end
 
-function joint_ot_within_base(data; lambda = 0.392, alpha = 0.714, percent_closest = 0.2)
+function joint_ot_within_base_discrete(data; lambda = 0.392, alpha = 0.714, percent_closest = 0.2)
 
     database = data.database
 
@@ -361,3 +361,68 @@ function joint_ot_within_base(data; lambda = 0.392, alpha = 0.714, percent_close
     return YB, ZA
 
 end
+
+
+function joint_ot_within_base_continuous(data; lambda = 0.392, alpha = 0.714, percent_closest = 0.2)
+
+    function categorize_using_quartile(data)
+    
+        digitize(x, bins) = searchsortedlast.(Ref(bins), x)
+    
+        XA = subset(data, :database => x -> x .== 1.0)
+        XB = subset(data, :database => x -> x .== 2.0)
+    
+        b1 = quantile(XA.X1, [0.25, 0.5, 0.75])
+        bins11 = vcat(-Inf, b1, +Inf)
+    
+        X11 = digitize(XA.X1, bins11)
+        X21 = digitize(XB.X1, bins11)
+    
+        b1 = quantile(XA.X2, [0.25, 0.5, 0.75])
+        bins12 = vcat(-Inf, b1, +Inf)
+    
+        X12 = digitize(XA.X2, bins12)
+        X22 = digitize(XB.X2, bins12)
+    
+        b1 = quantile(XA.X3, [0.25, 0.5, 0.75])
+        bins13 = vcat(-Inf, b1, +Inf)
+    
+        X13 = digitize(XA.X3, bins13)
+        X23 = digitize(XB.X3, bins13)
+    
+        X1 = vcat(X11, X21) .- 1
+        X2 = vcat(X12, X22) .- 1
+        X3 = vcat(X13, X23) .- 1
+    
+        to_categorical(x)  = sort(unique(x)) .== reshape(x, (1, size(x)...))
+    
+        X1c = to_categorical(X1)
+        X2c = to_categorical(X2)
+        X3c = to_categorical(X3)
+    
+        hcat(X1c', X2c', X3c')
+    
+    end
+    
+    X = categorize_using_quartile(data)
+    Y = Vector(data.Y)
+    Z = Vector(data.Z)
+    
+    Ylevels = 1:4
+    Zlevels = 1:3
+    
+    database = data.database
+    dist_choice = Euclidean()
+    
+    instance = Instance(database, X, Y, Ylevels, Z, Zlevels, dist_choice)
+    
+    lambda = 0.0
+    alpha = 0.0
+    percent_closest = 0.2
+    
+    sol = OptimalTransportDataIntegration.ot_joint(instance, alpha, lambda, percent_closest)
+    
+    return compute_pred_error!(sol, instance, false)
+
+end
+    
