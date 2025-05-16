@@ -26,15 +26,15 @@ import Flux: Chain, Dense, relu, softmax, onehotbatch, onecold, logitcrossentrop
 
 # ## Dataset
 
-# +
-data = DataFrame(CSV.File(joinpath(@__DIR__, "..", "test", "data_good.csv")))
+params = DataParameters()
+rng = DataGenerator(params)
+data = generate(rng)
 
 dba = subset(data, :database => ByRow(==(1)))
 dbb = subset(data, :database => ByRow(==(2)))
 
 XA = OptimalTransportDataIntegration.onehot(Matrix(dba[!, [:X1, :X2, :X3]]))
 XB = OptimalTransportDataIntegration.onehot(Matrix(dbb[!, [:X1, :X2, :X3]]))
-
 
 YA = onehotbatch(dba.Y, 1:4)
 ZB = onehotbatch(dbb.Z, 1:3)
@@ -80,4 +80,10 @@ train!(model2, XB, ZB)
 
 method = SimpleLearning()
 
-@show otrecod(data, method)
+@show accuracy(otrecod(data, method))
+
+rng = DataGenerator(params, discrete = false)
+data = generate(rng)
+
+accuracy(otrecod(data, method))
+

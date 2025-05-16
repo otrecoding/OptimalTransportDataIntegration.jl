@@ -82,4 +82,4 @@ YB, ZA = compute_pred_error!(sol, instance, false)
 
 println(accuracy(data, YB, ZA))
 
-println(accuracy(otrecod(data, JointOTWithinBase())))
+println(accuracy(otrecod(data, JointOTWithinBase(distance=Cityblock()))))

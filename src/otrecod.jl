@@ -11,6 +11,7 @@ export JointOTWithinBase
     lambda::Float64 = 0.1
     alpha::Float64 = 0.1
     percent_closest::Float64 = 0.2
+    distance::Distances.Metric = Hamming()
 
 end
 
@@ -23,6 +24,7 @@ function otrecod(data::DataFrame, method::JointOTWithinBase)
             lambda = method.lambda,
             alpha = method.alpha,
             percent_closest = method.percent_closest,
+            distance = method.distance
         )
 
     else
@@ -32,6 +34,7 @@ function otrecod(data::DataFrame, method::JointOTWithinBase)
             lambda = method.lambda,
             alpha = method.alpha,
             percent_closest = method.percent_closest,
+            distance = method.distance
         )
 
     end
@@ -66,7 +69,7 @@ function otrecod(data::DataFrame, method::SimpleLearning)
             epochs = method.epochs,
         )
     else
-        yb_pred, za_pred = simple_learning(
+        yb_pred, za_pred = learning_with_continuous_data(
             data;
             hidden_layer_size = method.hidden_layer_size,
             learning_rate = method.learning_rate,
