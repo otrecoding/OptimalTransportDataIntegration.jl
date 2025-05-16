@@ -224,8 +224,10 @@ function generate(generator::DataGenerator; eps = 0.0)
 
     if generator.discrete 
         df = DataFrame(hcat(XX1, XX2, XX3) .- 1, [:X1, :X2, :X3])
+        metadata!(df, "discrete", true, style=:note)
     else
         df = DataFrame(hcat(X1, X2)', [:X1, :X2, :X3])
+        metadata!(df, "discrete", false, style=:note)
     end
 
     df.Y = vcat(YA1, YB1)
@@ -236,11 +238,6 @@ function generate(generator::DataGenerator; eps = 0.0)
     @info "Categories in Z $(countmap(df.Z))"
 
      
-    if generator.discrete 
-        metadata!(df, "covariable type", "discrete")
-    else
-        metadata!(df, "covariable type", "continuous")
-    end
 
     return df
 
