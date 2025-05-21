@@ -21,11 +21,10 @@ import Distances: Hamming
 
 let
 
+    params = DataParameters(nA = 1000, nB = 1000)
+    rng = DataGenerator(params, scenario = 1)
+
     for simulation = 1:10
-
-        params = DataParameters(nA = 1000, nB = 1000)
-
-        rng = DataGenerator(params)
 
         data = generate(rng)
 
