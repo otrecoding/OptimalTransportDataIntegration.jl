@@ -1,6 +1,7 @@
 using Distributions
 using DataFrames
 import StatsBase: countmap
+import OrderedCollections: OrderedDict
 
 digitize(x, bins) = searchsortedlast.(Ref(bins), x)
 
@@ -232,10 +233,8 @@ function generate(generator::DataGenerator; eps = 0.0)
     df.Z = vcat(YA2, YB2)
     df.database = vcat(fill(1, params.nA), fill(2, params.nB))
 
-    @info "Categories in Y $(countmap(df.Y))"
-    @info "Categories in Z $(countmap(df.Z))"
-
-     
+    @info "Categories in Y $(sort!(OrderedDict(countmap(df.Y))))"
+    @info "Categories in Z $(sort!(OrderedDict(countmap(df.Z))))"
 
     return df
 

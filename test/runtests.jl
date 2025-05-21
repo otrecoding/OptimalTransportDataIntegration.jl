@@ -37,7 +37,7 @@ data = CSV.read(joinpath(@__DIR__, "data_good.csv"), DataFrame)
 @testset "Unbalanced method with good data" begin
 
     @time result = otrecod(data, JointOTBetweenBases())
-    println(accuracy(result))
+    @test all(accuracy(result) .> 0.5)
 
 end
 
@@ -61,6 +61,17 @@ end
     
     @time result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
     println(accuracy(result))
+
+end
+
+@testset "Continuous data" begin
+
+    params = DataParameters()
+    rng = DataGenerator(params, discrete = false)
+    data = generate(rng)
+    @test all(accuracy(otrecod(data, JointOTWithinBase())) .> 0.5)
+    @test all(accuracy(otrecod(data, JointOTBetweenBases())) .> 0.5)
+
 
 end
 

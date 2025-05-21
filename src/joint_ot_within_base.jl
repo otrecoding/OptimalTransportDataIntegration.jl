@@ -13,10 +13,7 @@ individual or for sets of indviduals that similar values of covariates
 - verbose: if true, write the transported value of each individual; otherwise, juste write the number of missed transports
 """
 function ot_joint(
-    inst::Instance,
-    alpha::Float64 = 0.0,
-    lambda::Float64 = 0.0,
-    percent_closest::Float64 = 0.2,
+    inst::Instance, alpha::Float64, lambda::Float64, percent_closest::Float64;
     norme::Metric = Cityblock(),
     aggregate_tol::Float64 = 0.5,
     verbose::Bool = false,
@@ -397,10 +394,6 @@ function joint_ot_within_base_continuous(data; lambda = 0.392, alpha = 0.714,
     database = data.database
     
     instance = Instance(database, X, Y, Ylevels, Z, Zlevels, distance)
-    
-    lambda = 0.0
-    alpha = 0.0
-    percent_closest = 0.2
     
     sol = OptimalTransportDataIntegration.ot_joint(instance, alpha, lambda, percent_closest)
     

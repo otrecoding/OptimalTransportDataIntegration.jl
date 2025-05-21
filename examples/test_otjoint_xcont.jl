@@ -45,13 +45,7 @@ function categorize_using_quartile(data)
     X2 = vcat(X12, X22) .- 1
     X3 = vcat(X13, X23) .- 1
 
-    to_categorical(x)  = sort(unique(x)) .== reshape(x, (1, size(x)...))
-
-    X1c = to_categorical(X1)
-    X2c = to_categorical(X2)
-    X3c = to_categorical(X3)
-
-    hcat(X1c', X2c', X3c')
+    hcat(X1, X2, X3)
 
 end
 
@@ -72,8 +66,8 @@ dist_choice = Euclidean()
 
 instance = Instance(database, X, Y, Ylevels, Z, Zlevels, dist_choice)
 
-lambda = 0.0
-alpha = 0.0
+lambda = 0.1
+alpha = 0.1
 percent_closest = 0.2
 
 sol = OptimalTransportDataIntegration.ot_joint(instance, alpha, lambda, percent_closest)
@@ -83,3 +77,7 @@ YB, ZA = compute_pred_error!(sol, instance, false)
 println(accuracy(data, YB, ZA))
 
 println(accuracy(otrecod(data, JointOTWithinBase(distance=Cityblock()))))
+println(accuracy(otrecod(data, JointOTWithinBase(distance=Hamming()))))
+println(accuracy(otrecod(data, JointOTWithinBase(distance=Euclidean()))))
+println(accuracy(otrecod(data, JointOTBetweenBases())))
+println(accuracy(otrecod(data, SimpleLearning())))

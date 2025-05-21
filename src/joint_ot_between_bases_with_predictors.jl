@@ -1,5 +1,5 @@
 function joint_within_with_predictors(data; iterations = 10,
-    learning_rate = 0.01, batchsize = 512, epochs = 500)
+    learning_rate = 0.01, batchsize = 512, epochs = 500, hidden_layer_size = 10)
 
     T = Int32
 
@@ -33,7 +33,6 @@ function joint_within_with_predictors(data; iterations = 10,
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
 
-    hidden_layer_size = 10
     modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
     modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
 
