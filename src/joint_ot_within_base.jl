@@ -337,7 +337,7 @@ function joint_ot_within_base_discrete(data; lambda = 0.392, alpha = 0.714,
 
     Xnames = ["X1", "X2", "X3"]
 
-    X = one_hot_encoder(Matrix(data[!, Xnames]))
+    X = Matrix(data[!, Xnames])
     Y = Vector(data.Y)
     Z = Vector(data.Z)
 

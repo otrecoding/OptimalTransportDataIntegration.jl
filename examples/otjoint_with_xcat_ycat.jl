@@ -46,7 +46,9 @@ let
         percent_closest = 0.2
 
         @time sol = ot_joint(instance, alpha, lambda, percent_closest)
-        println(compute_pred_error!(sol, instance, false))
+        yb, za = compute_pred_error!(sol, instance, false)
+        println(accuracy(data, yb, za))
+        println(accuracy(otrecod(data, JointOTWithinBase(lambda = lambda, alpha = alpha, percent_closest = percent_closest))))
 
     end
 
