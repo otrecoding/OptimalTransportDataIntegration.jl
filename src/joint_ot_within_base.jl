@@ -10,8 +10,7 @@ individual or for sets of indviduals that similar values of covariates
 - reg_norm: norm1, norm2 or entropy depending on the type of regularization
 - percent_closest: percent of closest neighbors taken into consideration in regularization
 - lambda: coefficient measuring the importance of the regularization term
-- full_disp: if true, write the transported value of each individual; otherwise, juste write the number of missed transports
-- solver_disp: if false, do not display the outputs of the solver
+- verbose: if true, write the transported value of each individual; otherwise, juste write the number of missed transports
 """
 function ot_joint(
     inst::Instance,
@@ -20,11 +19,10 @@ function ot_joint(
     percent_closest::Float64 = 0.2,
     norme::Metric = Cityblock(),
     aggregate_tol::Float64 = 0.5,
-    full_disp::Bool = false,
-    solver_disp::Bool = false,
+    verbose::Bool = false,
 )
 
-    if full_disp
+    if verbose
         @info " AGGREGATE INDIVIDUALS WRT COVARIATES               "
         @info " Reg. weight           = $(lambda)              "
         @info " Percent closest       = $(100.0 * percent_closest) % "
@@ -320,14 +318,9 @@ function ot_joint(
         end
     end
 
-    # Display the solution
-    # println("Solution of the joint probability transport")
-    # println("Distance cost = ", sum(C[y,z] * (gammaA_val[x,y,z]+gammaB_val[x,y,z]) for y in Ylevels, z in Zlevels, x in Xlevels))
-    # println("Regularization cost = ", lambda * value(regterm))
-
-    if full_disp
-        solution_summary(modelA; verbose = solver_disp)
-        solution_summary(modelB; verbose = solver_disp)
+    if verbose
+        solution_summary(modelA; verbose = verbose)
+        solution_summary(modelB; verbose = verbose)
     end
 
     Solution(
@@ -340,7 +333,8 @@ function ot_joint(
 
 end
 
-function joint_ot_within_base_discrete(data; lambda = 0.392, alpha = 0.714, percent_closest = 0.2)
+function joint_ot_within_base_discrete(data; lambda = 0.392, alpha = 0.714, 
+        percent_closest = 0.2, distance = Hamming())
 
     database = data.database
 
@@ -353,7 +347,7 @@ function joint_ot_within_base_discrete(data; lambda = 0.392, alpha = 0.714, perc
     Ylevels = 1:4
     Zlevels = 1:3
 
-    instance = Instance(database, X, Y, Ylevels, Z, Zlevels, Hamming())
+    instance = Instance(database, X, Y, Ylevels, Z, Zlevels, distance)
 
     sol = ot_joint(instance, alpha, lambda, percent_closest)
     YB, ZA = compute_pred_error!(sol, instance, false)

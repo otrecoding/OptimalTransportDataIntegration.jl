@@ -17,7 +17,9 @@ end
 
 function otrecod(data::DataFrame, method::JointOTWithinBase)
 
-    if metadata(data, "discrete")
+    discrete = all(isinteger.(data.X1))
+
+    if discrete
 
         yb_pred, za_pred = joint_ot_within_base_discrete(
             data;
@@ -59,8 +61,9 @@ end
 
 function otrecod(data::DataFrame, method::SimpleLearning)
 
+    discrete = all(isinteger.(data.X1))
 
-    if metadata(data, "discrete")
+    if discrete
         yb_pred, za_pred = simple_learning(
             data;
             hidden_layer_size = method.hidden_layer_size,
@@ -96,21 +99,37 @@ export JointOTBetweenBases
     Zlevels::AbstractVector = 1:3
     iterations::Int = 10
     distance::Distances.Metric = Hamming()
+    hidden_layer_size::Int = 10
+    learning_rate::Float64 = 0.01
+    batchsize::Int = 64
+    epochs::Int = 1000
 
 end
 
 function otrecod(data::DataFrame, method::JointOTBetweenBases)
 
-    yb_pred, za_pred = joint_ot_between_bases(
-        data,
-        method.reg,
-        method.reg_m1,
-        method.reg_m2;
-        Ylevels = method.Ylevels,
-        Zlevels = method.Zlevels,
-        iterations = method.iterations,
-        distance = method.distance
-    )
+    discrete = all(isinteger.(data.X1))
+
+    if discrete
+
+        yb_pred, za_pred = joint_ot_between_bases(
+            data,
+            method.reg,
+            method.reg_m1,
+            method.reg_m2;
+            Ylevels = method.Ylevels,
+            Zlevels = method.Zlevels,
+            iterations = method.iterations,
+            distance = method.distance)
+    else
+       yb_pred, za_pred = joint_within_with_predictors(data; 
+            iterations = method.iterations,
+            hidden_layer_size = method.hidden_layer_size,
+            learning_rate = method.learning_rate, 
+            batchsize = method.batchsize, 
+            epochs = method.epochs)
+
+    end
 
     yb_true = data.Y[data.database.==2]
     za_true = data.Z[data.database.==1]
