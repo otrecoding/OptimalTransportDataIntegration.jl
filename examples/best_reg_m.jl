@@ -12,12 +12,13 @@ function main(nsimulations::Int)
 
         writedlm(io, hcat(header...))
 
-        for i = 1:nsimulations
+        for mB in mb_values
 
-            for mB in mb_values
+            params = DataParameters(mB = mB)
+            rng = DataGenerator(params, scenario = 1)
 
-                @show mB
-                params = DataParameters(mB = mB)
+            for i = 1:nsimulations
+
                 data = generate(params)
 
                 for reg_m1 in reg_m_values, reg_m2 in reg_m_values

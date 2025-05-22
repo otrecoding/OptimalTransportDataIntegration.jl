@@ -75,7 +75,6 @@ train!(model2, XB, ZB)
 # Looking at the accuracy
 
 @show mean(Flux.onecold(model1(XB)) .== dbb.Y)
-
 @show mean(Flux.onecold(model2(XA)) .== dba.Z)
 
 method = SimpleLearning()
@@ -85,5 +84,6 @@ method = SimpleLearning()
 rng = DataGenerator(params, discrete = false)
 data = generate(rng)
 
-accuracy(otrecod(data, method))
+@show accuracy(otrecod(data, method))
+@show accuracy(otrecod(data, JointOTBetweenBases()))
 

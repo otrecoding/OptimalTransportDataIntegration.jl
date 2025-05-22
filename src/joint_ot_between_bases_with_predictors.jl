@@ -78,7 +78,7 @@ function joint_within_with_predictors(data; iterations = 10,
     YBpred = Flux.softmax(modelXZB(XZB))
     ZApred = Flux.softmax(modelXYA(XYA))
 
-    alpha1, alpha2 = 0.25, 0.33
+    alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
     G = ones(length(wa), length(wb))
     cost = Inf
@@ -98,8 +98,8 @@ function joint_within_with_predictors(data; iterations = 10,
         train!(modelXYA, XYA, ZA)
         train!(modelXZB, XZB, YB)
 
-        YBpred .= Flux.softmax(modelXZB(XZB))
-        ZApred .= Flux.softmax(modelXYA(XYA))
+        YBpred .= modelXZB(XZB)
+        ZApred .= modelXYA(XYA)
 
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
