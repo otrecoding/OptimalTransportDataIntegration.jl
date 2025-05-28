@@ -56,17 +56,17 @@ function accuracy(data::DataFrame, yb_pred::AbstractVector, za_pred::AbstractVec
     za_true = view(Z, indA)
 
     return accuracy(yb_true, yb_pred),
-    accuracy(za_true, za_pred),
-    accuracy(vcat(yb_pred, za_pred), vcat(yb_true, za_true))
+        accuracy(za_true, za_pred),
+        accuracy(vcat(yb_pred, za_pred), vcat(yb_true, za_true))
 
 end
 
 
 function accuracy(sol::JointOTResult)
 
-    accuracy(sol.yb_true, sol.yb_pred),
-    accuracy(sol.za_true, sol.za_pred),
-    accuracy(vcat(sol.yb_pred, sol.za_pred), vcat(sol.yb_true, sol.za_true))
+    return accuracy(sol.yb_true, sol.yb_pred),
+        accuracy(sol.za_true, sol.za_pred),
+        accuracy(vcat(sol.yb_pred, sol.za_pred), vcat(sol.yb_true, sol.za_true))
 
 end
 

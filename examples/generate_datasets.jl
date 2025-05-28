@@ -29,7 +29,7 @@ function write_datasets(nsimulations, all_params, outdir)
 
         rng = DataGenerator(params)
 
-        for i = 1:nsimulations
+        for i in 1:nsimulations
 
             df = generate(rng)
 
@@ -44,6 +44,7 @@ function write_datasets(nsimulations, all_params, outdir)
 
     end
 
+    return
 end
 # -
 

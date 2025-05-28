@@ -23,7 +23,7 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
     outfile = "covariates_shift_assumption.csv"
     header = ["id", "mB", "estyb", "estza", "estimation", "method"]
 
-    open(outfile, "w") do io
+    return open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
@@ -32,7 +32,7 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
             params = DataParameters(mB = mB)
             rng = DataGenerator(params)
 
-            for i = 1:nsimulations
+            for i in 1:nsimulations
 
                 data = generate(rng)
 
@@ -42,7 +42,7 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i j estyb estza est "ot"])
 
-                #OT-r Regularized Transport 
+                #OT-r Regularized Transport
                 result = otrecod(data, JointOTWithinBase())
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i j estyb estza est "ot-r"])
@@ -52,7 +52,7 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i j estyb estza est "ote"])
 
-                #OTE Regularized unbalanced transport 
+                #OTE Regularized unbalanced transport
                 result = otrecod(data, JointOTBetweenBases())
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i j estyb estza est "ote-r"])

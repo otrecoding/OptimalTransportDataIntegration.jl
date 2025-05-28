@@ -31,10 +31,10 @@ rng = MersenneTwister(42)
 # Generate synthetic data
 X = rand(rng, num_features, num_samples)
 Y = zeros(Int, num_samples)
-@. Y[(X[1, :]<=0.5)&(X[2, :]<=0.5)] = 1
-@. Y[(X[1, :]>0.5)&(X[2, :]<=0.5)] = 2
-@. Y[(X[1, :]<=0.5)&(X[2, :]>0.5)] = 3
-@. Y[(X[1, :]>0.5)&(X[2, :]>0.5)] = 4
+@. Y[(X[1, :] <= 0.5) & (X[2, :] <= 0.5)] = 1
+@. Y[(X[1, :] > 0.5) & (X[2, :] <= 0.5)] = 2
+@. Y[(X[1, :] <= 0.5) & (X[2, :] > 0.5)] = 3
+@. Y[(X[1, :] > 0.5) & (X[2, :] > 0.5)] = 4
 scatter(X[1, :], X[2, :], group = Y)
 # +
 import Flux: Chain, Dense, relu, softmax
@@ -43,7 +43,7 @@ function train!(model, loader, optim, epochs = 1000)
 
     losses = Float32[]
     loss = Inf
-    @showprogress for epoch = 1:epochs
+    return @showprogress for epoch in 1:epochs
         for (x, y) in loader
             loss, grads = Flux.withgradient(model) do m
                 y_hat = m(x)
@@ -67,7 +67,7 @@ function learning(X, Y, epochs = 1000, batchsize = 256)
     optim = Flux.setup(Flux.Adam(0.01), model)
     train!(model, loader, optim)
 
-    mean(Flux.onecold(model(x)) .== Y)
+    return mean(Flux.onecold(model(x)) .== Y)
 
 end
 # -

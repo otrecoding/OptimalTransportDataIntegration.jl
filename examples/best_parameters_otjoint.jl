@@ -30,10 +30,10 @@ function otjoint(start, stop)
     outfile = "results_otjoint.csv"
     header = ["id", "alpha", "lambda", "estimation", "method"]
 
-    open(outfile, "a") do io
+    return open(outfile, "a") do io
 
 
-        for i = start:stop
+        for i in start:stop
 
             if i == 1
                 seekstart(io)

@@ -13,14 +13,14 @@ individual or for sets of indviduals that similar values of covariates
 - verbose: if true, write the transported value of each individual; otherwise, juste write the number of missed transports
 """
 function ot_joint(
-    inst::Instance,
-    alpha::Float64,
-    lambda::Float64,
-    percent_closest::Float64;
-    norme::Metric = Cityblock(),
-    aggregate_tol::Float64 = 0.5,
-    verbose::Bool = false,
-)
+        inst::Instance,
+        alpha::Float64,
+        lambda::Float64,
+        percent_closest::Float64;
+        norme::Metric = Cityblock(),
+        aggregate_tol::Float64 = 0.5,
+        verbose::Bool = false,
+    )
 
     if verbose
         @info " AGGREGATE INDIVIDUALS WRT COVARIATES               "
@@ -71,11 +71,11 @@ function ot_joint(
     estim_XB = length.(indXB) ./ nB
     estim_XA_YA = [
         length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / nA for
-        x in Xlevels, y in Ylevels
+            x in Xlevels, y in Ylevels
     ]
     estim_XB_ZB = [
         length(indXB[x][findall(Zobserv[indXB[x] .+ nA] .== z)]) / nB for
-        x in Xlevels, z in Zlevels
+            x in Xlevels, z in Zlevels
     ]
 
 
@@ -141,14 +141,14 @@ function ot_joint(
         modelA,
         ctZandXinA[x in Xlevels, z in Zlevels],
         estim_XB[x] * sum(gammaA[x, y, z] for y in Ylevels) ==
-        estim_XB_ZB[x, z] * estim_XA[x] + estim_XB[x] * errorA_XZ[x, z]
+            estim_XB_ZB[x, z] * estim_XA[x] + estim_XB[x] * errorA_XZ[x, z]
     )
 
     @constraint(
         modelB,
         ctYandXinB[x in Xlevels, y in Ylevels],
         estim_XA[x] * sum(gammaB[x, y, z] for z in Zlevels) ==
-        estim_XA_YA[x, y] * estim_XB[x] + estim_XA[x] * errorB_XY[x, y]
+            estim_XA_YA[x, y] * estim_XB[x] + estim_XA[x] * errorB_XY[x, y]
     )
 
     # - recover the norm 1 of the error
@@ -217,16 +217,16 @@ function ot_joint(
         modelA,
         [x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels],
         reg_absA[x1, x2, y, z] >=
-        gammaA[x1, y, z] / (max(1, length(indXA[x1])) / nA) -
-        gammaA[x2, y, z] / (max(1, length(indXA[x2])) / nA)
+            gammaA[x1, y, z] / (max(1, length(indXA[x1])) / nA) -
+            gammaA[x2, y, z] / (max(1, length(indXA[x2])) / nA)
     )
 
     @constraint(
         modelA,
         [x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels],
         reg_absA[x1, x2, y, z] >=
-        gammaA[x2, y, z] / (max(1, length(indXA[x2])) / nA) -
-        gammaA[x1, y, z] / (max(1, length(indXA[x1])) / nA)
+            gammaA[x2, y, z] / (max(1, length(indXA[x2])) / nA) -
+            gammaA[x1, y, z] / (max(1, length(indXA[x1])) / nA)
     )
 
     @expression(
@@ -234,7 +234,7 @@ function ot_joint(
         regterm,
         sum(
             1 / nvoisins * reg_absA[x1, x2, y, z] for
-            x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels
+                x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels
         )
     )
 
@@ -247,16 +247,16 @@ function ot_joint(
         modelB,
         [x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels],
         reg_absB[x1, x2, y, z] >=
-        gammaB[x1, y, z] / (max(1, length(indXB[x1])) / nB) -
-        gammaB[x2, y, z] / (max(1, length(indXB[x2])) / nB)
+            gammaB[x1, y, z] / (max(1, length(indXB[x1])) / nB) -
+            gammaB[x2, y, z] / (max(1, length(indXB[x2])) / nB)
     )
 
     @constraint(
         modelB,
         [x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels],
         reg_absB[x1, x2, y, z] >=
-        gammaB[x2, y, z] / (max(1, length(indXB[x2])) / nB) -
-        gammaB[x1, y, z] / (max(1, length(indXB[x1])) / nB)
+            gammaB[x2, y, z] / (max(1, length(indXB[x2])) / nB) -
+            gammaB[x1, y, z] / (max(1, length(indXB[x1])) / nB)
     )
 
     @expression(
@@ -264,7 +264,7 @@ function ot_joint(
         regterm,
         sum(
             1 / nvoisins * reg_absB[x1, x2, y, z] for
-            x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels
+                x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels
         )
     )
 
@@ -273,9 +273,9 @@ function ot_joint(
         modelA,
         Min,
         sum(C[y, z] * gammaA[x, y, z] for y in Ylevels, z in Zlevels, x in Xlevels) +
-        lambda * sum(
+            lambda * sum(
             1 / nvoisins * reg_absA[x1, x2, y, z] for
-            x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels
+                x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels
         )
     )
 
@@ -283,9 +283,9 @@ function ot_joint(
         modelB,
         Min,
         sum(C[y, z] * gammaB[x, y, z] for y in Ylevels, z in Zlevels, x in Xlevels) +
-        lambda * sum(
+            lambda * sum(
             1 / nvoisins * reg_absB[x1, x2, y, z] for
-            x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels
+                x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels
         )
     )
 
@@ -297,14 +297,14 @@ function ot_joint(
     gammaA_val = [value(gammaA[x, y, z]) for x in Xlevels, y in Ylevels, z in Zlevels]
     gammaB_val = [value(gammaB[x, y, z]) for x in Xlevels, y in Ylevels, z in Zlevels]
 
-    # compute the resulting estimators for the distributions of Z 
+    # compute the resulting estimators for the distributions of Z
     # conditional to X and Y in base A and of Y conditional to X and Z in base B
 
     estimatorZA = ones(length(Xlevels), length(Ylevels), length(Zlevels)) ./ length(Zlevels)
 
     for x in Xlevels, y in Ylevels
         proba_c_mA = sum(gammaA_val[x, y, Zlevels])
-        if proba_c_mA > 1e-6
+        if proba_c_mA > 1.0e-6
             estimatorZA[x, y, :] = gammaA_val[x, y, :] ./ proba_c_mA
         end
     end
@@ -313,7 +313,7 @@ function ot_joint(
 
     for x in Xlevels, z in Zlevels
         proba_c_mB = sum(view(gammaB_val, x, Ylevels, z))
-        if proba_c_mB > 1e-6
+        if proba_c_mB > 1.0e-6
             estimatorYB[x, :, z] = view(gammaB_val, x, :, z) ./ proba_c_mB
         end
     end
@@ -323,7 +323,7 @@ function ot_joint(
         solution_summary(modelB; verbose = verbose)
     end
 
-    Solution(
+    return Solution(
         time() - tstart,
         [sum(gammaA_val[:, y, z]) for y in Ylevels, z in Zlevels],
         [sum(gammaB_val[:, y, z]) for y in Ylevels, z in Zlevels],
@@ -334,12 +334,12 @@ function ot_joint(
 end
 
 function joint_ot_within_base_discrete(
-    data;
-    lambda = 0.392,
-    alpha = 0.714,
-    percent_closest = 0.2,
-    distance = Hamming(),
-)
+        data;
+        lambda = 0.392,
+        alpha = 0.714,
+        percent_closest = 0.2,
+        distance = Hamming(),
+    )
 
     database = data.database
 
@@ -363,12 +363,12 @@ end
 
 
 function joint_ot_within_base_continuous(
-    data;
-    lambda = 0.392,
-    alpha = 0.714,
-    percent_closest = 0.2,
-    distance = Euclidean(),
-)
+        data;
+        lambda = 0.392,
+        alpha = 0.714,
+        percent_closest = 0.2,
+        distance = Euclidean(),
+    )
 
     digitize(x, bins) = searchsortedlast.(Ref(bins), x)
 

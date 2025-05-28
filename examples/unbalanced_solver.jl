@@ -24,7 +24,7 @@ import PythonOT
 onecold(X) = map(argmax, eachrow(X))
 
 function loss_crossentropy(Y, F)
-    ϵ = 1e-12
+    ϵ = 1.0e-12
     res = zeros(size(Y, 1), size(F, 1))
     logF = log.(F .+ ϵ)
     for i in axes(Y, 2)
@@ -123,7 +123,7 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
 
     steps = 10
 
-    for step = 1:steps
+    for step in 1:steps
 
         for (i, (y, x1)) in enumerate(product(Ylevels, eachindex(Xlevels_hot)))
             for (j, (z, x2)) in enumerate(product(Zlevels, eachindex(Xlevels_hot)))
@@ -159,11 +159,11 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
         estim_XB = length.(indXB) ./ nB
         estim_XA_YA = [
             length(indXA[x][YA[indXA[x]] .== y]) / nA for
-            x in eachindex(indXA), y in Ylevels
+                x in eachindex(indXA), y in Ylevels
         ]
         estim_XB_ZB = [
             length(indXB[x][ZB[indXB[x]] .== z]) / nB for
-            x in eachindex(indXB), z in Zlevels
+                x in eachindex(indXB), z in Zlevels
         ]
 
 
@@ -196,7 +196,7 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
             model,
             ctYandXinA[x1 in Xlevels, y in Ylevels],
             sum(Ω[x1, y, x2, z] for x2 in Xlevels, z in Zlevels) ==
-            estim_XA_YA[x1, y] + error_XY[x1, y]
+                estim_XA_YA[x1, y] + error_XY[x1, y]
         )
 
         # - we impose that the probability of Y conditional to X is the same in the two databases
@@ -205,7 +205,7 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
             model,
             ctZandXinA[x2 in Xlevels, z in Zlevels],
             sum(Ω[x1, y, x2, z] for x1 in Xlevels, y in Ylevels) ==
-            estim_XB_ZB[x2, z] + error_XZ[x2, z]
+                estim_XB_ZB[x2, z] + error_XZ[x2, z]
         )
 
         # - recover the norm 1 of the error
@@ -249,22 +249,22 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
             model,
             [x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, x in Xlevels, z in Zlevels],
             reg_absA[x1, x2, y, z] >=
-            Ω[x1, y, x, z] / (max(1, length(indXA[x1])) / nA) -
-            Ω[x2, y, x, z] / (max(1, length(indXA[x2])) / nA)
+                Ω[x1, y, x, z] / (max(1, length(indXA[x1])) / nA) -
+                Ω[x2, y, x, z] / (max(1, length(indXA[x2])) / nA)
         )
         @constraint(
             model,
             [x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, x in Xlevels, z in Zlevels],
             reg_absA[x1, x2, y, z] >=
-            Ω[x2, y, x, z] / (max(1, length(indXA[x2])) / nA) -
-            Ω[x1, y, x, z] / (max(1, length(indXA[x1])) / nA)
+                Ω[x2, y, x, z] / (max(1, length(indXA[x2])) / nA) -
+                Ω[x1, y, x, z] / (max(1, length(indXA[x1])) / nA)
         )
         @expression(
             model,
             regtermA,
             sum(
                 1 / nX * reg_absA[x1, x2, y, z] for
-                x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels
+                    x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels
             )
         )
 
@@ -277,22 +277,22 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
             model,
             [x1 in Xlevels, x2 in voisins_X[x1], x in Xlevels, y in Ylevels, z in Zlevels],
             reg_absB[x1, x2, y, z] >=
-            Ω[x, y, x1, z] / (max(1, length(indXB[x1])) / nB) -
-            Ω[x, y, x2, z] / (max(1, length(indXB[x2])) / nB)
+                Ω[x, y, x1, z] / (max(1, length(indXB[x1])) / nB) -
+                Ω[x, y, x2, z] / (max(1, length(indXB[x2])) / nB)
         )
         @constraint(
             model,
             [x1 in Xlevels, x2 in voisins_X[x1], x in Xlevels, y in Ylevels, z in Zlevels],
             reg_absB[x1, x2, y, z] >=
-            Ω[x, y, x2, z] / (max(1, length(indXB[x2])) / nB) -
-            Ω[x, y, x1, z] / (max(1, length(indXB[x1])) / nB)
+                Ω[x, y, x2, z] / (max(1, length(indXB[x2])) / nB) -
+                Ω[x, y, x1, z] / (max(1, length(indXB[x1])) / nB)
         )
         @expression(
             model,
             regtermB,
             sum(
                 1 / nX * reg_absB[x1, x2, y, z] for
-                x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels
+                    x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels
             )
         )
 
@@ -302,15 +302,15 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
             Min,
             sum(
                 c[x1, y, x2, z] * Ω[x1, y, x2, z] for
-                y in Ylevels, z in Zlevels, x1 in Xlevels, x2 in Xlevels
+                    y in Ylevels, z in Zlevels, x1 in Xlevels, x2 in Xlevels
             ) +
-            lambda * sum(
+                lambda * sum(
                 1 / nX * reg_absA[x1, x2, y, z] for
-                x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels
+                    x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels
             ) +
-            lambda * sum(
+                lambda * sum(
                 1 / nX * reg_absB[x1, x2, y, z] for
-                x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels
+                    x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels
             )
         )
 
@@ -322,7 +322,7 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
         # Extract the values of the solution
         gamma_val = [
             value(Ω[x1, y, x2, z]) for
-            x1 in Xlevels, y in Ylevels, x2 in Xlevels, z in Zlevels
+                x1 in Xlevels, y in Ylevels, x2 in Xlevels, z in Zlevels
         ]
 
 
@@ -340,9 +340,9 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
             end
         end
 
-        yA = last.(XYAlevels) # les y parmi les XYA observés, potentiellement des valeurs repetées 
+        yA = last.(XYAlevels) # les y parmi les XYA observés, potentiellement des valeurs repetées
         yA_hot = one_hot_encoder(yA, Ylevels)
-        zB = last.(XZBlevels) # les z parmi les XZB observés, potentiellement des valeurs repetées 
+        zB = last.(XZBlevels) # les z parmi les XZB observés, potentiellement des valeurs repetées
         zB_hot = one_hot_encoder(zB, Zlevels)
 
         Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
@@ -364,12 +364,12 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
         XYA = hcat(XA_hot, YA)
         XZB = hcat(XB_hot, ZB)
 
-        for i = 1:nA
+        for i in 1:nA
             ind = findfirst(XYA[i, :] ≈ v for v in XYAlevels)
             zA_pred_hot_i[i, :] .= zA_pred_hot[ind, :]
         end
 
-        for i = 1:nB
+        for i in 1:nB
             ind = findfirst(XZB[i, :] ≈ v for v in XZBlevels)
             yB_pred_hot_i[i, :] .= yB_pred_hot[ind, :]
         end
@@ -395,6 +395,7 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
 
     end
 
+    return
 end
 
 #csv_file = joinpath("dataset.csv")

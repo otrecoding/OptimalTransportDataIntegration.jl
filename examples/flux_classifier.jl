@@ -16,7 +16,7 @@
 
 # # Flux classifier
 #
-# The following page contains a step-by-step walkthrough of a classifier implementation in Julia using Flux. 
+# The following page contains a step-by-step walkthrough of a classifier implementation in Julia using Flux.
 # Let's start by importing the required Julia packages.
 
 using Statistics, DataFrames, CSV
@@ -56,7 +56,7 @@ model2 = Chain(Dense(nx, ny))
 function train!(model, x, y, epochs = 1000, batchsize = 64)
     loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
     optim = Flux.setup(Flux.Adam(0.01), model)
-    for epoch = 1:epochs
+    for epoch in 1:epochs
         for (x, y) in loader
             grads = Flux.gradient(model) do m
                 y_hat = m(x)
@@ -65,6 +65,7 @@ function train!(model, x, y, epochs = 1000, batchsize = 64)
             Flux.update!(optim, model, grads[1])
         end
     end
+    return
 end
 
 train!(model1, XA, YA)

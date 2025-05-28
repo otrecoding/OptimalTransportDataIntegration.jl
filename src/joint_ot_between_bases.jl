@@ -14,7 +14,7 @@ Cross entropy is typically used as a loss in multi-class classification, in whic
 
 """
 function loss_crossentropy(Y::AbstractMatrix{T}, F::AbstractMatrix{T}) where {T}
-    ϵ = 1e-12
+    ϵ = 1.0e-12
     nf, nclasses = size(F)
     ny = size(Y, 1)
     @assert nclasses == size(Y, 2)
@@ -58,15 +58,15 @@ function modality_cost(loss, weight)
 end
 
 function joint_ot_between_bases(
-    data,
-    reg,
-    reg_m1,
-    reg_m2;
-    Ylevels = 1:4,
-    Zlevels = 1:3,
-    iterations = 1,
-    distance = Hamming(),
-)
+        data,
+        reg,
+        reg_m1,
+        reg_m2;
+        Ylevels = 1:4,
+        Zlevels = 1:3,
+        iterations = 1,
+        distance = Hamming(),
+    )
 
     T = Int32
 
@@ -106,8 +106,8 @@ function joint_ot_between_bases(
     indZ = Dict((m, findall(ZB .== m)) for m in Zlevels)
 
     # Compute the indexes of individuals with same covariates
-    indXA = Dict{T,Array{T}}()
-    indXB = Dict{T,Array{T}}()
+    indXA = Dict{T, Array{T}}()
+    indXB = Dict{T, Array{T}}()
     Xlevels = sort(unique(eachrow(X_hot)))
 
     for (i, x) in enumerate(Xlevels)
@@ -120,8 +120,8 @@ function joint_ot_between_bases(
     nbXA = length(indXA)
     nbXB = length(indXB)
 
-    wa = vec([sum(indXA[x][YA[indXA[x]] .== y]) for y in Ylevels, x = 1:nbXA])
-    wb = vec([sum(indXB[x][ZB[indXB[x]] .== z]) for z in Zlevels, x = 1:nbXB])
+    wa = vec([sum(indXA[x][YA[indXA[x]] .== y]) for y in Ylevels, x in 1:nbXA])
+    wb = vec([sum(indXB[x][ZB[indXB[x]] .== z]) for z in Zlevels, x in 1:nbXB])
 
     wa2 = filter(>(0), wa)
     wb2 = filter(>(0), wb) ./ sum(wa2)
@@ -144,21 +144,21 @@ function joint_ot_between_bases(
     Ylevels_hot = one_hot_encoder(Ylevels)
     Zlevels_hot = one_hot_encoder(Zlevels)
 
-    nx = size(X_hot, 2) ## Nb modalités x 
+    nx = size(X_hot, 2) ## Nb modalités x
 
-    # les x parmi les XYA observés, potentiellement des valeurs repetées 
+    # les x parmi les XYA observés, potentiellement des valeurs repetées
     XA_hot = stack([v[1:nx] for v in XYA2], dims = 1)
-    # les x parmi les XZB observés, potentiellement des valeurs repetées 
+    # les x parmi les XZB observés, potentiellement des valeurs repetées
     XB_hot = stack([v[1:nx] for v in XZB2], dims = 1)
 
-    yA = last.(XYA2) # les y parmi les XYA observés, potentiellement des valeurs repetées 
+    yA = last.(XYA2) # les y parmi les XYA observés, potentiellement des valeurs repetées
     yA_hot = one_hot_encoder(yA, Ylevels)
-    zB = last.(XZB2) # les z parmi les XZB observés, potentiellement des valeurs repetées 
+    zB = last.(XZB2) # les z parmi les XZB observés, potentiellement des valeurs repetées
     zB_hot = one_hot_encoder(zB, Zlevels)
 
     # Algorithm
 
-    ## Initialisation 
+    ## Initialisation
 
     yB_pred = zeros(T, size(XZB2, 1)) # number of observed different values in A
     zA_pred = zeros(T, size(XYA2, 1)) # number of observed different values in B
@@ -188,7 +188,7 @@ function joint_ot_between_bases(
     G = ones(length(wa2), length(wb2))
     cost = Inf
 
-    for iter = 1:iterations
+    for iter in 1:iterations
 
         Gold = copy(G)
         costold = cost
@@ -238,7 +238,7 @@ function joint_ot_between_bases(
         YBpred .= onecold(yB_pred_hot_i)
         ZApred .= onecold(zA_pred_hot_i)
 
-        if delta < 1e-16 || abs(costold - cost) < 1e-7
+        if delta < 1.0e-16 || abs(costold - cost) < 1.0e-7
             @info "converged at iter $iter "
             break
         end

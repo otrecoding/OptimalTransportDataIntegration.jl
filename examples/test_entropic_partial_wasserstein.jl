@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 # ---
 # jupyter:
@@ -61,7 +60,7 @@ wb = vec([sum(indXB[x][ZB[indXB[x]] .== z]) for z in Zlevels, x in eachindex(ind
 wa2 = filter(>(0), wa) ./ nA
 wb2 = filter(>(0), wb) ./ nB
 
-nx = size(X, 2) ## Nb modalités x 
+nx = size(X, 2) ## Nb modalités x
 
 XYA2 = Vector{T}[]
 XZB2 = Vector{T}[]

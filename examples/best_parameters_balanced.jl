@@ -26,9 +26,9 @@ function unbalanced(start, stop)
     outfile = "results_balanced.csv"
     header = ["id" "reg" "estyb" "estza" "est" "method"]
 
-    open(outfile, "a") do io
+    return open(outfile, "a") do io
 
-        for i = start:stop
+        for i in start:stop
 
             if i == 1
                 seekstart(io)

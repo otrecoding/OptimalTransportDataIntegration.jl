@@ -6,12 +6,12 @@ $(SIGNATURES)
 Compute prediction errors in a solution
 """
 function compute_pred_error!(
-    sol::Solution,
-    inst::Instance,
-    proba_disp::Bool = false,
-    mis_disp::Bool = false,
-    full_disp::Bool = false,
-)
+        sol::Solution,
+        inst::Instance,
+        proba_disp::Bool = false,
+        mis_disp::Bool = false,
+        full_disp::Bool = false,
+    )
 
     A = 1:inst.nA
     B = 1:inst.nB
@@ -33,7 +33,7 @@ function compute_pred_error!(
         println("Modalities of base 2 individuals:")
         for j in B
             println(
-                "Index: $j real value: $(inst.Yobserv[inst.nA+j]) transported value: $(sol.predYB[j])",
+                "Index: $j real value: $(inst.Yobserv[inst.nA + j]) transported value: $(sol.predYB[j])",
             )
         end
     end
@@ -42,12 +42,12 @@ function compute_pred_error!(
     #deduce the individual distributions of probability for each individual from the distributions
     probaZindivA = zeros(Float64, (inst.nA, length(Z)))
     probaYindivB = zeros(Float64, (inst.nB, length(Y)))
-    for x = 1:nbX
+    for x in 1:nbX
         for i in indXA[x]
             probaZindivA[i, :] .= sol.estimatorZA[x, inst.Yobserv[i], :]
         end
         for i in indXB[x]
-            probaYindivB[i, :] .= sol.estimatorYB[x, :, inst.Zobserv[i+inst.nA]]
+            probaYindivB[i, :] .= sol.estimatorYB[x, :, inst.Zobserv[i + inst.nA]]
         end
     end
 
@@ -69,7 +69,7 @@ function compute_pred_error!(
     nbmisB = 0
     misB = Int64[]
     for j in B
-        if predYB[j] != inst.Yobserv[inst.nA+j]
+        if predYB[j] != inst.Yobserv[inst.nA + j]
             nbmisB += 1
             push!(misB, j)
         end

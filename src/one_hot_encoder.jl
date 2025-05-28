@@ -25,12 +25,12 @@ end
 
 function one_hot_encoder(x::AbstractVector)::Matrix{Bool}
 
-    (sort(filter(i -> i != 0, unique(x))) .== permutedims(x))'
+    return (sort(filter(i -> i != 0, unique(x))) .== permutedims(x))'
 
 end
 
 function one_hot_encoder(x::AbstractVector, levels::AbstractVector)::Matrix{Bool}
 
-    (sort(filter(i -> i != 0, levels)) .== permutedims(x))'
+    return (sort(filter(i -> i != 0, levels)) .== permutedims(x))'
 
 end

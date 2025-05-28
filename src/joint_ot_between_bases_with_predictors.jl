@@ -1,11 +1,11 @@
 function joint_within_with_predictors(
-    data;
-    iterations = 10,
-    learning_rate = 0.01,
-    batchsize = 512,
-    epochs = 500,
-    hidden_layer_size = 10,
-)
+        data;
+        iterations = 10,
+        learning_rate = 0.01,
+        batchsize = 512,
+        epochs = 500,
+        hidden_layer_size = 10,
+    )
 
     T = Int32
 
@@ -47,7 +47,7 @@ function joint_within_with_predictors(
         loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
         optim = Flux.setup(Flux.Adam(learning_rate), model)
 
-        for epoch = 1:epochs
+        for epoch in 1:epochs
             for (x, y) in loader
                 grads = Flux.gradient(model) do m
                     y_hat = m(x)
@@ -57,11 +57,12 @@ function joint_within_with_predictors(
             end
         end
 
+        return
     end
 
     function loss_crossentropy(Y, F)
 
-        ϵ = 1e-12
+        ϵ = 1.0e-12
         res = zeros(Float32, size(Y, 2), size(F, 2))
         logF = zeros(Float32, size(F))
 
@@ -89,7 +90,7 @@ function joint_within_with_predictors(
     G = ones(length(wa), length(wb))
     cost = Inf
 
-    for iter = 1:iterations # BCD algorithm
+    for iter in 1:iterations # BCD algorithm
 
         Gold = copy(G)
         costold = cost
@@ -116,7 +117,7 @@ function joint_within_with_predictors(
 
         @info "Delta: $(delta) \t  Loss: $(cost) "
 
-        if delta < 1e-16 || abs(costold - cost) < 1e-7
+        if delta < 1.0e-16 || abs(costold - cost) < 1.0e-7
             @info "converged at iter $iter "
             break
         end

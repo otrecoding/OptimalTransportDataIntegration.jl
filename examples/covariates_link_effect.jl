@@ -23,7 +23,7 @@ function covariates_link_effect(nsimulations::Int, pvalues)
     outfile = "covariates_link_effect.csv"
     header = ["id", "p", "estyb", "estza", "estimation", "method"]
 
-    open(outfile, "w") do io
+    return open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
@@ -33,7 +33,7 @@ function covariates_link_effect(nsimulations::Int, pvalues)
 
             rng = DataGenerator(params)
 
-            for i = 1:nsimulations
+            for i in 1:nsimulations
 
                 data = generate(rng)
 
@@ -43,7 +43,7 @@ function covariates_link_effect(nsimulations::Int, pvalues)
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i p estyb estza est "ot"])
 
-                #OT-r Regularized Transport 
+                #OT-r Regularized Transport
                 result = otrecod(data, JointOTWithinBase())
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i p estyb estza est "ot-r"])
@@ -53,7 +53,7 @@ function covariates_link_effect(nsimulations::Int, pvalues)
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i p estyb estza est "ote"])
 
-                #OTE Regularized unbalanced transport 
+                #OTE Regularized unbalanced transport
                 result = otrecod(data, JointOTBetweenBases())
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i p estyb estza est "ote-r"])

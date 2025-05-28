@@ -14,12 +14,12 @@ end
 
 
 function simple_learning(
-    data;
-    hidden_layer_size = 10,
-    learning_rate = 0.01,
-    batchsize = 64,
-    epochs = 1000,
-)
+        data;
+        hidden_layer_size = 10,
+        learning_rate = 0.01,
+        batchsize = 64,
+        epochs = 1000,
+    )
 
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
@@ -43,7 +43,7 @@ function simple_learning(
         loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
         optim = Flux.setup(Flux.Adam(learning_rate), model)
 
-        for epoch = 1:epochs
+        for epoch in 1:epochs
             for (x, y) in loader
                 grads = Flux.gradient(model) do m
                     y_hat = m(x)
@@ -53,6 +53,7 @@ function simple_learning(
             end
         end
 
+        return
     end
 
     train!(modelA, XA, YA)
@@ -61,6 +62,6 @@ function simple_learning(
     YB = Flux.onecold(modelA(XB))
     ZA = Flux.onecold(modelB(XA))
 
-    YB, ZA
+    return YB, ZA
 
 end

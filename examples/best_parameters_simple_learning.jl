@@ -23,10 +23,10 @@ function simple_learning(start, stop)
     outfile = "results_simple_learning.csv"
     header = ["id" "est_yb" "est_za" "est" "method"]
 
-    open(outfile, "a") do io
+    return open(outfile, "a") do io
 
 
-        for i = start:stop
+        for i in start:stop
 
             if i == 1
                 seekstart(io)

@@ -44,7 +44,7 @@ function otrecod(data::DataFrame, method::JointOTWithinBase)
     yb_true = data.Y[data.database .== 2]
     za_true = data.Z[data.database .== 1]
 
-    JointOTResult(yb_true, za_true, yb_pred, za_pred)
+    return JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
 end
 
@@ -84,7 +84,7 @@ function otrecod(data::DataFrame, method::SimpleLearning)
     yb_true = data.Y[data.database .== 2]
     za_true = data.Z[data.database .== 1]
 
-    JointOTResult(yb_true, za_true, yb_pred, za_pred)
+    return JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
 end
 
@@ -137,6 +137,6 @@ function otrecod(data::DataFrame, method::JointOTBetweenBases)
     yb_true = data.Y[data.database .== 2]
     za_true = data.Z[data.database .== 1]
 
-    JointOTResult(yb_true, za_true, yb_pred, za_pred)
+    return JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
 end

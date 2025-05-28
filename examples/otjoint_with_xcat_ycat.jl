@@ -24,7 +24,7 @@ let
     params = DataParameters(nA = 1000, nB = 1000)
     rng = DataGenerator(params, scenario = 1)
 
-    for simulation = 1:10
+    for simulation in 1:10
 
         data = generate(rng)
 

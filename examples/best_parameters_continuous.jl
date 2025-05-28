@@ -26,9 +26,9 @@ function otjoint(start, stop)
     outfile = "results_continuous.csv"
     header = ["id", "alpha", "lambda", "est_yb", "est_za", "est", "method"]
 
-    open(outfile, "a") do io
+    return open(outfile, "a") do io
 
-        for i = start:stop
+        for i in start:stop
 
             if i == 1
                 seekstart(io)

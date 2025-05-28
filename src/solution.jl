@@ -15,10 +15,10 @@ $(TYPEDSIGNATURES)
 mutable struct Solution
 
     tsolve::Float64
-    jointYZA::Array{Float64,2}
-    jointYZB::Array{Float64,2}
-    estimatorZA::Array{Float64,3}
-    estimatorYB::Array{Float64,3}
+    jointYZA::Array{Float64, 2}
+    jointYZB::Array{Float64, 2}
+    estimatorZA::Array{Float64, 3}
+    estimatorYB::Array{Float64, 3}
     errorpredZA::Float64
     errorpredYB::Float64
     errorpredavg::Float64
@@ -43,6 +43,6 @@ function Base.show(io::IO, sol::Solution)
     println(io, " errordistribZA  : $(sol.errordistribZA)")
     println(io, " errordistribYB  : $(sol.errordistribYB)")
     println(io, " errordistribavg : $(sol.errordistribavg)")
-    println(io, " tsolve          : $(sol.tsolve)")
+    return println(io, " tsolve          : $(sol.tsolve)")
 
 end

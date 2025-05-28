@@ -45,7 +45,7 @@ function categorize_using_quartile(data)
     X2 = vcat(X12, X22) .- 1
     X3 = vcat(X13, X23) .- 1
 
-    hcat(X1, X2, X3)
+    return hcat(X1, X2, X3)
 
 end
 

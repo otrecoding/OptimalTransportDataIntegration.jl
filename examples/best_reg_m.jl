@@ -9,7 +9,7 @@ function main(nsimulations::Int)
     reg_m_values = [0.01 0.05 0.1 0.25 0.5 0.75 1]
     header = ["id", "mB", "reg", "reg_m1", "reg_m2", "estyb", "estza", "accuracy"]
 
-    open(outfile, "w") do io
+    return open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
@@ -18,7 +18,7 @@ function main(nsimulations::Int)
             params = DataParameters(mB = mB)
             rng = DataGenerator(params, scenario = 1)
 
-            for i = 1:nsimulations
+            for i in 1:nsimulations
 
                 data = generate(rng)
 

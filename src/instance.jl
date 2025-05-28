@@ -33,14 +33,14 @@ struct Instance
 
 
     function Instance(
-        base::AbstractVector,
-        X::AbstractMatrix,
-        Y::AbstractVector,
-        Ylevels::AbstractVector,
-        Z::AbstractVector,
-        Zlevels::AbstractVector,
-        distance::Distances.Metric,
-    )
+            base::AbstractVector,
+            X::AbstractMatrix,
+            Y::AbstractVector,
+            Ylevels::AbstractVector,
+            Z::AbstractVector,
+            Zlevels::AbstractVector,
+            distance::Distances.Metric,
+        )
 
         indA = findall(base .== 1)
         indB = findall(base .== 2)
@@ -76,7 +76,7 @@ struct Instance
             push!(indXB, findall(distB .< 0.1))
         end
 
-        new(
+        return new(
             nA,
             nB,
             D,
@@ -96,15 +96,15 @@ struct Instance
 end
 
 function Instance(
-    base::AbstractVector,
-    X::AbstractMatrix,
-    Y::AbstractVector,
-    Z::AbstractVector,
-    distance::Distances.Metric,
-)
+        base::AbstractVector,
+        X::AbstractMatrix,
+        Y::AbstractVector,
+        Z::AbstractVector,
+        distance::Distances.Metric,
+    )
     Ylevels = sort(unique(Y))
     Zlevels = sort(unique(Z))
 
-    Instance(base, X, Y, Ylevels, Z, Zlevels, distance)
+    return Instance(base, X, Y, Ylevels, Z, Zlevels, distance)
 
 end

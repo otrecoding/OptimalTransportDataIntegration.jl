@@ -36,9 +36,9 @@ struct DataGenerator
         XA = rand(dA, n)
         XB = rand(dB, n)
 
-        px1cc = cumsum(params.px1c)[1:(end-1)]
-        px2cc = cumsum(params.px2c)[1:(end-1)]
-        px3cc = cumsum(params.px3c)[1:(end-1)]
+        px1cc = cumsum(params.px1c)[1:(end - 1)]
+        px2cc = cumsum(params.px2c)[1:(end - 1)]
+        px3cc = cumsum(params.px3c)[1:(end - 1)]
 
         qxA1c = quantile.(Normal(params.mA[1], sqrt(params.covA[1, 1])), px1cc)
         qxA2c = quantile.(Normal(params.mA[2], sqrt(params.covA[2, 2])), px2cc)
@@ -123,7 +123,7 @@ struct DataGenerator
             binsYB2 = vcat(-Inf, bB2, Inf)
         end
 
-        new(
+        return new(
             params,
             binsA1,
             binsA2,
