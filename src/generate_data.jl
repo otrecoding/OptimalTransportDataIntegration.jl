@@ -36,9 +36,9 @@ struct DataGenerator
         XA = rand(dA, n)
         XB = rand(dB, n)
 
-        px1cc = cumsum(params.px1c)[1:end-1]
-        px2cc = cumsum(params.px2c)[1:end-1]
-        px3cc = cumsum(params.px3c)[1:end-1]
+        px1cc = cumsum(params.px1c)[1:(end-1)]
+        px2cc = cumsum(params.px2c)[1:(end-1)]
+        px3cc = cumsum(params.px3c)[1:(end-1)]
 
         qxA1c = quantile.(Normal(params.mA[1], sqrt(params.covA[1, 1])), px1cc)
         qxA2c = quantile.(Normal(params.mA[2], sqrt(params.covA[2, 2])), px2cc)
@@ -48,9 +48,9 @@ struct DataGenerator
         qxB2c = quantile.(Normal(params.mB[2], sqrt(params.covA[2, 2])), px2cc)
         qxB3c = quantile.(Normal(params.mB[3], sqrt(params.covA[3, 3])), px3cc)
 
-        binsA1 = vcat( -Inf, qxA1c, Inf)
-        binsA2 = vcat( -Inf, qxA2c, Inf)
-        binsA3 = vcat( -Inf, qxA3c, Inf)
+        binsA1 = vcat(-Inf, qxA1c, Inf)
+        binsA2 = vcat(-Inf, qxA2c, Inf)
+        binsA3 = vcat(-Inf, qxA3c, Inf)
 
         if discrete
 
@@ -134,7 +134,7 @@ struct DataGenerator
             binsYA2,
             binsYB1,
             binsYB2,
-            discrete
+            discrete,
         )
 
     end
@@ -195,7 +195,7 @@ function generate(generator::DataGenerator; eps = 0.0)
     cr2 = 1.0 / params.r2 - 1
 
 
-    if generator.discrete 
+    if generator.discrete
 
         aA = params.aA
         aB = params.aB
@@ -223,7 +223,7 @@ function generate(generator::DataGenerator; eps = 0.0)
     YB1 = digitize(Y2, generator.binsYA1 .+ eps)
     YB2 = digitize(Y2, generator.binsYA2 .+ eps)
 
-    if generator.discrete 
+    if generator.discrete
         df = DataFrame(hcat(XX1, XX2, XX3) .- 1, [:X1, :X2, :X3])
     else
         df = DataFrame(hcat(X1, X2)', [:X1, :X2, :X3])

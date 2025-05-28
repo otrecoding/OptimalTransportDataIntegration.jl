@@ -76,8 +76,8 @@ YB, ZA = compute_pred_error!(sol, instance, false)
 
 println(accuracy(data, YB, ZA))
 
-println(accuracy(otrecod(data, JointOTWithinBase(distance=Cityblock()))))
-println(accuracy(otrecod(data, JointOTWithinBase(distance=Hamming()))))
-println(accuracy(otrecod(data, JointOTWithinBase(distance=Euclidean()))))
+println(accuracy(otrecod(data, JointOTWithinBase(distance = Cityblock()))))
+println(accuracy(otrecod(data, JointOTWithinBase(distance = Hamming()))))
+println(accuracy(otrecod(data, JointOTWithinBase(distance = Euclidean()))))
 println(accuracy(otrecod(data, JointOTBetweenBases())))
 println(accuracy(otrecod(data, SimpleLearning())))

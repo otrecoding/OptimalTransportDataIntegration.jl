@@ -26,7 +26,7 @@ function otrecod(data::DataFrame, method::JointOTWithinBase)
             lambda = method.lambda,
             alpha = method.alpha,
             percent_closest = method.percent_closest,
-            distance = method.distance
+            distance = method.distance,
         )
 
     else
@@ -36,13 +36,13 @@ function otrecod(data::DataFrame, method::JointOTWithinBase)
             lambda = method.lambda,
             alpha = method.alpha,
             percent_closest = method.percent_closest,
-            distance = method.distance
+            distance = method.distance,
         )
 
     end
 
-    yb_true = data.Y[data.database.==2]
-    za_true = data.Z[data.database.==1]
+    yb_true = data.Y[data.database .== 2]
+    za_true = data.Z[data.database .== 1]
 
     JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
@@ -81,8 +81,8 @@ function otrecod(data::DataFrame, method::SimpleLearning)
         )
     end
 
-    yb_true = data.Y[data.database.==2]
-    za_true = data.Z[data.database.==1]
+    yb_true = data.Y[data.database .== 2]
+    za_true = data.Z[data.database .== 1]
 
     JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
@@ -120,19 +120,22 @@ function otrecod(data::DataFrame, method::JointOTBetweenBases)
             Ylevels = method.Ylevels,
             Zlevels = method.Zlevels,
             iterations = method.iterations,
-            distance = method.distance)
+            distance = method.distance,
+        )
     else
-       yb_pred, za_pred = joint_within_with_predictors(data; 
+        yb_pred, za_pred = joint_within_with_predictors(
+            data;
             iterations = method.iterations,
             hidden_layer_size = method.hidden_layer_size,
-            learning_rate = method.learning_rate, 
-            batchsize = method.batchsize, 
-            epochs = method.epochs)
+            learning_rate = method.learning_rate,
+            batchsize = method.batchsize,
+            epochs = method.epochs,
+        )
 
     end
 
-    yb_true = data.Y[data.database.==2]
-    za_true = data.Z[data.database.==1]
+    yb_true = data.Y[data.database .== 2]
+    za_true = data.Z[data.database .== 1]
 
     JointOTResult(yb_true, za_true, yb_pred, za_pred)
 

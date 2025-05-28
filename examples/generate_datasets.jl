@@ -55,10 +55,10 @@ all_params = [
     DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0]),
     DataParameters(nA = 1000, nB = 1000, mB = [1, 1, 0]),
     DataParameters(nA = 1000, nB = 1000, mB = [1, 2, 0]),
-    DataParameters(nA = 100,  nB = 100,  mB = [1, 0, 0]),
+    DataParameters(nA = 100, nB = 100, mB = [1, 0, 0]),
     DataParameters(nA = 5000, nB = 5000, mB = [1, 0, 0]),
-    DataParameters(nA = 1000, nB = 500,  mB = [1, 0, 0]),
-    DataParameters(nA = 1000, nB = 100,  mB = [1, 0, 0]),
+    DataParameters(nA = 1000, nB = 500, mB = [1, 0, 0]),
+    DataParameters(nA = 1000, nB = 100, mB = [1, 0, 0]),
 ]
 
 nsimulations = 10

@@ -42,7 +42,10 @@ function unbalanced(start, stop)
 
             for r in reg, r_m1 in reg_m1, r_m2 in reg_m2
 
-                result = otrecod(data, JointOTBetweenBases(reg = r, reg_m1 = r_m1, reg_m2 = r_m2))
+                result = otrecod(
+                    data,
+                    JointOTBetweenBases(reg = r, reg_m1 = r_m1, reg_m2 = r_m2),
+                )
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i r estyb estza est "balanced"])
 

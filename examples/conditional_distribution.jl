@@ -29,7 +29,7 @@ function conditional_distribution(nsimulations::Int, epsilons)
 
         params = DataParameters(mB = [0, 0, 0])
 
-        rng = DataGenerator( params, scenario = 1 )
+        rng = DataGenerator(params, scenario = 1)
 
         for eps in epsilons
 
@@ -40,27 +40,27 @@ function conditional_distribution(nsimulations::Int, epsilons)
                 #OT Transport of the joint distribution of covariates and outcomes.
                 alpha, lambda = 0.0, 0.0
                 result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
-                estyb, estza, est = accuracy( result )
+                estyb, estza, est = accuracy(result)
                 writedlm(io, [i eps estyb estza est "ot"])
 
                 #OT-r Regularized Transport 
                 result = otrecod(data, JointOTWithinBase())
-                estyb, estza, est = accuracy( result )
+                estyb, estza, est = accuracy(result)
                 writedlm(io, [i eps estyb estza est "ot-r"])
 
                 #OTE Balanced transport of covariates and estimated outcomes
                 result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
-                estyb, estza, est = accuracy( result )
+                estyb, estza, est = accuracy(result)
                 writedlm(io, [i eps estyb estza est "ote"])
 
                 #OTE Regularized unbalanced transport 
                 result = otrecod(data, JointOTBetweenBases())
-                estyb, estza, est = accuracy( result )
+                estyb, estza, est = accuracy(result)
                 writedlm(io, [i eps estyb estza est "ote-r"])
 
                 #SL Simple Learning
                 result = otrecod(data, SimpleLearning())
-                estyb, estza, est = accuracy( result )
+                estyb, estza, est = accuracy(result)
                 writedlm(io, [i eps estyb estza est "sl"])
 
             end

@@ -13,7 +13,10 @@ individual or for sets of indviduals that similar values of covariates
 - verbose: if true, write the transported value of each individual; otherwise, juste write the number of missed transports
 """
 function ot_joint(
-    inst::Instance, alpha::Float64, lambda::Float64, percent_closest::Float64;
+    inst::Instance,
+    alpha::Float64,
+    lambda::Float64,
+    percent_closest::Float64;
     norme::Metric = Cityblock(),
     aggregate_tol::Float64 = 0.5,
     verbose::Bool = false,
@@ -67,12 +70,12 @@ function ot_joint(
     estim_XA = length.(indXA) ./ nA
     estim_XB = length.(indXB) ./ nB
     estim_XA_YA = [
-        length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / nA for x in Xlevels,
-        y in Ylevels
+        length(indXA[x][findall(Yobserv[indXA[x]] .== y)]) / nA for
+        x in Xlevels, y in Ylevels
     ]
     estim_XB_ZB = [
-        length(indXB[x][findall(Zobserv[indXB[x].+nA] .== z)]) / nB for x in Xlevels,
-        z in Zlevels
+        length(indXB[x][findall(Zobserv[indXB[x] .+ nA] .== z)]) / nB for
+        x in Xlevels, z in Zlevels
     ]
 
 
@@ -230,8 +233,8 @@ function ot_joint(
         modelA,
         regterm,
         sum(
-            1 / nvoisins * reg_absA[x1, x2, y, z] for x1 in Xlevels, x2 in voisins[x1],
-            y in Ylevels, z in Zlevels
+            1 / nvoisins * reg_absA[x1, x2, y, z] for
+            x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels
         )
     )
 
@@ -260,8 +263,8 @@ function ot_joint(
         modelB,
         regterm,
         sum(
-            1 / nvoisins * reg_absB[x1, x2, y, z] for x1 in Xlevels, x2 in voisins[x1],
-            y in Ylevels, z in Zlevels
+            1 / nvoisins * reg_absB[x1, x2, y, z] for
+            x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels
         )
     )
 
@@ -271,8 +274,8 @@ function ot_joint(
         Min,
         sum(C[y, z] * gammaA[x, y, z] for y in Ylevels, z in Zlevels, x in Xlevels) +
         lambda * sum(
-            1 / nvoisins * reg_absA[x1, x2, y, z] for x1 in Xlevels, x2 in voisins[x1],
-            y in Ylevels, z in Zlevels
+            1 / nvoisins * reg_absA[x1, x2, y, z] for
+            x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels
         )
     )
 
@@ -281,8 +284,8 @@ function ot_joint(
         Min,
         sum(C[y, z] * gammaB[x, y, z] for y in Ylevels, z in Zlevels, x in Xlevels) +
         lambda * sum(
-            1 / nvoisins * reg_absB[x1, x2, y, z] for x1 in Xlevels, x2 in voisins[x1],
-            y in Ylevels, z in Zlevels
+            1 / nvoisins * reg_absB[x1, x2, y, z] for
+            x1 in Xlevels, x2 in voisins[x1], y in Ylevels, z in Zlevels
         )
     )
 
@@ -330,8 +333,13 @@ function ot_joint(
 
 end
 
-function joint_ot_within_base_discrete(data; lambda = 0.392, alpha = 0.714, 
-        percent_closest = 0.2, distance = Hamming())
+function joint_ot_within_base_discrete(
+    data;
+    lambda = 0.392,
+    alpha = 0.714,
+    percent_closest = 0.2,
+    distance = Hamming(),
+)
 
     database = data.database
 
@@ -354,50 +362,54 @@ function joint_ot_within_base_discrete(data; lambda = 0.392, alpha = 0.714,
 end
 
 
-function joint_ot_within_base_continuous(data; lambda = 0.392, alpha = 0.714, 
-        percent_closest = 0.2, distance = Euclidean())
+function joint_ot_within_base_continuous(
+    data;
+    lambda = 0.392,
+    alpha = 0.714,
+    percent_closest = 0.2,
+    distance = Euclidean(),
+)
 
     digitize(x, bins) = searchsortedlast.(Ref(bins), x)
-    
+
     XA = subset(data, :database => x -> x .== 1.0)
     XB = subset(data, :database => x -> x .== 2.0)
-    
+
     b1 = quantile(XA.X1, [0.25, 0.5, 0.75])
     bins11 = vcat(-Inf, b1, +Inf)
-    
+
     X11 = digitize(XA.X1, bins11)
     X21 = digitize(XB.X1, bins11)
-    
+
     b1 = quantile(XA.X2, [0.25, 0.5, 0.75])
     bins12 = vcat(-Inf, b1, +Inf)
-    
+
     X12 = digitize(XA.X2, bins12)
     X22 = digitize(XB.X2, bins12)
-    
+
     b1 = quantile(XA.X3, [0.25, 0.5, 0.75])
     bins13 = vcat(-Inf, b1, +Inf)
-    
+
     X13 = digitize(XA.X3, bins13)
     X23 = digitize(XB.X3, bins13)
-    
+
     X1 = vcat(X11, X21)
     X2 = vcat(X12, X22)
-    X3 = vcat(X13, X23) 
-    
+    X3 = vcat(X13, X23)
+
     X = hcat(X1, X2, X3)
     Y = Vector(data.Y)
     Z = Vector(data.Z)
-    
+
     Ylevels = 1:4
     Zlevels = 1:3
-    
+
     database = data.database
-    
+
     instance = Instance(database, X, Y, Ylevels, Z, Zlevels, distance)
-    
+
     sol = OptimalTransportDataIntegration.ot_joint(instance, alpha, lambda, percent_closest)
-    
+
     return compute_pred_error!(sol, instance, false)
 
 end
-    

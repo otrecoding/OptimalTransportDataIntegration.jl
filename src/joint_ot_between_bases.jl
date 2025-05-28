@@ -13,7 +13,7 @@ onecold(X) = map(argmax, eachrow(X))
 Cross entropy is typically used as a loss in multi-class classification, in which case the labels y are given in a one-hot format. dims specifies the dimension (or the dimensions) containing the class probabilities. The prediction ŷ is usually probabilities but in our case it is also one hot encoded vector.
 
 """
-function loss_crossentropy(Y::AbstractMatrix{T}, F::AbstractMatrix{T}) where T
+function loss_crossentropy(Y::AbstractMatrix{T}, F::AbstractMatrix{T}) where {T}
     ϵ = 1e-12
     nf, nclasses = size(F)
     ny = size(Y, 1)
@@ -26,7 +26,7 @@ function loss_crossentropy(Y::AbstractMatrix{T}, F::AbstractMatrix{T}) where T
     end
 
     for i in axes(Y, 2)
-        res .+= - view(Y,:, i) .* view(logF,:, i)'
+        res .+= - view(Y, :, i) .* view(logF, :, i)'
     end
 
     return res
@@ -65,7 +65,7 @@ function joint_ot_between_bases(
     Ylevels = 1:4,
     Zlevels = 1:3,
     iterations = 1,
-    distance = Hamming()
+    distance = Hamming(),
 )
 
     T = Int32
@@ -120,8 +120,8 @@ function joint_ot_between_bases(
     nbXA = length(indXA)
     nbXB = length(indXB)
 
-    wa = vec([sum(indXA[x][YA[indXA[x]].==y]) for y in Ylevels, x = 1:nbXA])
-    wb = vec([sum(indXB[x][ZB[indXB[x]].==z]) for z in Zlevels, x = 1:nbXB])
+    wa = vec([sum(indXA[x][YA[indXA[x]] .== y]) for y in Ylevels, x = 1:nbXA])
+    wb = vec([sum(indXB[x][ZB[indXB[x]] .== z]) for z in Zlevels, x = 1:nbXB])
 
     wa2 = filter(>(0), wa)
     wb2 = filter(>(0), wb) ./ sum(wa2)

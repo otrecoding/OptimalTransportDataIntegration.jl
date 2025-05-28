@@ -31,10 +31,10 @@ function learning_with_continuous_data(
     modelB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
 
     function train!(model, x, y)
-    
+
         loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
         optim = Flux.setup(Flux.Adam(learning_rate), model)
-    
+
         for epoch = 1:epochs
             for (x, y) in loader
                 grads = Flux.gradient(model) do m
@@ -44,11 +44,11 @@ function learning_with_continuous_data(
                 Flux.update!(optim, model, grads[1])
             end
         end
-    
+
     end
 
-    train!( modelA, XA, YA)
-    train!( modelB, XB, ZB)
+    train!(modelA, XA, YA)
+    train!(modelB, XB, ZB)
 
     YB = Flux.onecold(modelA(XB))
     ZA = Flux.onecold(modelB(XA))

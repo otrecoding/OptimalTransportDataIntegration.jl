@@ -6,7 +6,7 @@ using OptimalTransportDataIntegration
 using Test
 
 params = DataParameters(nA = 1000, nB = 1000)
-    
+
 rng = DataGenerator(params, n = 1000)
 
 data = generate(rng)
@@ -20,7 +20,7 @@ end
 
 @testset "JointOTWithinBase method" begin
 
-    result = otrecod(data, JointOTWithinBase()) 
+    result = otrecod(data, JointOTWithinBase())
     @test all(accuracy(result) .> 0.5)
 
 end
@@ -58,7 +58,7 @@ data = CSV.read(joinpath(@__DIR__, "data_bad.csv"), DataFrame)
 end
 
 @testset "Balanced method with bad data" begin
-    
+
     @time result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
     println(accuracy(result))
 
@@ -80,10 +80,15 @@ end
 end
 
 @testset "doctests" begin
-    DocMeta.setdocmeta!(OptimalTransportDataIntegration, :DocTestSetup, :(using OptimalTransportDataIntegration); recursive=true)
+    DocMeta.setdocmeta!(
+        OptimalTransportDataIntegration,
+        :DocTestSetup,
+        :(using OptimalTransportDataIntegration);
+        recursive = true,
+    )
     doctest(
         OptimalTransportDataIntegration;
-        doctestfilters=[
+        doctestfilters = [
             r"{([a-zA-Z0-9]+,\s?)+[a-zA-Z0-9]+}",
             r"(Array{[a-zA-Z0-9]+,\s?1}|Vector{[a-zA-Z0-9]+})",
             r"(Array{[a-zA-Z0-9]+,\s?2}|Matrix{[a-zA-Z0-9]+})",

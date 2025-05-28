@@ -41,7 +41,7 @@ function sample_size_effect(all_params, nsimulations)
                 estyb, estza, est = accuracy(result)
 
                 writedlm(io, [i params.nA params.nB estyb estza est "ot"])
-          
+
 
                 #OT-r Regularized Transport 
                 result = otrecod(data, JointOTWithinBase())

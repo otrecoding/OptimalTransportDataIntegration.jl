@@ -24,7 +24,7 @@ function otjoint(start, stop)
     rng = DataGenerator(params, scenario = 1, discrete = false)
 
     outfile = "results_continuous.csv"
-    header = ["id", "alpha", "lambda", "est_yb", "est_za",  "est", "method"]
+    header = ["id", "alpha", "lambda", "est_yb", "est_za", "est", "method"]
 
     open(outfile, "a") do io
 

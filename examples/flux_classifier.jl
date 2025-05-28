@@ -86,4 +86,3 @@ data = generate(rng)
 
 @show accuracy(otrecod(data, method))
 @show accuracy(otrecod(data, JointOTBetweenBases()))
-

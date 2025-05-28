@@ -55,8 +55,8 @@ nB = length(indB)
 
 C = pairwise(Hamming(), XA, XB; dims = 1)
 
-wa = vec([sum(indXA[x][YA[indXA[x]].==y]) for y in Ylevels, x in eachindex(indXA)])
-wb = vec([sum(indXB[x][ZB[indXB[x]].==z]) for z in Zlevels, x in eachindex(indXB)])
+wa = vec([sum(indXA[x][YA[indXA[x]] .== y]) for y in Ylevels, x in eachindex(indXA)])
+wb = vec([sum(indXB[x][ZB[indXB[x]] .== z]) for z in Zlevels, x in eachindex(indXB)])
 
 wa2 = filter(>(0), wa) ./ nA
 wb2 = filter(>(0), wb) ./ nB

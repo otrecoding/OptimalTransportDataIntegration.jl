@@ -1,5 +1,11 @@
-function joint_within_with_predictors(data; iterations = 10,
-    learning_rate = 0.01, batchsize = 512, epochs = 500, hidden_layer_size = 10)
+function joint_within_with_predictors(
+    data;
+    iterations = 10,
+    learning_rate = 0.01,
+    batchsize = 512,
+    epochs = 500,
+    hidden_layer_size = 10,
+)
 
     T = Int32
 

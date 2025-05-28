@@ -47,7 +47,18 @@ let
         @time sol = ot_joint(instance, alpha, lambda, percent_closest)
         yb, za = compute_pred_error!(sol, instance, false)
         println(accuracy(data, yb, za))
-        println(accuracy(otrecod(data, JointOTWithinBase(lambda = lambda, alpha = alpha, percent_closest = percent_closest))))
+        println(
+            accuracy(
+                otrecod(
+                    data,
+                    JointOTWithinBase(
+                        lambda = lambda,
+                        alpha = alpha,
+                        percent_closest = percent_closest,
+                    ),
+                ),
+            ),
+        )
 
     end
 
