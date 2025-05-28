@@ -7,7 +7,7 @@ function main(nsimulations::Int)
     mb_values = [[1,0,0], [1,1,0], [1,2,0], [1,2,1]]
     reg_values = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1]
     reg_m_values = [0.01 0.05 0.1 0.25 0.5 0.75 1]
-    header = ["id", "mB", "reg" "reg_m1", "reg_m2", "estyb", "estza", "accuracy"]
+    header = ["id", "mB", "reg", "reg_m1", "reg_m2", "estyb", "estza", "accuracy"]
 
     open(outfile, "w") do io
 
