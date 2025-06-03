@@ -18,16 +18,16 @@ using DelimitedFiles
 using OptimalTransportDataIntegration
 
 # +
-function covariates_shift_assumption(nsimulations::Int, scenarios)
+function covariates_shift_assumption_continuous(nsimulations::Int, scenarios)
 
-    outfile = "covariates_shift_assumption.csv"
+    outfile = "covariates_shift_assumption_continuous.csv"
     header = ["id", "mB", "estyb", "estza", "estimation", "method"]
 
     return open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
-        for (j, mB) in enumerate(scenarios)
+        for mB in scenarios
 
             params = DataParameters(mB = mB)
             rng = DataGenerator(params, scenario = 1, discrete = false)
@@ -37,30 +37,20 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
                 data = generate(rng)
 
                 #OT Transport of the joint distribution of covariates and outcomes.
-                alpha, lambda = 0.0, 0.0
+                alpha, lambda = 0.6, 0.2
                 result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i j estyb estza est "ot"])
-
-                #OT-r Regularized Transport
-                result = otrecod(data, JointOTWithinBase())
-                estyb, estza, est = accuracy(result)
-                writedlm(io, [i j estyb estza est "ot-r"])
-
-                #OTE Balanced transport of covariates and estimated outcomes
-                result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
-                estyb, estza, est = accuracy(result)
-                writedlm(io, [i j estyb estza est "ote"])
+                writedlm(io, [i repr(mB) estyb estza est "within"])
 
                 #OTE Regularized unbalanced transport
                 result = otrecod(data, JointOTBetweenBases())
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i j estyb estza est "ote-r"])
+                writedlm(io, [i repr(mB) estyb estza est "between"])
 
                 #SL Simple Learning
                 result = otrecod(data, SimpleLearning())
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i j estyb estza est "sl"])
+                writedlm(io, [i repr(mB) estyb estza est "sl"])
 
             end
 
@@ -73,4 +63,4 @@ end
 nsimulations = 1000
 scenarios = ([0, 0, 0], [1, 0, 0], [1, 1, 0], [1, 2, 0])
 
-@time covariates_shift_assumption(nsimulations, scenarios)
+@time covariates_shift_assumption_continuous(nsimulations, scenarios)
