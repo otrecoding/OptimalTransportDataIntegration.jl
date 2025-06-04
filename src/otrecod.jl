@@ -93,7 +93,7 @@ export JointOTBetweenBases
 @with_kw struct JointOTBetweenBases <: AbstractMethod
 
     reg::Float64 = 0.01
-    reg_m1::Float64 = 0.01
+    reg_m1::Float64 = 0.05
     reg_m2::Float64 = 0.05
     Ylevels::AbstractVector = 1:4
     Zlevels::AbstractVector = 1:3
