@@ -30,7 +30,7 @@ function joint_within_with_predictors(
     wa = ones(nA) ./ nA
     wb = ones(nB) ./ nB
 
-    C0 = pairwise(Euclidean(), XA, XB)
+    C0 = pairwise(Euclidean(), XA, XB, dims = 2)
 
     C = C0 ./ maximum(C0)
 
