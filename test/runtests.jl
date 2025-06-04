@@ -67,7 +67,7 @@ end
 @testset "Continuous data" begin
 
     params = DataParameters()
-    rng = DataGenerator(params, discrete = false)
+    rng = DataGenerator(params, scenario = 1, discrete = false)
     data = generate(rng)
     @test all(accuracy(otrecod(data, JointOTWithinBase())) .> 0.5)
     @test all(accuracy(otrecod(data, JointOTBetweenBases())) .> 0.5)
