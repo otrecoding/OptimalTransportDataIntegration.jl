@@ -7,7 +7,7 @@ using Test
 
 params = DataParameters(nA = 1000, nB = 1000)
 
-rng = DataGenerator(params, n = 1000)
+rng = DataGenerator(params, n = 1000, scenario = 1)
 
 data = generate(rng)
 
