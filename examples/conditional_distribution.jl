@@ -21,7 +21,7 @@ using OptimalTransportDataIntegration
 function conditional_distribution(nsimulations::Int, epsilons)
 
     outfile = "conditional_distribution.csv"
-    header = ["id", "epsilon", "estyb", "estza", "accuracy", "method"]
+    header = ["id", "epsilon", "estyb", "estza", "accuracy", "method", "scenario"]
 
     return open(outfile, "w") do io
 
@@ -29,39 +29,43 @@ function conditional_distribution(nsimulations::Int, epsilons)
 
         params = DataParameters(mB = [0, 0, 0])
 
-        rng = DataGenerator(params, scenario = 1)
+        for scenario in (1,2)
 
-        for eps in epsilons
+            rng = DataGenerator(params, scenario = scenario)
 
-            for i in 1:nsimulations
+            for eps in epsilons
 
-                data = generate(rng, eps = eps)
+                for i in 1:nsimulations
 
-                #OT Transport of the joint distribution of covariates and outcomes.
-                alpha, lambda = 0.0, 0.0
-                result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
-                estyb, estza, est = accuracy(result)
-                writedlm(io, [i eps estyb estza est "ot"])
+                    data = generate(rng, eps = eps)
 
-                #OT-r Regularized Transport
-                result = otrecod(data, JointOTWithinBase())
-                estyb, estza, est = accuracy(result)
-                writedlm(io, [i eps estyb estza est "ot-r"])
+                    #OT Transport of the joint distribution of covariates and outcomes.
+                    alpha, lambda = 0.0, 0.0
+                    result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
+                    estyb, estza, est = accuracy(result)
+                    writedlm(io, [i eps estyb estza est "wi" scenario])
 
-                #OTE Balanced transport of covariates and estimated outcomes
-                result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
-                estyb, estza, est = accuracy(result)
-                writedlm(io, [i eps estyb estza est "ote"])
+                    #OT-r Regularized Transport
+                    result = otrecod(data, JointOTWithinBase())
+                    estyb, estza, est = accuracy(result)
+                    writedlm(io, [i eps estyb estza est "wi-r" scenario])
 
-                #OTE Regularized unbalanced transport
-                result = otrecod(data, JointOTBetweenBases())
-                estyb, estza, est = accuracy(result)
-                writedlm(io, [i eps estyb estza est "ote-r"])
+                    #OTE Balanced transport of covariates and estimated outcomes
+                    result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
+                    estyb, estza, est = accuracy(result)
+                    writedlm(io, [i eps estyb estza est "be-un" scenario])
 
-                #SL Simple Learning
-                result = otrecod(data, SimpleLearning())
-                estyb, estza, est = accuracy(result)
-                writedlm(io, [i eps estyb estza est "sl"])
+                    #OTE Regularized unbalanced transport
+                    result = otrecod(data, JointOTBetweenBases())
+                    estyb, estza, est = accuracy(result)
+                    writedlm(io, [i eps estyb estza est "be-un-r" scenario])
+
+                    #SL Simple Learning
+                    result = otrecod(data, SimpleLearning())
+                    estyb, estza, est = accuracy(result)
+                    writedlm(io, [i eps estyb estza est "sl" scenario])
+
+                end
 
             end
 
