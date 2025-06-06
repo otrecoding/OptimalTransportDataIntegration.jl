@@ -17,7 +17,6 @@ function otjoint(start, stop)
 
     alpha = collect(0:0.1:2)
     lambda = collect(0:0.1:1)
-    estimations = Float32[]
 
     params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0])
 

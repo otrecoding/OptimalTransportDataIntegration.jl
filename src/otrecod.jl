@@ -130,6 +130,9 @@ function otrecod(data::DataFrame, method::JointOTBetweenBases)
             learning_rate = method.learning_rate,
             batchsize = method.batchsize,
             epochs = method.epochs,
+            reg = method.reg,
+            reg_m1 = method.reg_m1,
+            reg_m2 = method.reg_m2
         )
 
     end

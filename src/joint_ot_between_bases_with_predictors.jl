@@ -5,6 +5,9 @@ function joint_within_with_predictors(
         batchsize = 512,
         epochs = 500,
         hidden_layer_size = 10,
+        reg = 0.0,
+        reg_m1 = 0.0,
+        reg_m2 = 0.0
     )
 
     T = Int32
@@ -95,7 +98,11 @@ function joint_within_with_predictors(
         Gold = copy(G)
         costold = cost
 
-        G = PythonOT.emd(wa, wb, C)
+        if reg > 0 
+            G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
+        else
+            G = PythonOT.emd(wa, wb, C)
+        end
 
         delta = norm(G .- Gold)
 
