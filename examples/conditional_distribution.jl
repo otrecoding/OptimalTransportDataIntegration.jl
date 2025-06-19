@@ -29,7 +29,7 @@ function conditional_distribution(nsimulations::Int, epsilons)
 
         params = DataParameters(mB = [0, 0, 0])
 
-        for scenario in (1,2)
+        for scenario in (1, 2)
 
             rng = DataGenerator(params, scenario = scenario)
 

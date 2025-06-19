@@ -27,7 +27,7 @@ function sample_size_effect(all_params, nsimulations)
 
         writedlm(io, hcat(header...))
 
-        for params in all_params, scenario in (1,2)
+        for params in all_params, scenario in (1, 2)
 
             rng = DataGenerator(params, scenario = scenario)
 

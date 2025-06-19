@@ -29,7 +29,7 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
 
         for (j, mB) in enumerate(scenarios)
 
-            for scenario in (1,2)
+            for scenario in (1, 2)
 
                 params = DataParameters(mB = mB)
                 rng = DataGenerator(params, scenario = scenario)

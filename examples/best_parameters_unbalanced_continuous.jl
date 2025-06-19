@@ -39,7 +39,7 @@ function unbalanced_continuous(start, stop)
 
             for r in reg, r_m in reg_m
 
-                result = otrecod( data, JointOTBetweenBases(reg = r, reg_m1= r_m, reg_m2 = r_m))
+                result = otrecod(data, JointOTBetweenBases(reg = r, reg_m1 = r_m, reg_m2 = r_m))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i r r_m estyb estza est "be-un-r"])
 

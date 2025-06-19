@@ -28,7 +28,7 @@ function sample_ratio_effect(nsimulations::Int, ratios)
 
         writedlm(io, hcat(header...))
 
-        for r in ratios, scenario in (1,2)
+        for r in ratios, scenario in (1, 2)
 
             nA = 1000
             nB = nA ÷ r
