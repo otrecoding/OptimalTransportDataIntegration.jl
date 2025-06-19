@@ -116,8 +116,8 @@ struct DataGenerator
         binsYA2 = vcat(-Inf, bA2, Inf)
 
         if scenario == 1
-            binsYB1 = binsYA1
-            binsYB2 = binsYA2
+            binsYB1 = copy(binsYA1)
+            binsYB2 = copy(binsYA2)
         else
             binsYB1 = vcat(-Inf, bB1, Inf)
             binsYB2 = vcat(-Inf, bB2, Inf)
