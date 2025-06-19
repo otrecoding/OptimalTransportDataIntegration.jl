@@ -20,7 +20,7 @@ using OptimalTransportDataIntegration
 # +
 function covariates_shift_assumption_continuous(nsimulations::Int, scenarios)
 
-    outfile = "covariates_shift_assumption_continuous.csv"
+    outfile = "covariates_shift_assumption_continuous_scenario_2.csv"
     header = ["id", "mB", "estyb", "estza", "estimation", "method"]
 
     return open(outfile, "w") do io
@@ -30,7 +30,7 @@ function covariates_shift_assumption_continuous(nsimulations::Int, scenarios)
         for mB in scenarios
 
             params = DataParameters(mB = mB)
-            rng = DataGenerator(params, scenario = 1, discrete = false)
+            rng = DataGenerator(params, scenario = 2, discrete = false)
 
             for i in 1:nsimulations
 
