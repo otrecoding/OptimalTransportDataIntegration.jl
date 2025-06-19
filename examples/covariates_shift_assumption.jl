@@ -27,7 +27,7 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
 
         writedlm(io, hcat(header...))
 
-        for (j, mB) in enumerate(scenarios)
+        for mB in scenarios
 
             for scenario in (1, 2)
 
@@ -42,27 +42,27 @@ function covariates_shift_assumption(nsimulations::Int, scenarios)
                     alpha, lambda = 0.0, 0.0
                     result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i j estyb estza est "wi" scenario])
+                    writedlm(io, [i repr(mB) estyb estza est "wi" scenario])
 
                     #OT-r Regularized Transport
                     result = otrecod(data, JointOTWithinBase())
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i j estyb estza est "wi-r" scenario])
+                    writedlm(io, [i repr(mB) estyb estza est "wi-r" scenario])
 
                     #OTE Balanced transport of covariates and estimated outcomes
                     result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i j estyb estza est "be-un" scenario])
+                    writedlm(io, [i repr(mB) estyb estza est "be-un" scenario])
 
                     #OTE Regularized unbalanced transport
                     result = otrecod(data, JointOTBetweenBases())
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i j estyb estza est "be-un-r" scenario])
+                    writedlm(io, [i repr(mB) estyb estza est "be-un-r" scenario])
 
                     #SL Simple Learning
                     result = otrecod(data, SimpleLearning())
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i j estyb estza est "sl" scenario])
+                    writedlm(io, [i repr(mB) estyb estza est "sl" scenario])
 
                 end
 
