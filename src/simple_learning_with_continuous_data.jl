@@ -1,31 +1,20 @@
 import Flux
 import Flux: Chain, Dense
 
-function onehot(x::AbstractMatrix)
-    res = Vector{Float32}[]
-    for col in eachcol(x)
-        levels = filter(x -> x != 0, sort(unique(col)))
-        for level in levels
-            push!(res, col .== level)
-        end
-    end
-    return stack(res, dims = 1)
-end
 
-
-function simple_learning(
+function learning_with_continuous_data(
         data;
         hidden_layer_size = 10,
         learning_rate = 0.01,
-        batchsize = 64,
+        batchsize = 128,
         epochs = 1000,
     )
 
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
-    XA = onehot(Matrix(dba[!, [:X1, :X2, :X3]]))
-    XB = onehot(Matrix(dbb[!, [:X1, :X2, :X3]]))
+    XA = transpose(Matrix{Float32}(dba[!, [:X1, :X2, :X3]]))
+    XB = transpose(Matrix{Float32}(dbb[!, [:X1, :X2, :X3]]))
 
     YA = Flux.onehotbatch(dba.Y, 1:4)
     ZB = Flux.onehotbatch(dbb.Z, 1:3)
@@ -34,6 +23,9 @@ function simple_learning(
     dimXB = size(XB, 1)
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
+
+    nA = size(XA, 2)
+    nB = size(XB, 2)
 
     modelA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
     modelB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))

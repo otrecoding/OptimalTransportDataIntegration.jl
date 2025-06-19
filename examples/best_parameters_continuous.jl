@@ -11,27 +11,21 @@
 # ---
 
 using OptimalTransportDataIntegration
-using DataFrames
-using CSV
-using Printf
 using DelimitedFiles
-import Statistics: mean
 
 function otjoint(start, stop)
 
     alpha = collect(0:0.1:2)
     lambda = collect(0:0.1:1)
-    estimations = Float32[]
 
     params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0])
 
-    rng = DataGenerator(params, scenario = 1)
+    rng = DataGenerator(params, scenario = 1, discrete = false)
 
-    outfile = "results_otjoint.csv"
-    header = ["id", "alpha", "lambda", "estimation", "method"]
+    outfile = "results_continuous.csv"
+    header = ["id", "alpha", "lambda", "est_yb", "est_za", "est", "method"]
 
     return open(outfile, "a") do io
-
 
         for i in start:stop
 
@@ -41,18 +35,24 @@ function otjoint(start, stop)
             end
 
             data = generate(rng)
-            csv_file = @sprintf "dataset%04i.csv" i
-            @show csv_file
-
-            CSV.write(joinpath("datasets", csv_file), data)
 
             for m in alpha, λ in lambda
 
                 result = otrecod(data, JointOTWithinBase(alpha = m, lambda = λ))
                 est_yb, est_za, est = accuracy(result)
-                writedlm(io, [i m λ est "otjoint"])
+                writedlm(io, [i m λ est_yb est_za est "within"])
 
             end
+
+            m, λ = 0.0, 0.0
+            result = otrecod(data, JointOTBetweenBases())
+            est_yb, est_za, est = accuracy(result)
+            writedlm(io, [i m λ est_yb est_za est "between"])
+
+            m, λ = 0.0, 0.0
+            result = otrecod(data, SimpleLearning())
+            est_yb, est_za, est = accuracy(result)
+            writedlm(io, [i m λ est_yb est_za est "learning"])
 
         end
 
@@ -61,16 +61,3 @@ function otjoint(start, stop)
 end
 
 otjoint(1, 1000)
-
-##
-# data = CSV.read("results_otjoint.csv", DataFrame)
-
-# sort(
-#     combine(groupby(data, ["alpha", "lambda"]), :estimation => mean),
-#     order(:estimation_mean, rev = true),
-# )
-
-# equivalent with pandas
-# import pandas as pd
-# data = pd.read_csv("results_otjoint.csv", sep="\t")
-# data.groupby(["alpha", "lambda"]).estimation.mean().sort_values(ascending=False)

@@ -60,9 +60,7 @@ for (csv_file, json_file) in zip(csv_files, json_files)
     push!(mB, params["mB"])
     push!(errorpredavg, test_ot_joint(csv_file))
     println("nA = $(nA[end]), nB = $(nB[end])")
-    println(
-        "p = $(p[end]), mB = $(mB[end]), est = $(1 - errorpredavg[end])",
-    )
+    println("p = $(p[end]), mB = $(mB[end]), est = $(1 - errorpredavg[end])")
 
 end
 # -

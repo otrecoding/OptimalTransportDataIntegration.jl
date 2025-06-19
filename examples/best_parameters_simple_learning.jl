@@ -21,12 +21,12 @@ function simple_learning(start, stop)
     estimations = Float32[]
 
     outfile = "results_simple_learning.csv"
-    header = ["id" "estimation" "method"]
+    header = ["id" "est_yb" "est_za" "est" "method"]
 
-    open(outfile, "a") do io
+    return open(outfile, "a") do io
 
 
-        for i = start:stop
+        for i in start:stop
 
             if i == 1
                 seekstart(io)
@@ -41,7 +41,7 @@ function simple_learning(start, stop)
             result = otrecod(data, SimpleLearning())
             est_yb, est_za, est = accuracy(result)
 
-            writedlm(io, [i est "learning"])
+            writedlm(io, [i est_yb est_za est "learning"])
 
         end
 
@@ -49,4 +49,4 @@ function simple_learning(start, stop)
 
 end
 
-simple_learning(985, 1000)
+simple_learning(1, 1000)

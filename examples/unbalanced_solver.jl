@@ -24,7 +24,7 @@ import PythonOT
 onecold(X) = map(argmax, eachrow(X))
 
 function loss_crossentropy(Y, F)
-    ϵ = 1e-12
+    ϵ = 1.0e-12
     res = zeros(size(Y, 1), size(F, 1))
     logF = log.(F .+ ϵ)
     for i in axes(Y, 2)
@@ -96,7 +96,7 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
     nB = length(indB)
 
     X_hot = one_hot_encoder(X)
-    Xlevels_hot = sort(unique(eachrow(X_hot))) 
+    Xlevels_hot = sort(unique(eachrow(X_hot)))
 
     @assert length(Xlevels_hot) == 24 "not possible observations in X"
 
@@ -157,10 +157,14 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
 
         estim_XA = length.(indXA) ./ nA
         estim_XB = length.(indXB) ./ nB
-        estim_XA_YA =
-            [length(indXA[x][YA[indXA[x]].==y]) / nA for x in eachindex(indXA), y in Ylevels]
-        estim_XB_ZB =
-            [length(indXB[x][ZB[indXB[x]].==z]) / nB for x in eachindex(indXB), z in Zlevels]
+        estim_XA_YA = [
+            length(indXA[x][YA[indXA[x]] .== y]) / nA for
+                x in eachindex(indXA), y in Ylevels
+        ]
+        estim_XB_ZB = [
+            length(indXB[x][ZB[indXB[x]] .== z]) / nB for
+                x in eachindex(indXB), z in Zlevels
+        ]
 
 
         Xlevels = eachindex(Xlevels_hot)
@@ -192,7 +196,7 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
             model,
             ctYandXinA[x1 in Xlevels, y in Ylevels],
             sum(Ω[x1, y, x2, z] for x2 in Xlevels, z in Zlevels) ==
-            estim_XA_YA[x1, y] + error_XY[x1, y]
+                estim_XA_YA[x1, y] + error_XY[x1, y]
         )
 
         # - we impose that the probability of Y conditional to X is the same in the two databases
@@ -201,11 +205,15 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
             model,
             ctZandXinA[x2 in Xlevels, z in Zlevels],
             sum(Ω[x1, y, x2, z] for x1 in Xlevels, y in Ylevels) ==
-            estim_XB_ZB[x2, z] + error_XZ[x2, z]
+                estim_XB_ZB[x2, z] + error_XZ[x2, z]
         )
 
         # - recover the norm 1 of the error
-        @constraint(model, [x1 in Xlevels, y in Ylevels], error_XY[x1, y] <= abserror_XY[x1, y])
+        @constraint(
+            model,
+            [x1 in Xlevels, y in Ylevels],
+            error_XY[x1, y] <= abserror_XY[x1, y]
+        )
         @constraint(
             model,
             [x1 in Xlevels, y in Ylevels],
@@ -216,7 +224,11 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
             sum(abserror_XY[x1, y] for x1 in Xlevels, y in Ylevels) <= alpha / 2.0
         )
         @constraint(model, sum(error_XY[x1, y] for x1 in Xlevels, y in Ylevels) == 0.0)
-        @constraint(model, [x2 in Xlevels, z in Zlevels], error_XZ[x2, z] <= abserror_XZ[x2, z])
+        @constraint(
+            model,
+            [x2 in Xlevels, z in Zlevels],
+            error_XZ[x2, z] <= abserror_XZ[x2, z]
+        )
         @constraint(
             model,
             [x2 in Xlevels, z in Zlevels],
@@ -237,22 +249,22 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
             model,
             [x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, x in Xlevels, z in Zlevels],
             reg_absA[x1, x2, y, z] >=
-            Ω[x1, y, x, z] / (max(1, length(indXA[x1])) / nA) -
-            Ω[x2, y, x, z] / (max(1, length(indXA[x2])) / nA)
+                Ω[x1, y, x, z] / (max(1, length(indXA[x1])) / nA) -
+                Ω[x2, y, x, z] / (max(1, length(indXA[x2])) / nA)
         )
         @constraint(
             model,
             [x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, x in Xlevels, z in Zlevels],
             reg_absA[x1, x2, y, z] >=
-            Ω[x2, y, x, z] / (max(1, length(indXA[x2])) / nA) -
-            Ω[x1, y, x, z] / (max(1, length(indXA[x1])) / nA)
+                Ω[x2, y, x, z] / (max(1, length(indXA[x2])) / nA) -
+                Ω[x1, y, x, z] / (max(1, length(indXA[x1])) / nA)
         )
         @expression(
             model,
             regtermA,
             sum(
-                1 / nX * reg_absA[x1, x2, y, z] for x1 in Xlevels, x2 in voisins_X[x1],
-                y in Ylevels, z in Zlevels
+                1 / nX * reg_absA[x1, x2, y, z] for
+                    x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels
             )
         )
 
@@ -265,22 +277,22 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
             model,
             [x1 in Xlevels, x2 in voisins_X[x1], x in Xlevels, y in Ylevels, z in Zlevels],
             reg_absB[x1, x2, y, z] >=
-            Ω[x, y, x1, z] / (max(1, length(indXB[x1])) / nB) -
-            Ω[x, y, x2, z] / (max(1, length(indXB[x2])) / nB)
+                Ω[x, y, x1, z] / (max(1, length(indXB[x1])) / nB) -
+                Ω[x, y, x2, z] / (max(1, length(indXB[x2])) / nB)
         )
         @constraint(
             model,
             [x1 in Xlevels, x2 in voisins_X[x1], x in Xlevels, y in Ylevels, z in Zlevels],
             reg_absB[x1, x2, y, z] >=
-            Ω[x, y, x2, z] / (max(1, length(indXB[x2])) / nB) -
-            Ω[x, y, x1, z] / (max(1, length(indXB[x1])) / nB)
+                Ω[x, y, x2, z] / (max(1, length(indXB[x2])) / nB) -
+                Ω[x, y, x1, z] / (max(1, length(indXB[x1])) / nB)
         )
         @expression(
             model,
             regtermB,
             sum(
-                1 / nX * reg_absB[x1, x2, y, z] for x1 in Xlevels, x2 in voisins_X[x1],
-                y in Ylevels, z in Zlevels
+                1 / nX * reg_absB[x1, x2, y, z] for
+                    x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels
             )
         )
 
@@ -288,14 +300,17 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
         @objective(
             model,
             Min,
-            sum(c[x1, y, x2, z] * Ω[x1, y, x2, z] for y in Ylevels, z in Zlevels, x1 = Xlevels, x2 = Xlevels) +
-            lambda * sum(
-                1 / nX * reg_absA[x1, x2, y, z] for x1 = Xlevels,
-                x2 in voisins_X[x1], y in Ylevels, z in Zlevels
+            sum(
+                c[x1, y, x2, z] * Ω[x1, y, x2, z] for
+                    y in Ylevels, z in Zlevels, x1 in Xlevels, x2 in Xlevels
             ) +
-            lambda * sum(
-                1 / nX * reg_absB[x1, x2, y, z] for x1 = Xlevels,
-                x2 in voisins_X[x1], y in Ylevels, z in Zlevels
+                lambda * sum(
+                1 / nX * reg_absA[x1, x2, y, z] for
+                    x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels
+            ) +
+                lambda * sum(
+                1 / nX * reg_absB[x1, x2, y, z] for
+                    x1 in Xlevels, x2 in voisins_X[x1], y in Ylevels, z in Zlevels
             )
         )
 
@@ -306,7 +321,8 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
 
         # Extract the values of the solution
         gamma_val = [
-            value(Ω[x1, y, x2, z]) for x1 in Xlevels, y in Ylevels, x2 in Xlevels, z in Zlevels
+            value(Ω[x1, y, x2, z]) for
+                x1 in Xlevels, y in Ylevels, x2 in Xlevels, z in Zlevels
         ]
 
 
@@ -324,16 +340,16 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
             end
         end
 
-        yA = last.(XYAlevels) # les y parmi les XYA observés, potentiellement des valeurs repetées 
+        yA = last.(XYAlevels) # les y parmi les XYA observés, potentiellement des valeurs repetées
         yA_hot = one_hot_encoder(yA, Ylevels)
-        zB = last.(XZBlevels) # les z parmi les XZB observés, potentiellement des valeurs repetées 
+        zB = last.(XZBlevels) # les z parmi les XZB observés, potentiellement des valeurs repetées
         zB_hot = one_hot_encoder(zB, Zlevels)
 
         Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
         Zloss = loss_crossentropy(zB_hot, Zlevels_hot)
 
-        yB_pred = [ optimal_modality(Ylevels, Yloss, view(G, :, j)) for j in axes(G, 2)]
-        zA_pred = [ optimal_modality(Zlevels, Zloss, view(G, i, :)) for i in axes(G, 1)]
+        yB_pred = [optimal_modality(Ylevels, Yloss, view(G, :, j)) for j in axes(G, 2)]
+        zA_pred = [optimal_modality(Zlevels, Zloss, view(G, i, :)) for i in axes(G, 1)]
 
 
         yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
@@ -349,13 +365,13 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
         XZB = hcat(XB_hot, ZB)
 
         for i in 1:nA
-           ind = findfirst(XYA[i, :] ≈ v for v in XYAlevels)
-           zA_pred_hot_i[i, :] .= zA_pred_hot[ind, :]
+            ind = findfirst(XYA[i, :] ≈ v for v in XYAlevels)
+            zA_pred_hot_i[i, :] .= zA_pred_hot[ind, :]
         end
 
         for i in 1:nB
-           ind = findfirst(XZB[i, :] ≈ v for v in XZBlevels)
-           yB_pred_hot_i[i, :] .= yB_pred_hot[ind, :]
+            ind = findfirst(XZB[i, :] ≈ v for v in XZBlevels)
+            yB_pred_hot_i[i, :] .= yB_pred_hot[ind, :]
         end
 
         ### Update Cost matrix
@@ -379,6 +395,7 @@ function unbalanced_solver(data; lambda = 0.0, alpha = 0.0)
 
     end
 
+    return
 end
 
 #csv_file = joinpath("dataset.csv")
@@ -387,17 +404,17 @@ end
 params = DataParameters(nA = 1000, nB = 1000, mB = [2, 0, 0], p = 0.2)
 
 rng = DataGenerator(params)
-data = generate_data(rng)
+data = generate(rng)
 
-@time println(unbalanced_solver(data, lambda = 0.01, alpha = 0.1 ))
+@time println(unbalanced_solver(data, lambda = 0.01, alpha = 0.1))
 #@time println(otrecod(data, JointOTWithinBase(lambda = 0.1, alpha = 0.1)))
 @time println(otrecod(data, JointOTBetweenBases()))
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [1, 0, 0], p = 0.4)
 rng = DataGenerator(params)
-data = generate_data(rng)
+data = generate(rng)
 
-@time println(unbalanced_solver(data, lambda = 0.01, alpha = 0.1 ))
+@time println(unbalanced_solver(data, lambda = 0.01, alpha = 0.1))
 # @time println(otrecod(data, JointOTWithinBase(lambda = 0.1, alpha = 0.1)))
 
 @time println(otrecod(data, JointOTBetweenBases()))

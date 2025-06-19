@@ -20,7 +20,9 @@ include("joint_ot_within_base.jl")
 # Data integration functions
 include("entropic_partial_wasserstein.jl")
 include("joint_ot_between_bases.jl")
+include("joint_ot_between_bases_with_predictors.jl")
 include("simple_learning.jl")
+include("simple_learning_with_continuous_data.jl")
 
 # Generic interface
 
@@ -54,17 +56,17 @@ function accuracy(data::DataFrame, yb_pred::AbstractVector, za_pred::AbstractVec
     za_true = view(Z, indA)
 
     return accuracy(yb_true, yb_pred),
-    accuracy(za_true, za_pred),
-    accuracy(vcat(yb_pred, za_pred), vcat(yb_true, za_true))
+        accuracy(za_true, za_pred),
+        accuracy(vcat(yb_pred, za_pred), vcat(yb_true, za_true))
 
 end
 
 
 function accuracy(sol::JointOTResult)
 
-    accuracy(sol.yb_true, sol.yb_pred),
-    accuracy(sol.za_true, sol.za_pred),
-    accuracy(vcat(sol.yb_pred, sol.za_pred), vcat(sol.yb_true, sol.za_true))
+    return accuracy(sol.yb_true, sol.yb_pred),
+        accuracy(sol.za_true, sol.za_pred),
+        accuracy(vcat(sol.yb_pred, sol.za_pred), vcat(sol.yb_true, sol.za_true))
 
 end
 

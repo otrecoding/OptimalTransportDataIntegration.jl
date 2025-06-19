@@ -87,16 +87,16 @@ julia> round.(entropic_partial_wasserstein(a, b, M, 1, m = 0.1), digits=2)
 
 """
 function entropic_partial_wasserstein(
-    a,
-    b,
-    M,
-    reg;
-    m = nothing,
-    numItermax = 1000,
-    stopThr = 1e-100,
-    verbose = false,
-    log = false,
-)
+        a,
+        b,
+        M,
+        reg;
+        m = nothing,
+        numItermax = 1000,
+        stopThr = 1.0e-100,
+        verbose = false,
+        log = false,
+    )
 
     dim_a, dim_b = size(M)
     dx = ones(eltype(a), dim_a)
@@ -119,7 +119,7 @@ function entropic_partial_wasserstein(
         @error "Problem infeasible. Parameter m should lower or equal than min(|a|_1, |b|_1)."
     end
 
-    log && (log_e = Dict{Any,Any}("err" => []))
+    log && (log_e = Dict{Any, Any}("err" => []))
 
     K = exp.(-M ./ reg)
     K .= K .* m ./ sum(K)

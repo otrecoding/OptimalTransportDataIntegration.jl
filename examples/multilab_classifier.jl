@@ -59,7 +59,6 @@ Y = hcat(
 )
 
 
-
 # +
 g = Flux.Chain(Flux.Dense(2, 10, Flux.relu), Flux.Dense(10, 3, x -> (tanh(x) + 1) / 2))
 
@@ -67,7 +66,7 @@ loader = Flux.DataLoader((x, y), batchsize = 8, shuffle = true)
 
 optim = Flux.setup(Flux.Adam(0.01), model)
 
-for epoch = 1:1_000
+for epoch in 1:1_000
     for (x, y) in loader
         grads = Flux.gradient(model) do m
             y_hat = m(x)

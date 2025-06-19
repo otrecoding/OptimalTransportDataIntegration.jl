@@ -37,17 +37,23 @@ using OptimalTransportDataIntegration # import the package
 
 params = DataParameters()  # Create the parameters set
 
-rng = PDataGenerator(params)  # Create the random generator
+rng = DataGenerator(params)  # Create the random generator
 
 data = generate_data( rng ) # Generate a dataset 
 
-result = otrecod( data, JointOTWithinBase() ) # Perform the statistical matching 
+result = otrecod( data, JointOTBetweenBases() ) # Perform the statistical matching 
 
 println(accuracy(result))  # Print accuracies on each distinct variables and the total accuracy.
 
 ```
 
 
+It is possible tu use continuous explanatory variables by using
 
+```
+rng = DataGenerator(params, discrete = false)
+```
+
+outcomes are always categorical, Y outcome levels are 1:4 and Z outcome levels are 1:3.
 
 

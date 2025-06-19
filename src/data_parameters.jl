@@ -20,6 +20,23 @@ export save_params
 
 end
 
+# function Base.show(io::IO, params::DataParameters)
+#
+#     println(io, "nA \t : $(params.nA)")
+#     println(io, "nB \t :  $(params.nB)")
+#     println(io, "mA \t :  $(params.mA)")
+#     println(io, "mB \t :  $(params.mB)")
+#     println(io, "covA \t :  $(params.covA)")
+#     println(io, "covB \t :  $(params.covB)")
+#     println(io, "px1c \t :  $(params.px1c)")
+#     println(io, "px2c \t :  $(params.px2c)")
+#     println(io, "px3c \t :  $(params.px3c)")
+#     println(io, "aA \t :  $(params.aA)")
+#     println(io, "aB \t :  $(params.aB)")
+#     println(io, "r2 \t :  $(params.r2)")
+#
+# end
+
 """
 $(SIGNATURES)
 
@@ -46,7 +63,7 @@ function read_params(jsonfile::AbstractString)
     px3c = Float64.(data["px3c"])
     r2 = Float64(data["r2"])
 
-    DataParameters(nA, nB, mA, mB, covA, covB, px1c, px2c, px3c, p, aA, aB, r2)
+    return DataParameters(nA, nB, mA, mB, covA, covB, px1c, px2c, px3c, p, aA, aB, r2)
 
 end
 
@@ -62,7 +79,7 @@ function save_params(jsonfile::AbstractString, params::DataParameters)
             getfield.(Ref(params), fieldnames(DataParameters)),
     )
 
-    open(jsonfile, "w") do io
+    return open(jsonfile, "w") do io
         JSON.print(io, data)
     end
 

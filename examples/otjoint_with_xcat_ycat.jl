@@ -21,13 +21,12 @@ import Distances: Hamming
 
 let
 
-    for simulation = 1:10
+    params = DataParameters(nA = 1000, nB = 1000)
+    rng = DataGenerator(params, scenario = 1)
 
-        params = DataParameters(nA = 1000, nB = 1000)
+    for simulation in 1:10
 
-        rng = DataGenerator(params)
-
-        data = generate_data(rng)
+        data = generate(rng)
 
         X = Matrix(data[!, ["X1", "X2", "X3"]])
         Y = Vector(data.Y)
@@ -46,7 +45,20 @@ let
         percent_closest = 0.2
 
         @time sol = ot_joint(instance, alpha, lambda, percent_closest)
-        println(compute_pred_error!(sol, instance, false))
+        yb, za = compute_pred_error!(sol, instance, false)
+        println(accuracy(data, yb, za))
+        println(
+            accuracy(
+                otrecod(
+                    data,
+                    JointOTWithinBase(
+                        lambda = lambda,
+                        alpha = alpha,
+                        percent_closest = percent_closest,
+                    ),
+                ),
+            ),
+        )
 
     end
 

@@ -4,27 +4,32 @@ using OptimalTransportDataIntegration
 function main(nsimulations::Int)
 
     outfile = "best_reg_m_values_with_different_mb.csv"
-    mb_values = [[1,0,0], [1,1,0], [1,2,0], [1,2,1]]
+    mb_values = [[1, 0, 0], [1, 1, 0], [1, 2, 0], [1, 2, 1]]
+    reg_values = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1]
     reg_m_values = [0.01 0.05 0.1 0.25 0.5 0.75 1]
-    header = ["id", "mB", "reg_m1", "reg_m2", "estyb", "estza", "accuracy"]
+    header = ["id", "mB", "reg", "reg_m1", "reg_m2", "estyb", "estza", "accuracy"]
 
-    open(outfile, "w") do io
+    return open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
-        for i = 1:nsimulations
+        for mB in mb_values
 
-            for mB in mb_values
+            params = DataParameters(mB = mB)
+            rng = DataGenerator(params, scenario = 1)
 
-                @show mB
-                params = DataParameters(mB = mB)
-                data = generate_data(params)
+            for i in 1:nsimulations
 
-                for reg_m1 in reg_m_values, reg_m2 in reg_m_values
+                data = generate(rng)
 
-                      result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = reg_m1, reg_m2 = reg_m2))
-                      estyb, estza, est = accuracy( result )
-                      writedlm(io, [i repr(mB) reg_m1 reg_m2 estyb estza est ])
+                for reg in reg_values, reg_m1 in reg_m_values, reg_m2 in reg_m_values
+
+                    result = otrecod(
+                        data,
+                        JointOTBetweenBases(reg = reg, reg_m1 = reg_m1, reg_m2 = reg_m2),
+                    )
+                    estyb, estza, est = accuracy(result)
+                    writedlm(io, [i repr(mB) reg reg_m1 reg_m2 estyb estza est])
 
                 end
 

@@ -16,7 +16,7 @@
 
 # # Flux classifier
 #
-# The following page contains a step-by-step walkthrough of a classifier implementation in Julia using Flux. 
+# The following page contains a step-by-step walkthrough of a classifier implementation in Julia using Flux.
 # Let's start by importing the required Julia packages.
 
 using Statistics, DataFrames, CSV
@@ -26,15 +26,15 @@ import Flux: Chain, Dense, relu, softmax, onehotbatch, onecold, logitcrossentrop
 
 # ## Dataset
 
-# +
-data = DataFrame(CSV.File(joinpath(@__DIR__, "..", "test", "data_good.csv")))
+params = DataParameters()
+rng = DataGenerator(params)
+data = generate(rng)
 
 dba = subset(data, :database => ByRow(==(1)))
 dbb = subset(data, :database => ByRow(==(2)))
 
 XA = OptimalTransportDataIntegration.onehot(Matrix(dba[!, [:X1, :X2, :X3]]))
 XB = OptimalTransportDataIntegration.onehot(Matrix(dbb[!, [:X1, :X2, :X3]]))
-
 
 YA = onehotbatch(dba.Y, 1:4)
 ZB = onehotbatch(dbb.Z, 1:3)
@@ -56,7 +56,7 @@ model2 = Chain(Dense(nx, ny))
 function train!(model, x, y, epochs = 1000, batchsize = 64)
     loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
     optim = Flux.setup(Flux.Adam(0.01), model)
-    for epoch = 1:epochs
+    for epoch in 1:epochs
         for (x, y) in loader
             grads = Flux.gradient(model) do m
                 y_hat = m(x)
@@ -65,6 +65,7 @@ function train!(model, x, y, epochs = 1000, batchsize = 64)
             Flux.update!(optim, model, grads[1])
         end
     end
+    return
 end
 
 train!(model1, XA, YA)
@@ -75,9 +76,14 @@ train!(model2, XB, ZB)
 # Looking at the accuracy
 
 @show mean(Flux.onecold(model1(XB)) .== dbb.Y)
-
 @show mean(Flux.onecold(model2(XA)) .== dba.Z)
 
 method = SimpleLearning()
 
-@show otrecod(data, method)
+@show accuracy(otrecod(data, method))
+
+rng = DataGenerator(params, discrete = false)
+data = generate(rng)
+
+@show accuracy(otrecod(data, method))
+@show accuracy(otrecod(data, JointOTBetweenBases()))

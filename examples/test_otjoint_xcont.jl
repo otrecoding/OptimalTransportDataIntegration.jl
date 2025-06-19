@@ -10,22 +10,11 @@
 #       jupytext_version: 1.16.4
 # ---
 
-using OTRecod
+using OptimalTransportDataIntegration
 using DataFrames
-using CSV
 using Distances
-using JSON
 using Statistics
 
-files = readdir(joinpath(@__DIR__, "datasets"), join = true)
-json_files = sort(filter(endswith("json"), files))
-csv_files = sort(filter(endswith("csv"), files))
-
-
-# +
-function to_categorical(x)
-    sort(unique(x)) .== reshape(x, (1, size(x)...))
-end
 
 digitize(x, bins) = searchsortedlast.(Ref(bins), x)
 
@@ -35,19 +24,19 @@ function categorize_using_quartile(data)
     XB = subset(data, :database => x -> x .== 2.0)
 
     b1 = quantile(XA.X1, [0.25, 0.5, 0.75])
-    bins11 = vcat(minimum(XA.X1) - 100, b1, maximum(XA.X1) + 100)
+    bins11 = vcat(-Inf, b1, +Inf)
 
     X11 = digitize(XA.X1, bins11)
     X21 = digitize(XB.X1, bins11)
 
     b1 = quantile(XA.X2, [0.25, 0.5, 0.75])
-    bins12 = vcat(minimum(XA.X2) - 100, b1, maximum(XA.X2) + 100)
+    bins12 = vcat(-Inf, b1, +Inf)
 
     X12 = digitize(XA.X2, bins12)
     X22 = digitize(XB.X2, bins12)
 
     b1 = quantile(XA.X3, [0.25, 0.5, 0.75])
-    bins13 = vcat(minimum(XA.X3) - 100, b1, maximum(XA.X3) + 100)
+    bins13 = vcat(-Inf, b1, +Inf)
 
     X13 = digitize(XA.X3, bins13)
     X23 = digitize(XB.X3, bins13)
@@ -56,58 +45,39 @@ function categorize_using_quartile(data)
     X2 = vcat(X12, X22) .- 1
     X3 = vcat(X13, X23) .- 1
 
-    X1c = to_categorical(X1)
-    X2c = to_categorical(X2)
-    X3c = to_categorical(X3)
-
-    hcat(X1c', X2c', X3c')
+    return hcat(X1, X2, X3)
 
 end
 
+params = DataParameters()
+rng = DataGenerator(params, discrete = false)
+data = generate(rng)
 
-# +
-function compute_pred_error_with_otjoint(csv_file)
 
-    data = DataFrame(CSV.File(csv_file))
+X = categorize_using_quartile(data)
+Y = Vector(data.Y)
+Z = Vector(data.Z)
 
-    X = categorize_using_quartile(data)
-    Y = Vector(data.Y)
-    Z = Vector(data.Z)
+Ylevels = 1:4
+Zlevels = 1:3
 
-    database = data.database
-    dist_choice = Euclidean()
+database = data.database
+dist_choice = Euclidean()
 
-    instance = Instance(database, X, Y, Z, dist_choice)
+instance = Instance(database, X, Y, Ylevels, Z, Zlevels, dist_choice)
 
-    lambda = 0.0
-    alpha = 0.0
-    percent_closest = 0.2
+lambda = 0.1
+alpha = 0.1
+percent_closest = 0.2
 
-    sol = ot_joint(instance, alpha, lambda, percent_closest)
-    OTRecod.compute_pred_error!(sol, instance, false)
-    return sol.errorpredavg
+sol = OptimalTransportDataIntegration.ot_joint(instance, alpha, lambda, percent_closest)
 
-end
-# -
+YB, ZA = compute_pred_error!(sol, instance, false)
 
-errorpredavg = Float64[]
-nA = Int[]
-nB = Int[]
-mB = Vector{Float64}[]
+println(accuracy(data, YB, ZA))
 
-for (csv_file, json_file) in zip(csv_files, json_files)
-
-    params = JSON.parsefile(json_file)
-
-    push!(nA, params["nA"])
-    push!(nB, params["nB"])
-    push!(mB, params["mB"])
-    push!(errorpredavg, compute_pred_error_with_otjoint(csv_file))
-    println("nA = $(nA[end]), nB = $(nB[end])")
-    println("mB = $(mB[end]), est = $(1 - errorpredavg[end])")
-
-end
-
-df = DataFrame(nA = nA, nB = nB, mB = mB, errorpred = errorpredavg)
-
-CSV.write(joinpath("results_M5max.csv"), df)
+println(accuracy(otrecod(data, JointOTWithinBase(distance = Cityblock()))))
+println(accuracy(otrecod(data, JointOTWithinBase(distance = Hamming()))))
+println(accuracy(otrecod(data, JointOTWithinBase(distance = Euclidean()))))
+println(accuracy(otrecod(data, JointOTBetweenBases())))
+println(accuracy(otrecod(data, SimpleLearning())))

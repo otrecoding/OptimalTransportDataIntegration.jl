@@ -22,7 +22,7 @@ using OptimalTransportDataIntegration
 params = DataParameters(nA = 1000, nB = 1000, mB = [0, 0, 0], p = 0.2)
 
 rng = DataGenerator(params)
-data = generate_data(rng, eps = 0.01)
+data = generate(rng, eps = 0.01)
 
 outdir = @__DIR__
 json_file = "dataset.json"

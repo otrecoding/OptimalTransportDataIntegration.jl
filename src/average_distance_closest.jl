@@ -36,6 +36,6 @@ function average_distance_to_closest(inst::Instance, percent_closest::Float64)
 
     end
 
-    Davg
+    return Davg
 
 end
