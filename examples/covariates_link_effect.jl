@@ -21,17 +21,17 @@ using OptimalTransportDataIntegration
 function covariates_link_effect(nsimulations::Int, r2values)
 
     outfile = "covariates_link_effect.csv"
-    header = ["id", "r2", "estyb", "estza", "accuracy", "method"]
+    header = ["id", "r2", "estyb", "estza", "accuracy", "method",  "scenario"]
 
     return open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
-        for r2 in r2values
+        for r2 in r2values, scenario in (1, 2)
 
             params = DataParameters(r2 = r2)
 
-            rng = DataGenerator(params)
+            rng = DataGenerator(params, scenario = scenario)
 
             for i in 1:nsimulations
 
@@ -41,27 +41,27 @@ function covariates_link_effect(nsimulations::Int, r2values)
                 alpha, lambda = 0.0, 0.0
                 result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i r2 estyb estza est "ot"])
+                writedlm(io, [i r2 estyb estza est "ot" scenario])
 
                 #OT-r Regularized Transport
                 result = otrecod(data, JointOTWithinBase())
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i r2 estyb estza est "ot-r"])
+                writedlm(io, [i r2 estyb estza est "ot-r" scenario])
 
                 #OTE Balanced transport of covariates and estimated outcomes
                 result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i r2 estyb estza est "ote"])
+                writedlm(io, [i r2 estyb estza est "ote" scenario])
 
                 #OTE Regularized unbalanced transport
                 result = otrecod(data, JointOTBetweenBases())
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i r2 estyb estza est "ote-r"])
+                writedlm(io, [i r2 estyb estza est "ote-r" scenario])
 
                 #SL Simple Learning
                 result = otrecod(data, SimpleLearning())
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i r2 estyb estza est "sl"])
+                writedlm(io, [i r2 estyb estza est "sl" scenario])
 
             end
 
