@@ -375,19 +375,19 @@ function joint_ot_within_base_continuous(
     XA = subset(data, :database => x -> x .== 1.0)
     XB = subset(data, :database => x -> x .== 2.0)
 
-    b1 = quantile(XA.X1, [0.25, 0.5, 0.75])
+    b1 = quantile(data.X1, collect(0.1:0.1:0.9))
     bins11 = vcat(-Inf, b1, +Inf)
 
     X11 = digitize(XA.X1, bins11)
     X21 = digitize(XB.X1, bins11)
 
-    b1 = quantile(XA.X2, [0.25, 0.5, 0.75])
+    b1 = quantile(data.X2, collect(0.1:0.1:0.9))
     bins12 = vcat(-Inf, b1, +Inf)
 
     X12 = digitize(XA.X2, bins12)
     X22 = digitize(XB.X2, bins12)
 
-    b1 = quantile(XA.X3, [0.25, 0.5, 0.75])
+    b1 = quantile(data.X3, collect(0.1:0.1:0.9))
     bins13 = vcat(-Inf, b1, +Inf)
 
     X13 = digitize(XA.X3, bins13)
