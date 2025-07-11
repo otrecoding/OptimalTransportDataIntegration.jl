@@ -224,6 +224,12 @@ function generate(generator::DataGenerator; eps = 0.0)
     YB2 = digitize(Y2, generator.binsYB2 .+ eps)
 
     if generator.discrete
+        @info "Categories in XA1 $(sort!(OrderedDict(countmap(X11c))))"
+        @info "Categories in XA2 $(sort!(OrderedDict(countmap(X12c))))"
+        @info "Categories in XA3 $(sort!(OrderedDict(countmap(X13c))))"
+        @info "Categories in XB1 $(sort!(OrderedDict(countmap(X21c))))"
+        @info "Categories in XB2 $(sort!(OrderedDict(countmap(X22c))))"
+        @info "Categories in XB3 $(sort!(OrderedDict(countmap(X23c))))"
         df = DataFrame(hcat(XX1, XX2, XX3) .- 1, [:X1, :X2, :X3])
     else
         df = DataFrame(hcat(X1, X2)', [:X1, :X2, :X3])
@@ -233,8 +239,10 @@ function generate(generator::DataGenerator; eps = 0.0)
     df.Z = vcat(YA2, YB2)
     df.database = vcat(fill(1, params.nA), fill(2, params.nB))
 
-    @info "Categories in Y $(sort!(OrderedDict(countmap(df.Y))))"
-    @info "Categories in Z $(sort!(OrderedDict(countmap(df.Z))))"
+    @info "Categories in YA $(sort!(OrderedDict(countmap(YA1))))"
+    @info "Categories in ZA $(sort!(OrderedDict(countmap(YA2))))"
+    @info "Categories in YB $(sort!(OrderedDict(countmap(YB1))))"
+    @info "Categories in ZB $(sort!(OrderedDict(countmap(YB2))))"
 
     return df
 
