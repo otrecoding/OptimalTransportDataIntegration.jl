@@ -22,10 +22,10 @@ struct DataGenerator
     binsA3::Vector{Float64}
     covAemp::Matrix{Float64}
     covBemp::Matrix{Float64}
-    binsYA1::Vector{Float64}
-    binsYA2::Vector{Float64}
-    binsYB1::Vector{Float64}
-    binsYB2::Vector{Float64}
+    binsYA::Vector{Float64}
+    binsZA::Vector{Float64}
+    binsYB::Vector{Float64}
+    binsZB::Vector{Float64}
     discrete::Bool
 
     function DataGenerator(params; n = 10000, scenario = 2, discrete = true)
@@ -104,23 +104,25 @@ struct DataGenerator
             cr2 *
             sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
 
-        Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(varerrorA)), n)
-        Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(varerrorB)), n)
+        Base1 = X1' * aA .+ rand(Normal(0.0, sqrt(varerrorA)), n)
+        Base2 = X2' * aB .+ rand(Normal(0.0, sqrt(varerrorB)), n)
 
-        bA1 = quantile(Y1, [0.25, 0.5, 0.75])
-        bB1 = quantile(Y2, [0.25, 0.5, 0.75])
-        bA2 = quantile(Y1, [1 / 3, 2 / 3])
-        bB2 = quantile(Y2, [1 / 3, 2 / 3])
+        bYA = quantile(Base1, [0.25, 0.5, 0.75])
+        bYB = quantile(Base2, [0.25, 0.5, 0.75])
+        bZA = quantile(Base1, [1 / 3, 2 / 3])
+        bZB = quantile(Base2, [1 / 3, 2 / 3])
 
-        binsYA1 = vcat(-Inf, bA1, Inf)
-        binsYA2 = vcat(-Inf, bA2, Inf)
 
         if scenario == 1
-            binsYB1 = copy(binsYA1)
-            binsYB2 = copy(binsYA2)
+            binsYA = vcat(-Inf, bYA, Inf)
+            binsZA = vcat(-Inf, bZA, Inf)
+            binsYB = copy(binsYA)
+            binsZB = copy(binsZA)
         else
-            binsYB1 = vcat(-Inf, bB1, Inf)
-            binsYB2 = vcat(-Inf, bB2, Inf)
+            binsYA = vcat(-Inf, bYA, Inf)
+            binsZA = vcat(-Inf, bZA, Inf)
+            binsYB = vcat(-Inf, bYB, Inf)
+            binsZB = vcat(-Inf, bZB, Inf)
         end
 
         return new(
@@ -130,10 +132,10 @@ struct DataGenerator
             binsA3,
             covAemp,
             covBemp,
-            binsYA1,
-            binsYA2,
-            binsYB1,
-            binsYB2,
+            binsYA,
+            binsZA,
+            binsYB,
+            binsZB,
             discrete,
         )
 
@@ -217,32 +219,32 @@ function generate(generator::DataGenerator; eps = 0.0)
     Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(σA)), params.nA)
     Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(σB)), params.nB)
 
-    YA1 = digitize(Y1, generator.binsYA1)
-    YA2 = digitize(Y1, generator.binsYA2)
+    YA = digitize(Y1, generator.binsYA)
+    ZA = digitize(Y1, generator.binsZA)
 
-    YB1 = digitize(Y2, generator.binsYB1 .+ eps)
-    YB2 = digitize(Y2, generator.binsYB2 .+ eps)
+    YB = digitize(Y2, generator.binsYB .+ eps)
+    ZB = digitize(Y2, generator.binsZB .+ eps)
 
     if generator.discrete
-        @info "Categories in XA1 $(sort!(OrderedDict(countmap(X11c))))"
-        @info "Categories in XA2 $(sort!(OrderedDict(countmap(X12c))))"
-        @info "Categories in XA3 $(sort!(OrderedDict(countmap(X13c))))"
-        @info "Categories in XB1 $(sort!(OrderedDict(countmap(X21c))))"
-        @info "Categories in XB2 $(sort!(OrderedDict(countmap(X22c))))"
-        @info "Categories in XB3 $(sort!(OrderedDict(countmap(X23c))))"
+        @info "Categories in XA1 $(sort!(OrderedDict(countmap(X11))))"
+        @info "Categories in XA2 $(sort!(OrderedDict(countmap(X12))))"
+        @info "Categories in XA3 $(sort!(OrderedDict(countmap(X13))))"
+        @info "Categories in XB1 $(sort!(OrderedDict(countmap(X21))))"
+        @info "Categories in XB2 $(sort!(OrderedDict(countmap(X22))))"
+        @info "Categories in XB3 $(sort!(OrderedDict(countmap(X23))))"
         df = DataFrame(hcat(XX1, XX2, XX3) .- 1, [:X1, :X2, :X3])
     else
         df = DataFrame(hcat(X1, X2)', [:X1, :X2, :X3])
     end
 
-    df.Y = vcat(YA1, YB1)
-    df.Z = vcat(YA2, YB2)
+    df.Y = vcat(YA, YB)
+    df.Z = vcat(ZA, ZB)
     df.database = vcat(fill(1, params.nA), fill(2, params.nB))
 
-    @info "Categories in YA $(sort!(OrderedDict(countmap(YA1))))"
-    @info "Categories in ZA $(sort!(OrderedDict(countmap(YA2))))"
-    @info "Categories in YB $(sort!(OrderedDict(countmap(YB1))))"
-    @info "Categories in ZB $(sort!(OrderedDict(countmap(YB2))))"
+    @info "Categories in YA $(sort!(OrderedDict(countmap(YA))))"
+    @info "Categories in ZA $(sort!(OrderedDict(countmap(ZA))))"
+    @info "Categories in YB $(sort!(OrderedDict(countmap(YB))))"
+    @info "Categories in ZB $(sort!(OrderedDict(countmap(ZB))))"
 
     return df
 
