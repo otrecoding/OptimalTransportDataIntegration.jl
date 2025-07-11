@@ -220,8 +220,8 @@ function generate(generator::DataGenerator; eps = 0.0)
     YA1 = digitize(Y1, generator.binsYA1)
     YA2 = digitize(Y1, generator.binsYA2)
 
-    YB1 = digitize(Y2, generator.binsYA1 .+ eps)
-    YB2 = digitize(Y2, generator.binsYA2 .+ eps)
+    YB1 = digitize(Y2, generator.binsYB1 .+ eps)
+    YB2 = digitize(Y2, generator.binsYB2 .+ eps)
 
     if generator.discrete
         df = DataFrame(hcat(XX1, XX2, XX3) .- 1, [:X1, :X2, :X3])
