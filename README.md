@@ -39,7 +39,7 @@ params = DataParameters()  # Create the parameters set
 
 rng = DataGenerator(params)  # Create the random generator
 
-data = generate_data( rng ) # Generate a dataset 
+data = generate( rng ) # Generate a dataset 
 
 result = otrecod( data, JointOTBetweenBases() ) # Perform the statistical matching 
 
