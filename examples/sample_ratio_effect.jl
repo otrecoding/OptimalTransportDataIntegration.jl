@@ -73,6 +73,6 @@ function sample_ratio_effect(nsimulations::Int, ratios)
 
 end
 
-nsimulations = 1000
+nsimulations = 100
 
 @time sample_ratio_effect(nsimulations, (1, 2, 5, 10))

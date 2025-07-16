@@ -20,37 +20,37 @@ using OptimalTransportDataIntegration
 # +
 function covariates_shift_assumption_continuous(nsimulations::Int, scenarios)
 
-    outfile = "covariates_shift_assumption_continuous_scenario_2.csv"
-    header = ["id", "mB", "estyb", "estza", "estimation", "method"]
+    outfile = "covariates_shift_assumption_continuous.csv"
+    header = ["id", "mB", "estyb", "estza", "estimation", "method", "scenario"]
 
     return open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
-        for mB in scenarios
+        for mB in scenarios, scenario in 1:2
 
             params = DataParameters(mB = mB)
-            rng = DataGenerator(params, scenario = 2, discrete = false)
+            rng = DataGenerator(params, scenario = scenario, discrete = false)
 
             for i in 1:nsimulations
 
                 data = generate(rng)
 
                 #OT Transport of the joint distribution of covariates and outcomes.
-                alpha, lambda = 0.6, 0.2
+                alpha, lambda = 0.1, 0.1
                 result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i repr(mB) estyb estza est "within"])
+                writedlm(io, [i repr(mB) estyb estza est "within" scenario])
 
                 #OTE Regularized unbalanced transport
                 result = otrecod(data, JointOTBetweenBases())
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i repr(mB) estyb estza est "between"])
+                writedlm(io, [i repr(mB) estyb estza est "between" scenario])
 
                 #SL Simple Learning
                 result = otrecod(data, SimpleLearning())
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i repr(mB) estyb estza est "sl"])
+                writedlm(io, [i repr(mB) estyb estza est "sl" scenario])
 
             end
 
@@ -60,7 +60,7 @@ function covariates_shift_assumption_continuous(nsimulations::Int, scenarios)
 
 end
 
-nsimulations = 1000
+nsimulations = 100
 scenarios = ([0, 0, 0], [1, 0, 0], [1, 1, 0], [1, 2, 0])
 
 @time covariates_shift_assumption_continuous(nsimulations, scenarios)

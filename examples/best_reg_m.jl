@@ -26,10 +26,10 @@ function main(nsimulations::Int)
 
                     result = otrecod(
                         data,
-                        JointOTBetweenBases(reg = reg, reg_m = reg_m),
+                        JointOTBetweenBases(reg = reg, reg_m1 = reg_m, reg_m2 = reg_m),
                     )
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i repr(mB) reg reg_m1 reg_m2 estyb estza est])
+                    writedlm(io, [i repr(mB) reg reg_m estyb estza est scenario])
 
                 end
 
@@ -41,6 +41,6 @@ function main(nsimulations::Int)
 
 end
 
-nsimulations = 1000
+nsimulations = 100
 
 @time main(nsimulations)
