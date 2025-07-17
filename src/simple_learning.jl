@@ -4,7 +4,7 @@ import Flux: Chain, Dense
 function onehot(x::AbstractMatrix)
     res = Vector{Float32}[]
     for col in eachcol(x)
-        levels = filter(x -> x != 0, sort(unique(col)))
+        levels = 1:4 #filter(x -> x != 0, sort(unique(col)))
         for level in levels
             push!(res, col .== level)
         end
