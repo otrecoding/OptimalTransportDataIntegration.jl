@@ -21,7 +21,7 @@ using OptimalTransportDataIntegration
 function covariates_link_effect(nsimulations::Int, r2values)
 
     outfile = "covariates_link_effect.csv"
-    header = ["id", "r2", "estyb", "estza", "accuracy", "method",  "scenario"]
+    header = ["id", "r2", "estyb", "estza", "accuracy", "method", "scenario"]
 
     return open(outfile, "w") do io
 

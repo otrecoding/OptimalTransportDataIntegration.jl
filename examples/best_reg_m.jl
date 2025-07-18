@@ -13,7 +13,7 @@ function main(nsimulations::Int)
 
         writedlm(io, hcat(header...))
 
-        for mB in mb_values, scenario = 1:2
+        for mB in mb_values, scenario in 1:2
 
             params = DataParameters(mB = mB)
             rng = DataGenerator(params, scenario = scenario)
