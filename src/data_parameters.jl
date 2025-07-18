@@ -11,31 +11,12 @@ export save_params
     mB::Vector{Float64} = [0.0, 0.0, 0.0]
     covA::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
     covB::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
-    px1c::Vector{Float64} = [0.5, 0.5]
-    px2c::Vector{Float64} = [0.333, 0.334, 0.333]
-    px3c::Vector{Float64} = [0.25, 0.25, 0.25, 0.25]
+    pxc::Vector{Vector{Float64}} = [[0.5, 0.5], [0.333, 0.334, 0.333],[0.25, 0.25, 0.25, 0.25]]
     aA::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
     aB::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
     r2::Float64 = 0.6
 
 end
-
-# function Base.show(io::IO, params::DataParameters)
-#
-#     println(io, "nA \t : $(params.nA)")
-#     println(io, "nB \t :  $(params.nB)")
-#     println(io, "mA \t :  $(params.mA)")
-#     println(io, "mB \t :  $(params.mB)")
-#     println(io, "covA \t :  $(params.covA)")
-#     println(io, "covB \t :  $(params.covB)")
-#     println(io, "px1c \t :  $(params.px1c)")
-#     println(io, "px2c \t :  $(params.px2c)")
-#     println(io, "px3c \t :  $(params.px3c)")
-#     println(io, "aA \t :  $(params.aA)")
-#     println(io, "aB \t :  $(params.aB)")
-#     println(io, "r2 \t :  $(params.r2)")
-#
-# end
 
 """
 $(SIGNATURES)
@@ -58,12 +39,10 @@ function read_params(jsonfile::AbstractString)
     covA = stack([Float64.(x) for x in data["covA"]])
     covB = stack([Float64.(x) for x in data["covB"]])
 
-    px1c = Float64.(data["px1c"])
-    px2c = Float64.(data["px2c"])
-    px3c = Float64.(data["px3c"])
+    pxc = Float64.(data["pxc"])
     r2 = Float64(data["r2"])
 
-    return DataParameters(nA, nB, mA, mB, covA, covB, px1c, px2c, px3c, p, aA, aB, r2)
+    return DataParameters(nA, nB, mA, mB, covA, covB, pxc, aA, aB, r2)
 
 end
 
