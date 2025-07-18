@@ -37,11 +37,7 @@ function joint_within_with_predictors(
 
     C = C0 ./ maximum(C0)
 
-    if reg > 0
-        G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
-    else
-        G = PythonOT.emd(wa, wb, C)
-    end
+    G = PythonOT.emd(wa, wb, C)
 
     XBt = nB .* XA * G
     XAt = nA .* XB * G'
