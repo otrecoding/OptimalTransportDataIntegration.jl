@@ -71,6 +71,6 @@ function covariates_link_effect(nsimulations::Int, r2values)
 
 end
 
-nsimulations = 1000
+nsimulations = 100
 
 @time covariates_link_effect(nsimulations, (0.2, 0.4, 0.6, 0.8))

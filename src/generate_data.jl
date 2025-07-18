@@ -27,7 +27,7 @@ struct DataGenerator
     binsZB::Vector{Float64}
     discrete::Bool
 
-    function DataGenerator(params; n = 10000, scenario = 2, discrete = true)
+    function DataGenerator(params; scenario = 1, n = 10000, discrete = true)
 
         dA = MvNormal(params.mA, params.covA)
         dB = MvNormal(params.mB, params.covB)

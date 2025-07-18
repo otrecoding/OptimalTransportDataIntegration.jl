@@ -80,6 +80,6 @@ all_params = [
     DataParameters(nA = 10000, nB = 10000),
 ]
 
-nsimulations = 1000
+nsimulations = 100
 
 @time sample_size_effect(all_params, nsimulations)
