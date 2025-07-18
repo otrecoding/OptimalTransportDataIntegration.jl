@@ -63,75 +63,28 @@ function joint_within_with_predictors(
         return
     end
 
-    function loss_crossentropy(Y, F)
-
-        ϵ = 1.0e-12
-        res = zeros(Float32, size(Y, 2), size(F, 2))
-        logF = zeros(Float32, size(F))
-
-        for i in eachindex(F)
-            if F[i] ≈ 1.0
-                logF[i] = log(1.0 - ϵ)
-            else
-                logF[i] = log(ϵ)
-            end
-        end
-
-        for i in axes(Y, 1)
-            res .+= -Y[i, :] .* logF[i, :]'
-        end
-
-        return res
-
+    if reg > 0
+        G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
+    else
+        G = PythonOT.emd(wa, wb, C)
     end
 
-    YBpred = Flux.softmax(modelXZB(XZB))
-    ZApred = Flux.softmax(modelXYA(XYA))
+    delta = norm(G .- Gold)
 
-    alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
+    XB2 = nB .* XA * G
+    XA2 = nA .* XB * G'
 
-    G = ones(length(wa), length(wb))
-    cost = Inf
+    YB = nB .* YA * G
+    ZA = nA .* ZB * G'
 
-    for iter in 1:iterations # BCD algorithm
+    XYA = vcat(XA2, YA)
+    XZB = vcat(XB2, ZB) 
 
-        Gold = copy(G)
-        costold = cost
+    train!(modelXYA, XYA, ZA)
+    train!(modelXZB, XZB, YB)
 
-        if reg > 0
-            G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
-        else
-            G = PythonOT.emd(wa, wb, C)
-        end
-
-        delta = norm(G .- Gold)
-
-        YB = nB .* YA * G
-        ZA = nA .* ZB * G'
-
-        train!(modelXYA, XYA, ZA)
-        train!(modelXZB, XZB, YB)
-
-        YBpred .= modelXZB(XZB)
-        ZApred .= modelXYA(XYA)
-
-        loss_y = alpha1 * loss_crossentropy(YA, YBpred)
-        loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
-
-        fcost = loss_y .+ loss_z'
-
-        cost = sum(G .* fcost)
-
-        @info "Delta: $(delta) \t  Loss: $(cost) "
-
-        if delta < 1.0e-16 || abs(costold - cost) < 1.0e-7
-            @info "converged at iter $iter "
-            break
-        end
-
-        C .= C0 ./ maximum(C0) .+ fcost
-
-    end
+    YBpred .= modelXZB(XZB)
+    ZApred .= modelXYA(XYA)
 
     return Flux.onecold(YBpred), Flux.onecold(ZApred)
 
