@@ -16,6 +16,7 @@ include("solution.jl")
 include("average_distance_closest.jl")
 include("pred_error.jl")
 include("joint_ot_within_base.jl")
+include("joint_ot_within_base_continuous.jl")
 
 # Data integration functions
 include("entropic_partial_wasserstein.jl")

@@ -75,7 +75,7 @@ function conditional_distribution(nsimulations::Int, epsilons)
 
 end
 
-nsimulations = 1000
+nsimulations = 100
 epsilons = (0.0, 0.1, 0.5, 1.0)
 
 @time conditional_distribution(nsimulations, epsilons)
