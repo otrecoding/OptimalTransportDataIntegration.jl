@@ -360,5 +360,3 @@ function joint_ot_within_base_discrete(
     return YB, ZA
 
 end
-
-
