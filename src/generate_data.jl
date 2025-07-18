@@ -9,7 +9,6 @@ to_categorical(x) = sort(unique(x)) .== permutedims(x)
 
 to_categorical(x, levels) = levels .== permutedims(x)
 
-
 export DataGenerator
 
 export generate
@@ -44,9 +43,9 @@ struct DataGenerator
         qxA2c = quantile.(Normal(params.mA[2], sqrt(params.covA[2, 2])), px2cc)
         qxA3c = quantile.(Normal(params.mA[3], sqrt(params.covA[3, 3])), px3cc)
 
-        qxB1c = quantile.(Normal(params.mB[1], sqrt(params.covA[1, 1])), px1cc)
-        qxB2c = quantile.(Normal(params.mB[2], sqrt(params.covA[2, 2])), px2cc)
-        qxB3c = quantile.(Normal(params.mB[3], sqrt(params.covA[3, 3])), px3cc)
+        qxB1c = quantile.(Normal(params.mB[1], sqrt(params.covB[1, 1])), px1cc)
+        qxB2c = quantile.(Normal(params.mB[2], sqrt(params.covB[2, 2])), px2cc)
+        qxB3c = quantile.(Normal(params.mB[3], sqrt(params.covB[3, 3])), px3cc)
 
         binsA1 = vcat(-Inf, qxA1c, Inf)
         binsA2 = vcat(-Inf, qxA2c, Inf)
