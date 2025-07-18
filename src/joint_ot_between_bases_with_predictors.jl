@@ -37,13 +37,22 @@ function joint_within_with_predictors(
 
     C = C0 ./ maximum(C0)
 
-    dimXYA = size(XYA, 1)
-    dimXZB = size(XZB, 1)
-    dimYA = size(YA, 1)
-    dimZB = size(ZB, 1)
+    if reg > 0
+        G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
+    else
+        G = PythonOT.emd(wa, wb, C)
+    end
 
-    modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
-    modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
+    XBt = nB .* XA * G
+    XAt = nA .* XB * G'
+
+    @show dimXA = size(XAt, 1)
+    @show dimXB = size(XBt, 1)
+    @show dimYA = size(YA, 1)
+    @show dimZB = size(ZB, 1)
+
+    modelXYA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
+    modelXZB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
 
     function train!(model, x, y)
 
@@ -63,28 +72,11 @@ function joint_within_with_predictors(
         return
     end
 
-    if reg > 0
-        G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
-    else
-        G = PythonOT.emd(wa, wb, C)
-    end
+    train!(modelXYA, XAt, YA)
+    train!(modelXZB, XBt, ZB)
 
-    delta = norm(G .- Gold)
-
-    XB2 = nB .* XA * G
-    XA2 = nA .* XB * G'
-
-    YB = nB .* YA * G
-    ZA = nA .* ZB * G'
-
-    XYA = vcat(XA2, YA)
-    XZB = vcat(XB2, ZB) 
-
-    train!(modelXYA, XYA, ZA)
-    train!(modelXZB, XZB, YB)
-
-    YBpred .= modelXZB(XZB)
-    ZApred .= modelXYA(XYA)
+    YBpred = modelXYA(XB)
+    ZApred = modelXZB(XA)
 
     return Flux.onecold(YBpred), Flux.onecold(ZApred)
 
