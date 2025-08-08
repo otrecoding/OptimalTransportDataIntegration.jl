@@ -1,4 +1,4 @@
-function joint_within_with_predictors(
+function joint_between_with_predictors(
         data;
         iterations = 10,
         learning_rate = 0.01,
