@@ -108,7 +108,7 @@ function joint_between_ref_JDOT(
             G2 = PythonOT.emd(wa, wb, C2)
         end
 
-        delta = norm(G .- Gold)
+        delta = norm(G1 .- Gold)
 
         YB = nB .* YA * G1
         ZA = nA .* ZB * G2'
@@ -124,7 +124,7 @@ function joint_between_ref_JDOT(
 
         fcost = loss_y .+ loss_z'
 
-        cost = sum(G .* fcost)
+        cost = sum(G1 .* fcost)
 
         @info "Delta: $(delta) \t  Loss: $(cost) "
 
