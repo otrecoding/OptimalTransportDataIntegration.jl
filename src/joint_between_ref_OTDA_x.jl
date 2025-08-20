@@ -1,4 +1,4 @@
-function joint_between_with_predictors(
+function joint_between_ref_OTDA_x(
         data;
         iterations = 10,
         learning_rate = 0.01,
@@ -37,13 +37,13 @@ function joint_between_with_predictors(
 
     C = C0 ./ maximum(C0)
 
-    dimXYA = size(XYA, 1)
-    dimXZB = size(XZB, 1)
+    dimXA = size(XA, 1)
+    dimXB = size(XB, 1)
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
 
-    modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
-    modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
+    modelXYA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
+    modelXZB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
 
     function train!(model, x, y)
 
@@ -85,53 +85,35 @@ function joint_between_with_predictors(
 
     end
 
-    YBpred = Flux.softmax(modelXZB(XZB))
-    ZApred = Flux.softmax(modelXYA(XYA))
+    YBpred = Flux.softmax(modelXZB(XB))
+    ZApred = Flux.softmax(modelXYA(XA))
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
     G = ones(length(wa), length(wb))
     cost = Inf
 
-    for iter in 1:iterations # BCD algorithm
+    #for iter in 1:iterations # BCD algorithm
 
-        Gold = copy(G)
-        costold = cost
+    Gold = copy(G)
+    costold = cost
 
-        if reg > 0
+    if reg > 0
             G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
-        else
+    else
             G = PythonOT.emd(wa, wb, C)
-        end
-
-        delta = norm(G .- Gold)
-
-        YB = nB .* YA * G
-        ZA = nA .* ZB * G'
-
-        train!(modelXYA, XYA, ZA)
-        train!(modelXZB, XZB, YB)
-
-        YBpred .= modelXZB(XZB)
-        ZApred .= modelXYA(XYA)
-
-        loss_y = alpha1 * loss_crossentropy(YA, YBpred)
-        loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
-
-        fcost = loss_y .+ loss_z'
-
-        cost = sum(G .* fcost)
-
-        @info "Delta: $(delta) \t  Loss: $(cost) "
-
-        if delta < 1.0e-16 || abs(costold - cost) < 1.0e-7
-            @info "converged at iter $iter "
-            break
-        end
-
-        C .= C0 ./ maximum(C0) .+ fcost
-
     end
+
+    delta = norm(G .- Gold)
+
+    XBt = nB .* XA * G
+    XAt = nA .* XB * G'
+
+    train!(modelXYA, XBt, YA)
+    train!(modelXZB, XAt, ZB)
+
+    ZApred .= modelXZB(XA)
+    YBpred .= modelXYA(XB)
 
     return Flux.onecold(YBpred), Flux.onecold(ZApred)
 
