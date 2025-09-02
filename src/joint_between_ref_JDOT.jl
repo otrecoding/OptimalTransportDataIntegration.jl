@@ -21,7 +21,7 @@ function joint_between_ref_JDOT(
     XA = transpose(Matrix{Float32}(dba[!, [:X1, :X2, :X3]])) #A changer pour p covariables
     #cols = names(dba, r"^X")              # toutes les colonnes dont le nom commence par "X"
     #XA = transpose(Matrix{Float32}(dba[:, cols]))
-    XB = transpose(Matrix{Float32}(dbb[:, cols]))
+    XB = transpose(Matrix{Float32}(dbb[!, [:X1, :X2, :X3]]))
     #cols = names(dbb, r"^X")              # toutes les colonnes dont le nom commence par "X"
     #XB = transpose(Matrix{Float32}(dbb[:, cols]))
     YA = Flux.onehotbatch(dba.Y, Ylevels)
