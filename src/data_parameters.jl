@@ -3,7 +3,28 @@ export DataParameters
 export read_params
 export save_params
 
-@with_kw struct DataParameters
+@with_kw struct DataParameters_d
+
+    nA::Int = 1000
+    nB::Int = 1000
+    pA = [
+               [0.5, 0.5],                # 2 catégories
+               [1/3,1/3,1/3],             # 3 catégories
+               [0.25, 0.25, 0.25, 0.25],  # 4 catégories
+          ]
+    pB = [
+               [0.7, 0.3],                # 2 catégories
+               [1/3,1/3,1/3],             # 3 catégories
+               [0.25, 0.25, 0.25, 0.25],  # 4 catégories
+          ]
+
+    aA::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
+    aB::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
+    r2::Float64 = 0.6
+
+end
+
+@with_kw struct DataParameters_c
 
     nA::Int = 1000
     nB::Int = 1000
@@ -11,15 +32,11 @@ export save_params
     mB::Vector{Float64} = [0.0, 0.0, 0.0]
     covA::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
     covB::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
-    px1c::Vector{Float64} = [0.5, 0.5]
-    px2c::Vector{Float64} = [0.333, 0.334, 0.333]
-    px3c::Vector{Float64} = [0.25, 0.25, 0.25, 0.25]
     aA::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
     aB::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
     r2::Float64 = 0.6
 
 end
-
 # function Base.show(io::IO, params::DataParameters)
 #
 #     println(io, "nA \t : $(params.nA)")
