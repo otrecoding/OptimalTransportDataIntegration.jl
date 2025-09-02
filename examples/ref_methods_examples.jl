@@ -1,7 +1,7 @@
 using OptimalTransportDataIntegration
 
-params = DataParameters(mB = [5, 5, 5], aA = [1.,1,1], aB = [1.,1,1])
-
+#params = DataParameters(mB = [5, 5, 5], aA = [1.,1,1], aB = [1.,1,1])
+params = DataParameters(mA = [0],mB = [5], covA=[1], aA = [1.], aB = [1.])
 rng = DataGenerator(params, scenario = 2, discrete = false)
 
 data = generate( rng ) 
