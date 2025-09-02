@@ -17,9 +17,6 @@ export generate
 struct DataGenerator
 
     params::DataParameters
-    binsA1::Vector{Float64}
-    binsA2::Vector{Float64}
-    binsA3::Vector{Float64}
     covAemp::Matrix{Float64}
     covBemp::Matrix{Float64}
     binsYA::Vector{Float64}
