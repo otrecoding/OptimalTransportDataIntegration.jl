@@ -201,6 +201,7 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesRefJDOT)
 
 end
 
+#=
 
 export JointOTBetweenBasesrefOTDAx
 
@@ -371,3 +372,5 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesrefOTDAyz)
     return JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
 end
+
+=#
