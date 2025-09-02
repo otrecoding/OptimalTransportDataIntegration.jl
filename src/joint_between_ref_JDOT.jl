@@ -113,7 +113,7 @@ function joint_between_ref_JDOT(
         YB = nB .* YA * G1
         ZA = nA .* ZB * G2'
 
-        train!(modelXYA, XA, ZA)
+        train!(modelXYA, XA, YA)
         train!(modelXZB, XB, YB)
 
         YBpred .= modelXZB(XB)
