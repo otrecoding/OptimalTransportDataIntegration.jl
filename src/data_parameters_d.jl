@@ -18,25 +18,13 @@ export save_params
                [0.25, 0.25, 0.25, 0.25],  # 4 catégories
           ]
 
-    aA::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
-    aB::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
+    aA::Vector{Float64} = [1.0, 1.0, 1]
+    aB::Vector{Float64} = [1.0, 1.0, 1]
     r2::Float64 = 0.6
 
 end
 
-@with_kw struct DataParameters_c
 
-    nA::Int = 1000
-    nB::Int = 1000
-    mA::Vector{Float64} = [0.0, 0.0, 0.0]
-    mB::Vector{Float64} = [0.0, 0.0, 0.0]
-    covA::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
-    covB::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
-    aA::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
-    aB::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
-    r2::Float64 = 0.6
-
-end
 # function Base.show(io::IO, params::DataParameters)
 #
 #     println(io, "nA \t : $(params.nA)")

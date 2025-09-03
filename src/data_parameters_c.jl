@@ -1,0 +1,84 @@
+import JSON
+export DataParameters
+export read_params
+export save_params
+
+
+
+@with_kw struct DataParameters_c
+
+    nA::Int = 1000
+    nB::Int = 1000
+    mA::Vector{Float64} = [0.0, 0.0, 0.0]
+    mB::Vector{Float64} = [0.0, 0.0, 0.0]
+    covA::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
+    covB::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
+    aA::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
+    aB::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
+    r2::Float64 = 0.6
+
+end
+# function Base.show(io::IO, params::DataParameters)
+#
+#     println(io, "nA \t : $(params.nA)")
+#     println(io, "nB \t :  $(params.nB)")
+#     println(io, "mA \t :  $(params.mA)")
+#     println(io, "mB \t :  $(params.mB)")
+#     println(io, "covA \t :  $(params.covA)")
+#     println(io, "covB \t :  $(params.covB)")
+#     println(io, "px1c \t :  $(params.px1c)")
+#     println(io, "px2c \t :  $(params.px2c)")
+#     println(io, "px3c \t :  $(params.px3c)")
+#     println(io, "aA \t :  $(params.aA)")
+#     println(io, "aB \t :  $(params.aB)")
+#     println(io, "r2 \t :  $(params.r2)")
+#
+# end
+
+"""
+$(SIGNATURES)
+
+Read the data generation scenario from a JSON file
+"""
+function read_params(jsonfile::AbstractString)
+
+    data = JSON.parsefile(jsonfile)
+
+    nA = Int(data["nA"])
+    nB = Int(data["nB"])
+
+    aA = Int.(data["aA"])
+    aB = Int.(data["aB"])
+
+    mA = vec(Int.(data["mA"]))
+    mB = vec(Int.(data["mB"]))
+
+    covA = stack([Float64.(x) for x in data["covA"]])
+    covB = stack([Float64.(x) for x in data["covB"]])
+
+    px1c = Float64.(data["px1c"])
+    px2c = Float64.(data["px2c"])
+    px3c = Float64.(data["px3c"])
+    r2 = Float64(data["r2"])
+
+    return DataParameters(nA, nB, mA, mB, covA, covB, px1c, px2c, px3c, p, aA, aB, r2)
+
+end
+
+"""
+$(SIGNATURES)
+
+Write the data generation scenario to a JSON file
+"""
+function save_params(jsonfile::AbstractString, params::DataParameters)
+
+    data = Dict(
+        fieldnames(DataParameters) .=>
+            getfield.(Ref(params), fieldnames(DataParameters)),
+    )
+
+    return open(jsonfile, "w") do io
+        JSON.print(io, data)
+    end
+
+end

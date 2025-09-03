@@ -74,8 +74,8 @@ function joint_ot_between_bases(
 
     indA = findall(base .== 1)
     indB = findall(base .== 2)
-
-    X_hot = Matrix{T}(one_hot_encoder(data[!, [:X1, :X2, :X3]]))
+    cols = names(data, r"^X")              # toutes les colonnes dont le nom commence par "X"
+    X_hot = Matrix{T}(one_hot_encoder(data[!, cols])) #A changer pour p covariables
     Y = Vector{T}(data.Y)
     Z = Vector{T}(data.Z)
 

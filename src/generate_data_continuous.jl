@@ -17,25 +17,16 @@ export generate
 struct DataGenerator
 
     params::DataParameters
-    covAemp::Matrix{Float64}
-    covBemp::Matrix{Float64}
     binsYA::Vector{Float64}
     binsZA::Vector{Float64}
     binsYB::Vector{Float64}
     binsZB::Vector{Float64}
     discrete::Bool
 
-    function DataGenerator_c(params; scenario = 1, n = 10000)
+    function DataGenerator_c(params; scenario = 1,  nA = 10000, nB = 10000,)
     
-        if length(params.mA) == 1
-            dA = Normal(params.mA[1], sqrt(params.covA[1,1]))
-            dB = Normal(params.mB[1], sqrt(params.covB[1,1]))
-        else
-            dA = MvNormal(params.mA, params.covA)
-            dB = MvNormal(params.mB, params.covB)
-
-        XA = rand(dA, n)
-        XB = rand(dB, n)
+        XA = rand(MvNormal(params.mA, params.covA),nA)
+        XB = rand(MvNormal(params.mB, params.covB),nB)
 
         X1 = XA
         X2 = XB
@@ -43,14 +34,11 @@ struct DataGenerator
         aA = params.aA
         aB = params.aB
 
-        covAemp = diagm(ones(3))
-        covBemp = diagm(ones(3))
-
         cr2 = 1 / params.r2 - 1
 
         covA = params.covA
         covB = params.covB
-
+        #il faut que covA et covB soient des matrices, c'est le cas
         varerrorA =
             cr2 *
             sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
@@ -58,8 +46,8 @@ struct DataGenerator
             cr2 *
             sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
 
-        Base1 = X1' * aA .+ rand(Normal(0.0, sqrt(varerrorA)), n)
-        Base2 = X2' * aB .+ rand(Normal(0.0, sqrt(varerrorB)), n)
+        Base1 = X1' * aA .+ rand(Normal(0.0, sqrt(varerrorA)), nA)
+        Base2 = X2' * aB .+ rand(Normal(0.0, sqrt(varerrorB)), nB)
 
         bYA = quantile(Base1, [0.25, 0.5, 0.75])
         bYB = quantile(Base2, [0.25, 0.5, 0.75])
@@ -81,8 +69,6 @@ struct DataGenerator
 
         return new(
             params,
-            covAemp,
-            covBemp,
             binsYA,
             binsZA,
             binsYB,
@@ -109,12 +95,15 @@ function generate_c(generator::DataGenerator; eps = 0.0)
 
     params = generator.params
 
-    if length(params.mA) == 1
-        dA = Normal(params.mA[1], sqrt(params.covA[1,1]))
-        dB = Normal(params.mB[1], sqrt(params.covB[1,1]))
-    else
-        dA = MvNormal(params.mA, params.covA)
-        dB = MvNormal(params.mB, params.covB)
+   # if length(params.mA) == 1
+   #     dA = Normal(params.mA[1], sqrt(params.covA[1,1]))
+    #    dB = Normal(params.mB[1], sqrt(params.covB[1,1]))
+   # else
+    #    dA = MvNormal(params.mA, params.covA)
+    #    dB = MvNormal(params.mB, params.covB)
+   # end
+    XA = rand(MvNormal(params.mA, params.covA),nA)
+    XB = rand(MvNormal(params.mB, params.covB),nB)
     X1 = XA
     X2 = XB
 
@@ -126,20 +115,25 @@ function generate_c(generator::DataGenerator; eps = 0.0)
     covA = params.covA
     covB = params.covB
 
-    σA = cr2 * sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
-    σB = cr2 * sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
+    varerrorA =
+            cr2 *
+            sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
+    varerrorB =
+            cr2 *
+            sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
 
-    Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(σA)), params.nA)
-    Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(σB)), params.nB)
+
+    Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(varerrorA)), params.nA)
+    Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(varerrorB)), params.nB)
 
     YA = digitize(Y1, generator.binsYA)
     ZA = digitize(Y1, generator.binsZA)
 
     YB = digitize(Y2, generator.binsYB .+ eps)
     ZB = digitize(Y2, generator.binsZB .+ eps)
-
-    df = DataFrame(hcat(X1, X2)', [:X1, :X2, :X3]) #######changer ici pour q variable X JE NE COMPRENDS PAS
-
+    p=length(aA)
+    colnames = Symbol.("X" .* string.(1:p))  # [:X1, :X2, ..., :Xp]
+    df = DataFrame(vcat(X1', X2'), colnames)
     df.Y = vcat(YA, YB)
     df.Z = vcat(ZA, ZB)
     df.database = vcat(fill(1, params.nA), fill(2, params.nB))

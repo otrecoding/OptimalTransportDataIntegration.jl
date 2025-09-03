@@ -18,8 +18,9 @@ function joint_between_ref_OTDA_x(
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
-    XA = transpose(Matrix{Float32}(dba[!, [:X1, :X2, :X3]]))
-    XB = transpose(Matrix{Float32}(dbb[!, [:X1, :X2, :X3]]))
+    cols = names(dba, r"^X")              # toutes les colonnes dont le nom commence par "X"
+    XA = transpose(Matrix{Float32}(dba[:, cols]))
+    XB = transpose(Matrix{Float32}(dbb[:, cols]))
 
     YA = Flux.onehotbatch(dba.Y, Ylevels)
     ZB = Flux.onehotbatch(dbb.Z, Zlevels)

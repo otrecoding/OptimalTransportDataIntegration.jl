@@ -25,33 +25,29 @@ struct DataGenerator
     binsZB::Vector{Float64}
     discrete::Bool
 
-    function DataGenerator_d(params; scenario = 1, n = 10000, discrete = true)
-    
-          XA= [rand(Categorical(pA[i]), n) for i in 1:q]
-          XB= [rand(Categorical(pB[i]), n) for i in 1:q]
-        
+    function DataGenerator_d(params; scenario = 1, nA = 10000, nB = 10000)
+          q = length(pA)
+          XA=  stack([rand(Categorical(pA[i]), nA) for i in 1:q])
+          XB=  stack([rand(Categorical(pB[i]), nB) for i in 1:q])
+
           X1 = XA
           X2 = XB
-          covAemp = cov(XA, dims = 2)
-          covBemp = cov(XB, dims = 2)
+          covAemp = cov(XA, dims = 1)
+          covBemp = cov(XB, dims = 1)
 
           aA = params.aA
           aB = params.aB
 
           cr2 = 1 / params.r2 - 1
 
-          covA = params.covA
-          covB = params.covB
+          covA = covAemp
+          covB = covBemp
 
-          varerrorA =
-            cr2 *
-            sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
-          varerrorB =
-            cr2 *
-            sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
-
-          Base1 = X1' * aA .+ rand(Normal(0.0, sqrt(varerrorA)), n)
-          Base2 = X2' * aB .+ rand(Normal(0.0, sqrt(varerrorB)), n)
+          σA = cr2 * sum([aA[i]*aA[j]*cov(XA[:,i], XA[:,j]) for i in 1:q, j in 1:q])
+          σB = cr2 * sum([aB[i]*aB[j]*cov(XB[:,i], XB[:,j]) for i in 1:q, j in 1:q])
+          #ci dessous ne marche pas !
+          Base1 = X1 * aA .+ rand(Normal(0.0, sqrt(σA)), params.nA)
+          Base2 = X2 * aB .+ rand(Normal(0.0, sqrt(σB)), params.nB)
 
           bYA = quantile(Base1, [0.25, 0.5, 0.75])
           bYB = quantile(Base2, [0.25, 0.5, 0.75])
@@ -101,8 +97,9 @@ function generate_d(generator::DataGenerator; eps = 0.0)
 
     params = generator.params
 
-    XA= [rand(Categorical(pA[i]), n) for i in 1:q]
-    XB= [rand(Categorical(pB[i]), n) for i in 1:q]
+    q = length(pA)
+    XA=  stack([rand(Categorical(pA[i]), nA) for i in 1:q])
+    XB=  stack([rand(Categorical(pB[i]), nB) for i in 1:q])
     X1 = XA
     X2 = XB
 
@@ -112,11 +109,12 @@ function generate_d(generator::DataGenerator; eps = 0.0)
     covA = generator.covAemp
     covB = generator.covBemp
 
-    σA = cr2 * sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
-    σB = cr2 * sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
+    cr2 = 1 / r2 - 1
+    σA = cr2 * sum([aA[i]*aA[j]*cov(XA[:,i], XA[:,j]) for i in 1:q, j in 1:q])
+    σB = cr2 * sum([aB[i]*aB[j]*cov(XB[:,i], XB[:,j]) for i in 1:q, j in 1:q])
 
-    Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(σA)), params.nA)
-    Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(σB)), params.nB)
+    Y1 = X1 * aA .+ rand(Normal(0.0, sqrt(σA)), params.nA)
+    Y2 = X2 * aB .+ rand(Normal(0.0, sqrt(σB)), params.nB)
 
     YA = digitize(Y1, generator.binsYA)
     ZA = digitize(Y1, generator.binsZA)
@@ -124,14 +122,14 @@ function generate_d(generator::DataGenerator; eps = 0.0)
     YB = digitize(Y2, generator.binsYB .+ eps)
     ZB = digitize(Y2, generator.binsZB .+ eps)
 
-    @info "Categories in XA1 $(sort!(OrderedDict(countmap(X11))))"
-    @info "Categories in XA2 $(sort!(OrderedDict(countmap(X12))))"
-    @info "Categories in XA3 $(sort!(OrderedDict(countmap(X13))))"
-    @info "Categories in XB1 $(sort!(OrderedDict(countmap(X21))))"
-    @info "Categories in XB2 $(sort!(OrderedDict(countmap(X22))))"
-    @info "Categories in XB3 $(sort!(OrderedDict(countmap(X23))))"
-    df = DataFrame(hcat(XX1, XX2, XX3) .- 1, [:X1, :X2, :X3]) ####### JE NE COMPRENDS PAS
+    for j in 1:q
+        @info "Categories in XA$j $(sort!(OrderedDict(countmap(XA[:,j]))))"
+        @info "Categories in XB$j $(sort!(OrderedDict(countmap(XB[:,j]))))"
+    end
 
+    # Construire automatiquement le DataFrame
+    colnames = Symbol.("X" .* string.(1:q))  # [:X1, :X2, ..., :Xq]
+    df = DataFrame(vcat(X1, X2), colnames)
 
     df.Y = vcat(YA, YB)
     df.Z = vcat(ZA, ZB)
