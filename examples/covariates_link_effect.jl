@@ -31,7 +31,7 @@ function covariates_link_effect(nsimulations::Int, r2values)
 
             params = DataParameters(r2 = r2)
 
-            rng = DataGenerator(params, scenario = scenario)
+            rng = DiscreteDataGenerator(params, scenario = scenario)
 
             for i in 1:nsimulations
 

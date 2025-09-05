@@ -27,7 +27,7 @@ import Flux: Chain, Dense, relu, softmax, onehotbatch, onecold, logitcrossentrop
 # ## Dataset
 
 params = DataParameters()
-rng = DataGenerator(params)
+rng = DiscreteDataGenerator(params)
 data = generate(rng)
 
 dba = subset(data, :database => ByRow(==(1)))
@@ -82,7 +82,7 @@ method = SimpleLearning()
 
 @show accuracy(otrecod(data, method))
 
-rng = DataGenerator(params, discrete = false)
+rng = ContinuousDataGenerator(params)
 data = generate(rng)
 
 @show accuracy(otrecod(data, method))

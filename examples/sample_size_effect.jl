@@ -29,7 +29,7 @@ function sample_size_effect(all_params, nsimulations)
 
         for params in all_params, scenario in (1, 2)
 
-            rng = DataGenerator(params, scenario = scenario)
+            rng = DiscreteDataGenerator(params, scenario = scenario)
 
             for i in 1:nsimulations
 
