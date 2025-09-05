@@ -16,8 +16,8 @@ export generate
 struct DiscreteDataGenerator
 
     params::DataParameters
-    covAemp::Matrix{Float64}
-    covBemp::Matrix{Float64}
+    covA::Matrix{Float64}
+    covB::Matrix{Float64}
     binsYA::Vector{Float64}
     binsZA::Vector{Float64}
     binsYB::Vector{Float64}
@@ -25,7 +25,7 @@ struct DiscreteDataGenerator
 
     function DiscreteDataGenerator(params; scenario = 1, n = 10000)
 
-        q = length(params.pA)
+        q = length(params.mA)
 
         XA = stack([rand(Categorical(params.pA[i]), params.nA) for i in 1:q], dims=1)
         XB = stack([rand(Categorical(params.pB[i]), params.nB) for i in 1:q], dims=1)
@@ -33,19 +33,21 @@ struct DiscreteDataGenerator
         X1 = XA
         X2 = XB
 
-        covAemp = cov(XA, dims = 1)
-        covBemp = cov(XB, dims = 1)
+        if q === 1
+            covA = [[cov(vec(XA))]]
+            covB = [[cov(vec(XB))]]
+        else
+            covA = cov(XA, dims = 1)
+            covB = cov(XB, dims = 1)
+        end
 
         aA = params.aA
         aB = params.aB
 
         cr2 = 1 / params.r2 - 1
 
-        covA = covAemp
-        covB = covBemp
-
-        σA = cr2 * sum([params.aA[i]*aA[j]*cov(XA[:,i], XA[:,j]) for i in 1:q, j in 1:q])
-        σB = cr2 * sum([params.aB[i]*aB[j]*cov(XB[:,i], XB[:,j]) for i in 1:q, j in 1:q])
+        σA = cr2 * sum([params.aA[i]*aA[j]*cov(XA[i,:], XA[j,:]) for i in 1:q, j in 1:q])
+        σB = cr2 * sum([params.aB[i]*aB[j]*cov(XB[i,:], XB[j,:]) for i in 1:q, j in 1:q])
         
         Base1 = X1' * params.aA[1:q] .+ rand(Normal(0.0, sqrt(σA)), params.nA)
         Base2 = X2' * params.aB[1:q] .+ rand(Normal(0.0, sqrt(σB)), params.nB)
@@ -69,8 +71,8 @@ struct DiscreteDataGenerator
 
         return new(
             params,
-            covAemp,
-            covBemp,
+            covA,
+            covB,
             binsYA,
             binsZA,
             binsYB,
