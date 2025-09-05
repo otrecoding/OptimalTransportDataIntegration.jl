@@ -11,29 +11,26 @@ function joint_ot_within_base_continuous(
     XA = subset(data, :database => x -> x .== 1.0)
     XB = subset(data, :database => x -> x .== 2.0)
 
-    b1 = quantile(data.X1, collect(0.1:0.1:0.9))
-    bins11 = vcat(-Inf, b1, +Inf)
+    cols = names(data, r"^X")   # toutes les colonnes X1, X2, ..., Xp
+    p = length(cols)
 
-    X11 = digitize(XA.X1, bins11)
-    X21 = digitize(XB.X1, bins11)
+    Xlist = []  # va contenir les colonnes discrétisées
 
-    b1 = quantile(data.X2, collect(0.1:0.1:0.9))
-    bins12 = vcat(-Inf, b1, +Inf)
+    for col in cols
+    # bornes de discrétisation basées sur les quantiles de la colonne dans data
+        b = quantile(data[!, col], collect(0.1:0.1:0.9))
+        bins = vcat(-Inf, b, +Inf)
 
-    X12 = digitize(XA.X2, bins12)
-    X22 = digitize(XB.X2, bins12)
+    # discrétisation pour XA et XB
+        XA_d = digitize(XA[!, col], bins)
+        XB_d = digitize(XB[!, col], bins)
 
-    b1 = quantile(data.X3, collect(0.1:0.1:0.9))
-    bins13 = vcat(-Inf, b1, +Inf)
+    # concaténer les deux
+        push!(Xlist, vcat(XA_d, XB_d))
+end
 
-    X13 = digitize(XA.X3, bins13)
-    X23 = digitize(XB.X3, bins13)
-
-    X1 = vcat(X11, X21)
-    X2 = vcat(X12, X22)
-    X3 = vcat(X13, X23)
-
-    X = hcat(X1, X2, X3)
+# Construire la matrice finale
+    X = hcat(Xlist)  
     Y = Vector(data.Y)
     Z = Vector(data.Z)
 

@@ -37,7 +37,7 @@ using OptimalTransportDataIntegration # import the package
 
 params = DataParameters()  # Create the parameters set
 
-rng = DataGenerator(params)  # Create the random generator
+rng = DiscreteDataGenerator(params)  # Create the random generator
 
 data = generate( rng ) # Generate a dataset 
 
@@ -51,7 +51,7 @@ println(accuracy(result))  # Print accuracies on each distinct variables and the
 It is possible tu use continuous explanatory variables by using
 
 ```
-rng = DataGenerator(params, discrete = false)
+rng = ContinuousDataGenerator(params)
 ```
 
 outcomes are always categorical, Y outcome levels are 1:4 and Z outcome levels are 1:3.

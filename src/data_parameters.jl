@@ -11,38 +11,28 @@ export save_params
     mB::Vector{Float64} = [0.0, 0.0, 0.0]
     covA::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
     covB::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
-    px1c::Vector{Float64} = [0.5, 0.5]
-    px2c::Vector{Float64} = [0.333, 0.334, 0.333]
-    px3c::Vector{Float64} = [0.25, 0.25, 0.25, 0.25]
     aA::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
     aB::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
     r2::Float64 = 0.6
+    pA::Vector{Vector{Float64}} = [
+               [0.5, 0.5],                # 2 categories
+               [1/3,1/3,1/3],             # 3 categories
+               [0.25, 0.25, 0.25, 0.25],  # 4 categories
+          ]
+    pB::Vector{Vector{Float64}} = [
+               [0.7, 0.3],                # 2 categories
+               [1/3,1/3,1/3],             # 3 categories
+               [0.25, 0.25, 0.25, 0.25],  # 4 categories
+          ]
 
 end
-
-# function Base.show(io::IO, params::DataParameters)
-#
-#     println(io, "nA \t : $(params.nA)")
-#     println(io, "nB \t :  $(params.nB)")
-#     println(io, "mA \t :  $(params.mA)")
-#     println(io, "mB \t :  $(params.mB)")
-#     println(io, "covA \t :  $(params.covA)")
-#     println(io, "covB \t :  $(params.covB)")
-#     println(io, "px1c \t :  $(params.px1c)")
-#     println(io, "px2c \t :  $(params.px2c)")
-#     println(io, "px3c \t :  $(params.px3c)")
-#     println(io, "aA \t :  $(params.aA)")
-#     println(io, "aB \t :  $(params.aB)")
-#     println(io, "r2 \t :  $(params.r2)")
-#
-# end
 
 """
 $(SIGNATURES)
 
 Read the data generation scenario from a JSON file
 """
-function read_params(jsonfile::AbstractString)
+function read(jsonfile::AbstractString)
 
     data = JSON.parsefile(jsonfile)
 
@@ -58,12 +48,11 @@ function read_params(jsonfile::AbstractString)
     covA = stack([Float64.(x) for x in data["covA"]])
     covB = stack([Float64.(x) for x in data["covB"]])
 
-    px1c = Float64.(data["px1c"])
-    px2c = Float64.(data["px2c"])
-    px3c = Float64.(data["px3c"])
     r2 = Float64(data["r2"])
+    @show pA = [ Float64.(v) for v in data["pA"]]
+    @show pB = [ Float64.(v) for v in data["pB"]]
 
-    return DataParameters(nA, nB, mA, mB, covA, covB, px1c, px2c, px3c, p, aA, aB, r2)
+    return DataParameters(nA, nB, mA, mB, covA, covB, aA, aB, r2, pA, pB)
 
 end
 
@@ -72,7 +61,7 @@ $(SIGNATURES)
 
 Write the data generation scenario to a JSON file
 """
-function save_params(jsonfile::AbstractString, params::DataParameters)
+function save(jsonfile::AbstractString, params::DataParameters)
 
     data = Dict(
         fieldnames(DataParameters) .=>

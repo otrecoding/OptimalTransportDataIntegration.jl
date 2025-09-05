@@ -15,7 +15,6 @@ using DataFrames
 using Distances
 using Statistics
 
-
 digitize(x, bins) = searchsortedlast.(Ref(bins), x)
 
 function categorize_using_quartile(data)
@@ -50,7 +49,7 @@ function categorize_using_quartile(data)
 end
 
 params = DataParameters()
-rng = DataGenerator(params, discrete = false)
+rng = ContinuousDataGenerator(params)
 data = generate(rng)
 
 

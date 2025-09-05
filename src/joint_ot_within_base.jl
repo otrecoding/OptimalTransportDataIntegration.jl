@@ -343,7 +343,7 @@ function joint_ot_within_base_discrete(
 
     database = data.database
 
-    Xnames = ["X1", "X2", "X3"]
+    Xnames = names(data, r"^X")
 
     X = Matrix(data[!, Xnames])
     Y = Vector(data.Y)

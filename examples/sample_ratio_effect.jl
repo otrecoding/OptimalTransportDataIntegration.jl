@@ -33,7 +33,7 @@ function sample_ratio_effect(nsimulations::Int, ratios)
             nA = 1000
             nB = nA ÷ r
             params = DataParameters(nB = nB)
-            rng = DataGenerator(params, scenario = scenario)
+            rng = DiscreteDataGenerator(params, scenario = scenario)
 
             for i in 1:nsimulations
 

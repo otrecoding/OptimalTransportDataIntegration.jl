@@ -7,7 +7,7 @@ using Test
 
 params = DataParameters(nA = 1000, nB = 1000)
 
-rng = DataGenerator(params, n = 1000, scenario = 1)
+rng = DiscreteDataGenerator(params, n = 1000, scenario = 1)
 
 data = generate(rng)
 
@@ -67,7 +67,7 @@ end
 @testset "Continuous data" begin
 
     params = DataParameters()
-    rng = DataGenerator(params, scenario = 1, discrete = false)
+    rng = ContinuousDataGenerator(params, scenario = 1)
     data = generate(rng)
     @test all(accuracy(otrecod(data, JointOTWithinBase())) .> 0.5)
     @test all(accuracy(otrecod(data, JointOTBetweenBases())) .> 0.5)

@@ -7,7 +7,8 @@ using Printf
 
 # Data generation functions
 include("data_parameters.jl")
-include("generate_data.jl")
+include("generate_discrete_data.jl")
+include("generate_continuous_data.jl")
 include("one_hot_encoder.jl")
 
 # OTRecod functions
@@ -24,8 +25,10 @@ include("joint_ot_between_bases.jl")
 include("joint_ot_between_bases_with_predictors.jl")
 include("simple_learning.jl")
 include("simple_learning_with_continuous_data.jl")
-
-# Generic interface
+include("joint_between_ref_JDOT.jl")
+include("joint_between_ref_OTDA_x.jl")
+include("joint_between_ref_OTDA_yz.jl")
+include("joint_between_ref_OTDA_yz_pred.jl")
 
 struct JointOTResult
 

@@ -1,4 +1,4 @@
-function joint_between_with_predictors(
+function joint_between_ref_JDOT(
         data;
         iterations = 10,
         learning_rate = 0.01,
@@ -21,7 +21,6 @@ function joint_between_with_predictors(
     cols = names(dba, r"^X")              # toutes les colonnes dont le nom commence par "X"
     XA = transpose(Matrix{Float32}(dba[:, cols]))
     XB = transpose(Matrix{Float32}(dbb[:, cols]))
-
     YA = Flux.onehotbatch(dba.Y, Ylevels)
     ZB = Flux.onehotbatch(dbb.Z, Zlevels)
 
@@ -33,18 +32,19 @@ function joint_between_with_predictors(
 
     wa = ones(nA) ./ nA
     wb = ones(nB) ./ nB
-
+    #pour le cas p=1 il faut XA et XB en matrice ==> c'est le cas
     C0 = pairwise(Euclidean(), XA, XB, dims = 2)
 
-    C = C0 ./ maximum(C0)
+    C1 = C0 ./ maximum(C0)
+    C2 = C0 ./ maximum(C0)
 
-    dimXYA = size(XYA, 1)
-    dimXZB = size(XZB, 1)
+    dimXA = size(XA, 1)
+    dimXB = size(XB, 1)
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
 
-    modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
-    modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
+    modelXYA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
+    modelXZB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
 
     function train!(model, x, y)
 
@@ -86,42 +86,45 @@ function joint_between_with_predictors(
 
     end
 
-    YBpred = Flux.softmax(modelXZB(XZB))
-    ZApred = Flux.softmax(modelXYA(XYA))
+    YBpred = Flux.softmax(modelXZB(XB))
+    ZApred = Flux.softmax(modelXYA(XA))
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
-    G = ones(length(wa), length(wb))
+    G1 = ones(length(wa), length(wb))
+    G2 = ones(length(wa), length(wb))
     cost = Inf
 
     for iter in 1:iterations # BCD algorithm
 
-        Gold = copy(G)
+        Gold = copy(G1)
         costold = cost
 
         if reg > 0
-            G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
+            G1 = PythonOT.mm_unbalanced(wa, wb, C1, (reg_m1, reg_m2); reg = reg, div = "kl")
+            G2 = PythonOT.mm_unbalanced(wa, wb, C2, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
-            G = PythonOT.emd(wa, wb, C)
+            G1 = PythonOT.emd(wa, wb, C1)
+            G2 = PythonOT.emd(wa, wb, C2)
         end
 
-        delta = norm(G .- Gold)
+        delta = norm(G1 .- Gold)
 
-        YB = nB .* YA * G
-        ZA = nA .* ZB * G'
+        YB = nB .* YA * G1
+        ZA = nA .* ZB * G2'
 
-        train!(modelXYA, XYA, ZA)
-        train!(modelXZB, XZB, YB)
+        train!(modelXYA, XB, YB)
+        train!(modelXZB, XA, ZA)
 
-        YBpred .= modelXZB(XZB)
-        ZApred .= modelXYA(XYA)
+        YBpred .= modelXZB(XB)
+        ZApred .= modelXYA(XA)
 
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
 
         fcost = loss_y .+ loss_z'
 
-        cost = sum(G .* fcost)
+        cost = sum(G1 .* fcost)
 
         @info "Delta: $(delta) \t  Loss: $(cost) "
 
@@ -130,7 +133,8 @@ function joint_between_with_predictors(
             break
         end
 
-        C .= C0 ./ maximum(C0) .+ fcost
+        C1 .= C0 ./ maximum(C0) .+ loss_y 
+        C2 .= C0 ./ maximum(C0) .+ loss_z'
 
     end
 
