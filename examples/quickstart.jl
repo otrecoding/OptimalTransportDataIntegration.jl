@@ -23,7 +23,7 @@ for mB in [[1, 0, 0], [5, 5, 5], [10, 10, 10]]
 
     println("mB = $mB .......")
     params = DataParameters(mB = mB)
-    rng = DataGenerator(params)
+    rng = DiscreteDataGenerator(params)
     data = generate(rng)
     result = otrecod(data, JointOTWithinBase())
     est = accuracy(result)

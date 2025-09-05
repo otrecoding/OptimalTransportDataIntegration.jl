@@ -23,9 +23,10 @@ function simple_learning(
 
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
-    cols = names(dba, r"^X")   
-    XA = onehot(Matrix(dba[!,cols]))
-    XB = onehot(Matrix(dbb[!, cols]))
+
+    colnames = names(data, r"^X")
+    XA = onehot(Matrix(dba[!, colnames]))
+    XB = onehot(Matrix(dbb[!, colnames]))
 
     YA = Flux.onehotbatch(dba.Y, 1:4)
     ZB = Flux.onehotbatch(dbb.Z, 1:3)

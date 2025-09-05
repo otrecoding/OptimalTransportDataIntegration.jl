@@ -31,7 +31,7 @@ function conditional_distribution(nsimulations::Int, epsilons)
 
         for scenario in (1, 2)
 
-            rng = DataGenerator(params, scenario = scenario)
+            rng = DiscreteDataGenerator(params, scenario = scenario)
 
             for eps in epsilons
 

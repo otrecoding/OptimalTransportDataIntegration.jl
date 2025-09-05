@@ -6,10 +6,9 @@ using Parameters
 using Printf
 
 # Data generation functions
-include("data_parameters_discrete.jl")
-include("data_parameters_continuous.jl")
-include("generate_data_c.jl")
-include("generate_data_d.jl")
+include("data_parameters.jl")
+include("generate_discrete_data.jl")
+include("generate_continuous_data.jl")
 include("one_hot_encoder.jl")
 
 # OTRecod functions
