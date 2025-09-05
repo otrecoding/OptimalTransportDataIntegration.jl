@@ -96,7 +96,6 @@ struct DiscreteDataGenerator
             binsZA,
             binsYB,
             binsZB,
-            discrete,
         )
 
     end
