@@ -34,8 +34,8 @@ struct DiscreteDataGenerator
         X2 = XB
 
         if q === 1
-            covA = [[cov(vec(XA))]]
-            covB = [[cov(vec(XB))]]
+            covA = fill(cov(vec(XA)), (1,1))
+            covB = fill(cov(vec(XB)), (1,1))
         else
             covA = cov(XA, dims = 1)
             covB = cov(XB, dims = 1)
@@ -98,7 +98,7 @@ function generate(generator::DiscreteDataGenerator; eps = 0.0)
 
     params = generator.params
 
-    q = length(params.pA)
+    q = length(params.mA)
 
     XA = stack([rand(Categorical(params.pA[i]), params.nA) for i in 1:q], dims=1)
     XB = stack([rand(Categorical(params.pB[i]), params.nB) for i in 1:q], dims=1)
@@ -111,12 +111,12 @@ function generate(generator::DiscreteDataGenerator; eps = 0.0)
     aA = params.aA[1:q]
     aB = params.aB[1:q]
 
-    covA = generator.covAemp
-    covB = generator.covBemp
+    covA = generator.covA
+    covB = generator.covB
 
     cr2 = 1 / params.r2 - 1
-    σA = cr2 * sum([aA[i]*aA[j]*cov(XA[:,i], XA[:,j]) for i in 1:q, j in 1:q])
-    σB = cr2 * sum([aB[i]*aB[j]*cov(XB[:,i], XB[:,j]) for i in 1:q, j in 1:q])
+    σA = cr2 * sum([aA[i]*aA[j]*cov(XA[i,:], XA[j,:]) for i in 1:q, j in 1:q])
+    σB = cr2 * sum([aB[i]*aB[j]*cov(XB[i,:], XB[j,:]) for i in 1:q, j in 1:q])
 
     Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(σA)), params.nA)
     Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(σB)), params.nB)
