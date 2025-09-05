@@ -16,7 +16,6 @@ export generate
 struct DiscreteDataGenerator
 
     params::DataParameters
-    binsA::Vector{Vector{Float64}}
     covAemp::Matrix{Float64}
     covBemp::Matrix{Float64}
     binsYA::Vector{Float64}
@@ -26,54 +25,35 @@ struct DiscreteDataGenerator
 
     function DiscreteDataGenerator(params; scenario = 1, n = 10000)
 
-        dA = MvNormal(params.mA, params.covA)
-        dB = MvNormal(params.mB, params.covB)
+        q = length(params.pA)
 
-        XA = rand(dA, n)
-        XB = rand(dB, n)
+        XA = stack([rand(Categorical(params.pA[i]), params.nA) for i in 1:q], dims=1)
+        XB = stack([rand(Categorical(params.pB[i]), params.nB) for i in 1:q], dims=1)
 
-        pxcc = [cumsum(pxc)[1:(end - 1)] for pxc in params.pxc]
+        X1 = XA
+        X2 = XB
 
-        qxAc = [quantile.(Normal(params.mA[i], sqrt(params.covA[i, i])), pxcc[i]) for i in eachindex(pxcc)]
-        qxBc = [quantile.(Normal(params.mB[i], sqrt(params.covB[i, i])), pxcc[i]) for i in eachindex(pxcc)]
+        covAemp = cov(XA, dims = 1)
+        covBemp = cov(XB, dims = 1)
 
-        binsA = [vcat(-Inf, qx, Inf) for qx in qxAc]
-
-        X1 = [digitize(XA[i, :], binsA[i]) for i in eachindex(binsA)]
-        X2 = [digitize(XB[i, :], binsA[i]) for i in eachindex(binsA)]
-
-        X1c = [to_categorical(X)[2:end, :] for X in X1]
-        X2c = [to_categorical(X)[2:end, :] for X in X2]
-
-        X1 = vcat(X1c...)
-        X2 = vcat(X2c...)
-
-        covAemp = cov(X1, dims = 2)
-        covBemp = cov(X2, dims = 2)
+        aA = params.aA
+        aB = params.aB
 
         cr2 = 1 / params.r2 - 1
 
-        aA = params.aA[1:size(X1,1)]
-        aB = params.aB[1:size(X2,1)]
+        covA = covAemp
+        covB = covBemp
 
-        covA = params.covA
-        covB = params.covB
-
-        varerrorA =
-            cr2 *
-            sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
-        varerrorB =
-            cr2 *
-            sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
-
-        Base1 = X1' * aA .+ rand(Normal(0.0, sqrt(varerrorA)), n)
-        Base2 = X2' * aB .+ rand(Normal(0.0, sqrt(varerrorB)), n)
+        σA = cr2 * sum([params.aA[i]*aA[j]*cov(XA[:,i], XA[:,j]) for i in 1:q, j in 1:q])
+        σB = cr2 * sum([params.aB[i]*aB[j]*cov(XB[:,i], XB[:,j]) for i in 1:q, j in 1:q])
+        
+        Base1 = X1' * params.aA[1:q] .+ rand(Normal(0.0, sqrt(σA)), params.nA)
+        Base2 = X2' * params.aB[1:q] .+ rand(Normal(0.0, sqrt(σB)), params.nB)
 
         bYA = quantile(Base1, [0.25, 0.5, 0.75])
         bYB = quantile(Base2, [0.25, 0.5, 0.75])
         bZA = quantile(Base1, [1 / 3, 2 / 3])
         bZB = quantile(Base2, [1 / 3, 2 / 3])
-
 
         if scenario == 1
             binsYA = vcat(-Inf, bYA, Inf)
@@ -89,7 +69,6 @@ struct DiscreteDataGenerator
 
         return new(
             params,
-            binsA,
             covAemp,
             covBemp,
             binsYA,
@@ -117,31 +96,25 @@ function generate(generator::DiscreteDataGenerator; eps = 0.0)
 
     params = generator.params
 
-    dA = MvNormal(params.mA, params.covA)
-    XA = rand(dA, params.nA)
-    dB = MvNormal(params.mB, params.covB)
-    XB = rand(dB, params.nB)
+    q = length(params.pA)
 
-    X1 = [digitize(XA[i, :], generator.binsA[i]) for i in eachindex(generator.binsA)]
-    X2 = [digitize(XB[i, :], generator.binsA[i]) for i in eachindex(generator.binsA)]
+    XA = stack([rand(Categorical(params.pA[i]), params.nA) for i in 1:q], dims=1)
+    XB = stack([rand(Categorical(params.pB[i]), params.nB) for i in 1:q], dims=1)
 
-    X1c = [to_categorical(X)[2:end, :] for X in X1]
-    X2c = [to_categorical(X)[2:end, :] for X in X2]
-
-    XX = [vcat(x1, x2) for (x1, x2) in zip(X1, X2)]
-
-    X1 = vcat(X1c...)
-    X2 = vcat(X2c...)
+    X1 = XA
+    X2 = XB
 
     cr2 = 1.0 / params.r2 - 1
 
-    aA = params.aA
-    aB = params.aB
+    aA = params.aA[1:q]
+    aB = params.aB[1:q]
+
     covA = generator.covAemp
     covB = generator.covBemp
 
-    σA = cr2 * sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
-    σB = cr2 * sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
+    cr2 = 1 / params.r2 - 1
+    σA = cr2 * sum([aA[i]*aA[j]*cov(XA[:,i], XA[:,j]) for i in 1:q, j in 1:q])
+    σB = cr2 * sum([aB[i]*aB[j]*cov(XB[:,i], XB[:,j]) for i in 1:q, j in 1:q])
 
     Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(σA)), params.nA)
     Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(σB)), params.nB)
@@ -152,18 +125,25 @@ function generate(generator::DiscreteDataGenerator; eps = 0.0)
     YB = digitize(Y2, generator.binsYB .+ eps)
     ZB = digitize(Y2, generator.binsZB .+ eps)
 
-    columns = [Symbol("X$i") for i in eachindex(XX)]
-    df = DataFrame(hcat(XX...) .- 1, columns)
+    for j in 1:q
+        @info "Categories in XA$j $(sort!(OrderedDict(countmap(XA[j,:]))))"
+        @info "Categories in XB$j $(sort!(OrderedDict(countmap(XB[j,:]))))"
+    end
+
+    colnames = Symbol.("X" .* string.(1:q)) 
+
+    df = DataFrame(hcat(X1, X2)', colnames)
 
     df.Y = vcat(YA, YB)
     df.Z = vcat(ZA, ZB)
     df.database = vcat(fill(1, params.nA), fill(2, params.nB))
 
-    @info "Categories in YA $(sort!(OrderedDict(countmap(YA))))"
+    @info "Categories in YA $(sort!(OrderedDict(countmap(YA))))" #
     @info "Categories in ZA $(sort!(OrderedDict(countmap(ZA))))"
     @info "Categories in YB $(sort!(OrderedDict(countmap(YB))))"
     @info "Categories in ZB $(sort!(OrderedDict(countmap(ZB))))"
 
     return df
+
 
 end
