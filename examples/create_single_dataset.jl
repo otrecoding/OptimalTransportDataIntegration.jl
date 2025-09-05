@@ -21,7 +21,7 @@ using OptimalTransportDataIntegration
 
 params = DataParameters(nA = 1000, nB = 1000, mB = [0, 0, 0], p = 0.2)
 
-rng = DataGenerator(params)
+rng = DiscreteDataGenerator(params)
 data = generate(rng, eps = 0.01)
 
 outdir = @__DIR__

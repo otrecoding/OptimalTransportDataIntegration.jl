@@ -9,7 +9,7 @@ for mB in mB_values
 
     params = DataParameters(nA = 1000, nB = 1000, mB = mB)
 
-    rng = DataGenerator(params)
+    rng = DiscreteDataGenerator(params)
     data = generate(rng)
 
 
