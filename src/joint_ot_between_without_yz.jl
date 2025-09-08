@@ -1,4 +1,4 @@
-function joint_between_withoutyz(
+function joint_between_without_yz(
         data;
         iterations = 10,
         learning_rate = 0.01,
@@ -7,18 +7,18 @@ function joint_between_withoutyz(
         hidden_layer_size = 10,
         reg = 0.0,
         reg_m1 = 0.0,
-        reg_m2 = 0.0
+        reg_m2 = 0.0,
+        Ylevels = 1:4,
+        Zlevels = 1:3
     )
 
     T = Int32
 
-    Ylevels = 1:4
-    Zlevels = 1:3
-
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
-    cols = names(dba, r"^X")              # toutes les colonnes dont le nom commence par "X"
+    cols = names(dba, r"^X")   
+
     XA = transpose(Matrix{Float32}(dba[:, cols]))
     XB = transpose(Matrix{Float32}(dbb[:, cols]))
 
@@ -38,13 +38,14 @@ function joint_between_withoutyz(
 
     C = C0 ./ maximum(C0)
 
-    dimXYA = size(XA, 1)
-    dimXZB = size(XB, 1)
+    dimXA = size(XA, 1)
+    dimXB = size(XB, 1)
+
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
 
-    modelXYA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
-    modelXZB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
+    modelXYA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
+    modelXZB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
 
     function train!(model, x, y)
 
@@ -86,8 +87,10 @@ function joint_between_withoutyz(
 
     end
 
-    YBpred = Flux.softmax(modelXZB(XB))
-    ZApred = Flux.softmax(modelXYA(XA))
+    YBpred = Flux.softmax(modelXYA(XB))
+    ZApred = Flux.softmax(modelXZB(XA))
+    @show size(YBpred)
+    @show size(ZApred)
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
@@ -113,8 +116,11 @@ function joint_between_withoutyz(
         train!(modelXYA, XA, ZA)
         train!(modelXZB, XB, YB)
 
-        YBpred .= modelXZB(XB)
-        ZApred .= modelXYA(XA)
+        YBpred .= Flux.softmax(modelXYA(XB))
+        ZApred .= Flux.softmax(modelXZB(XA))
+
+        @show size(YBpred)
+        @show size(ZApred)
 
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
