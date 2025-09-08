@@ -118,8 +118,6 @@ function joint_between_ref_jdot(
 
         YBpred .= modelXYA(XB)
         ZApred .= modelXZB(XA)
-        @show size(YBpred)
-        @show size(ZApred)
 
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
