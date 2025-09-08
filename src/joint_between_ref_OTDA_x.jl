@@ -1,4 +1,4 @@
-function joint_between_ref_OTDA_x(
+function joint_between_ref_otda_x(
         data;
         iterations = 10,
         learning_rate = 0.01,
@@ -18,7 +18,7 @@ function joint_between_ref_OTDA_x(
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
-    cols = names(dba, r"^X")              # toutes les colonnes dont le nom commence par "X"
+    cols = names(dba, r"^X")    
     XA = transpose(Matrix{Float32}(dba[:, cols]))
     XB = transpose(Matrix{Float32}(dbb[:, cols]))
 
@@ -86,29 +86,30 @@ function joint_between_ref_OTDA_x(
 
     end
 
-    YBpred = Flux.softmax(modelXZB(XB))
-    ZApred = Flux.softmax(modelXYA(XA))
+    ZApred = modelXZB(XA)
+    YBpred = modelXYA(XB)
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
     G = ones(length(wa), length(wb))
     cost = Inf
 
-    #for iter in 1:iterations # BCD algorithm
-
     Gold = copy(G)
     costold = cost
 
     if reg > 0
-            G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
+        G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
     else
-            G = PythonOT.emd(wa, wb, C)
+        G = PythonOT.emd(wa, wb, C)
     end
 
     delta = norm(G .- Gold)
 
-    XBt = nB .* XA * G
-    XAt = nA .* XB * G'
+    XAt = similar(XA)
+    XBt = similar(XB)
+
+    XBt .= nB .* XA * G
+    XAt .= nA .* XB * G'
 
     train!(modelXYA, XAt, YA)
     train!(modelXZB, XBt, ZB)
