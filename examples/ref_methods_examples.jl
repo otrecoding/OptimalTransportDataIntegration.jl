@@ -7,19 +7,10 @@ params = DataParameters(mA = [0.0],
                         aA = [1.0],
                         aB = [1.0])
  
-rng = DiscreteDataGenerator(params)
+rng = ContinuousDataGenerator(params)
 data = generate(rng)
 
 @show accuracy(otrecod(data, SimpleLearning()))
 @show accuracy(otrecod(data, JointOTWithinBase()))
 @show accuracy(otrecod(data, JointOTBetweenBases()))
-@show accuracy(otrecod(data, JointOTBetweenBasesRefJDOT()))
-
- 
-#rng = ContinuousDataGenerator(params)
-#data = generate(rng)
-#@show accuracy(otrecod(data, SimpleLearning()))
-#@show accuracy(otrecod(data, JointOTWithinBase()))
-#@show accuracy(otrecod(data, JointOTBetweenBases()))
-
-
+# @show accuracy(otrecod(data, JointOTBetweenBasesRefJDOT()))
