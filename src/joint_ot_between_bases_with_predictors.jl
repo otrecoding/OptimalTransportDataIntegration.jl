@@ -18,9 +18,9 @@ function joint_between_with_predictors(
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
-    cols = names(dba, r"^X")              # toutes les colonnes dont le nom commence par "X"
-    XA = transpose(Matrix{Float32}(dba[:, cols]))
-    XB = transpose(Matrix{Float32}(dbb[:, cols]))
+    colnames = names(data, r"^X")
+    XA = transpose(Matrix{Float32}(dba[!, colnames]))
+    XB = transpose(Matrix{Float32}(dbb[!, colnames]))
 
     YA = Flux.onehotbatch(dba.Y, Ylevels)
     ZB = Flux.onehotbatch(dbb.Z, Zlevels)

@@ -11,26 +11,22 @@ function joint_ot_within_base_continuous(
     XA = subset(data, :database => x -> x .== 1.0)
     XB = subset(data, :database => x -> x .== 2.0)
 
-    cols = names(data, r"^X")   # toutes les colonnes X1, X2, ..., Xp
-    p = length(cols)
+    for col in names(data, r"^X")
 
-    Xlist = []  # va contenir les colonnes discrétisées
-
-    for col in cols
-    # bornes de discrétisation basées sur les quantiles de la colonne dans data
         b = quantile(data[!, col], collect(0.1:0.1:0.9))
         bins = vcat(-Inf, b, +Inf)
 
-    # discrétisation pour XA et XB
-        XA_d = digitize(XA[!, col], bins)
-        XB_d = digitize(XB[!, col], bins)
+        X1 = digitize(XA.X1, bins)
+        X2 = digitize(XB.X1, bins)
 
-    # concaténer les deux
-        push!(Xlist, vcat(XA_d, XB_d))
-end
+        if col == "X1"
+           X = vcat(X1, X2)
+        else
+           X = hcat(X, vcat(X1, X2))
+        end
 
-# Construire la matrice finale
-    X = hcat(Xlist)  
+    end
+
     Y = Vector(data.Y)
     Z = Vector(data.Z)
 
