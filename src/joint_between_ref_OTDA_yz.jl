@@ -7,13 +7,12 @@ function joint_between_ref_otda_yz(
         hidden_layer_size = 10,
         reg = 0.0,
         reg_m1 = 0.0,
-        reg_m2 = 0.0
+        reg_m2 = 0.0,
+        Ylevels = 1:4,
+        Zlevels = 1:3
     )
 
     T = Int32
-
-    Ylevels = 1:4
-    Zlevels = 1:3
 
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
@@ -44,8 +43,8 @@ function joint_between_ref_otda_yz(
         G .= PythonOT.emd(wa, wb, C)
     end
 
-    ZApred = nA .* ZB * G'
-    YBpred = nB .* YA * G
+    ZApred = Flux.softmax(nA .* ZB * G')
+    YBpred = Flux.softmax(nB .* YA * G)
 
     return Flux.onecold(YBpred), Flux.onecold(ZApred)
 

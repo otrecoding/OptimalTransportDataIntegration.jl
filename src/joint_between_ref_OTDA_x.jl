@@ -7,13 +7,13 @@ function joint_between_ref_otda_x(
         hidden_layer_size = 10,
         reg = 0.0,
         reg_m1 = 0.0,
-        reg_m2 = 0.0
+        reg_m2 = 0.0,
+        Ylevels = 1:4,
+        Zlevels = 1:3
     )
 
     T = Int32
 
-    Ylevels = 1:4
-    Zlevels = 1:3
 
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
@@ -89,21 +89,13 @@ function joint_between_ref_otda_x(
     ZApred = modelXZB(XA)
     YBpred = modelXYA(XB)
 
-    alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
-
     G = ones(length(wa), length(wb))
-    cost = Inf
-
-    Gold = copy(G)
-    costold = cost
 
     if reg > 0
         G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
     else
         G = PythonOT.emd(wa, wb, C)
     end
-
-    delta = norm(G .- Gold)
 
     XAt = similar(XA)
     XBt = similar(XB)
