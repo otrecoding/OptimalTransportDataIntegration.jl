@@ -110,8 +110,8 @@ function joint_between_ref_OTDA_x(
     XBt = nB .* XA * G
     XAt = nA .* XB * G'
 
-    train!(modelXYA, XBt, YA)
-    train!(modelXZB, XAt, ZB)
+    train!(modelXYA, XAt, YA)
+    train!(modelXZB, XBt, ZB)
 
     ZApred .= modelXZB(XA)
     YBpred .= modelXYA(XB)
