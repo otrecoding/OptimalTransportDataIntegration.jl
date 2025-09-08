@@ -258,11 +258,10 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesRefOTDAx)
 
 end
 
-#=
 
-export JointOTBetweenBasesrefOTDAyz
+export JointOTBetweenBasesRefOTDAyz
 
-@with_kw struct JointOTBetweenBasesrefOTDAyz <: AbstractMethod
+@with_kw struct JointOTBetweenBasesRefOTDAyz <: AbstractMethod
 
     reg::Float64 = 0.01
     reg_m1::Float64 = 0.05
@@ -278,7 +277,7 @@ export JointOTBetweenBasesrefOTDAyz
 
 end
 
-function otrecod(data::DataFrame, method::JointOTBetweenBasesrefOTDAyz)
+function otrecod(data::DataFrame, method::JointOTBetweenBasesRefOTDAyz)
 
     discrete = all(isinteger.(data.X1))
 
@@ -295,7 +294,7 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesrefOTDAyz)
             distance = method.distance,
         )
     else
-        yb_pred, za_pred = joint_between_ref_OTDA_yz(
+        yb_pred, za_pred = joint_between_ref_otda_yz(
             data;
             iterations = method.iterations,
             hidden_layer_size = method.hidden_layer_size,
@@ -316,6 +315,7 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesrefOTDAyz)
 
 end
 
+#=
 
 export JointOTBetweenBasesrefOTDAyz
 
