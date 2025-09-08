@@ -18,8 +18,9 @@ function joint_within_with_predictors(
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
-    XA = transpose(Matrix{Float32}(dba[!, [:X1, :X2, :X3]]))
-    XB = transpose(Matrix{Float32}(dbb[!, [:X1, :X2, :X3]]))
+    colnames = names(data, r"^X")
+    XA = transpose(Matrix{Float32}(dba[!, colnames]))
+    XB = transpose(Matrix{Float32}(dbb[!, colnames]))
 
     YA = Flux.onehotbatch(dba.Y, Ylevels)
     ZB = Flux.onehotbatch(dbb.Z, Zlevels)
