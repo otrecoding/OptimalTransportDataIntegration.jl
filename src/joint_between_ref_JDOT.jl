@@ -86,8 +86,8 @@ function joint_between_ref_jdot(
 
     end
 
-    YBpred = Flux.softmax(modelXZB(XB))
-    ZApred = Flux.softmax(modelXYA(XA))
+    YBpred = modelXYA(XB)
+    ZApred = modelXZB(XA)
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
@@ -116,8 +116,10 @@ function joint_between_ref_jdot(
         train!(modelXYA, XB, YB)
         train!(modelXZB, XA, ZA)
 
-        YBpred .= modelXZB(XB)
-        ZApred .= modelXYA(XA)
+        YBpred .= modelXYA(XB)
+        ZApred .= modelXZB(XA)
+        @show size(YBpred)
+        @show size(ZApred)
 
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
