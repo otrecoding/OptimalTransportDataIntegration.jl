@@ -9,7 +9,7 @@ params = DataParameters(mA = [0.0],
  
 rng = DiscreteDataGenerator(params)
 data = generate(rng)
-#@show accuracy(otrecod(data, SimpleLearning()))
+@show accuracy(otrecod(data, SimpleLearning()))
 #@show accuracy(otrecod(data, JointOTWithinBase()))
 #@show accuracy(otrecod(data, JointOTBetweenBases()))
  
