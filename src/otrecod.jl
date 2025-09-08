@@ -180,7 +180,7 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesRefJDOT)
             distance = method.distance,
         )
     else
-        yb_pred, za_pred = joint_between_ref_JDOT(
+        yb_pred, za_pred = joint_between_ref_jdot(
             data;
             iterations = method.iterations,
             hidden_layer_size = method.hidden_layer_size,
