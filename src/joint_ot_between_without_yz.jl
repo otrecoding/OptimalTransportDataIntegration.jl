@@ -44,8 +44,8 @@ function joint_between_without_yz(
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
 
-    modelXYA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
-    modelXZB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
+    modelXA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
+    modelXB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
 
     function train!(model, x, y)
 
@@ -113,11 +113,11 @@ function joint_between_without_yz(
         YB = nB .* YA * G
         ZA = nA .* ZB * G'
 
-        train!(modelXYA, XA, ZA)
-        train!(modelXZB, XB, YB)
+        train!(modelXA, XA, ZA)
+        train!(modelXB, XB, YB)
 
-        YBpred .= Flux.softmax(modelXYA(XB))
-        ZApred .= Flux.softmax(modelXZB(XA))
+        YBpred .= Flux.softmax(modelXA(XB))
+        ZApred .= Flux.softmax(modelXB(XA))
 
         @show size(YBpred)
         @show size(ZApred)
