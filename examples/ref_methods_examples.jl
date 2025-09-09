@@ -1,4 +1,4 @@
-sing OptimalTransportDataIntegration
+using OptimalTransportDataIntegration
 
 params = DataParameters(mA = [0.0], 
                         mB = [6.0],
