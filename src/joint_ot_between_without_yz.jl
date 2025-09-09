@@ -23,6 +23,8 @@ function joint_between_without_yz(
     XB = transpose(Matrix{Float32}(dbb[:, cols]))
 
     YA = Flux.onehotbatch(dba.Y, Ylevels)
+    YB = Flux.onehotbatch(dbb.Y, Ylevels)
+    ZA = Flux.onehotbatch(dba.Z, Zlevels)
     ZB = Flux.onehotbatch(dbb.Z, Zlevels)
 
     XYA = vcat(XA, YA)
@@ -87,10 +89,8 @@ function joint_between_without_yz(
 
     end
 
-    YBpred = Flux.softmax(modelXA(XB))
-    ZApred = Flux.softmax(modelXB(XA))
-    @show size(YBpred)
-    @show size(ZApred)
+    YBpred = Flux.softmax(modelXB(XB))
+    ZApred = Flux.softmax(modelXA(XA))
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
@@ -116,11 +116,8 @@ function joint_between_without_yz(
         train!(modelXA, XA, ZA)
         train!(modelXB, XB, YB)
 
-        YBpred .= Flux.softmax(modelXA(XB))
-        ZApred .= Flux.softmax(modelXB(XA))
-
-        @show size(YBpred)
-        @show size(ZApred)
+        YBpred .= Flux.softmax(modelXB(XB))
+        ZApred .= Flux.softmax(modelXA(XA))
 
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
