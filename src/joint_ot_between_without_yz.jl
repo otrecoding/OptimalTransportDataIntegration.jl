@@ -23,8 +23,6 @@ function joint_between_without_yz(
     XB = transpose(Matrix{Float32}(dbb[:, cols]))
 
     YA = Flux.onehotbatch(dba.Y, Ylevels)
-    YB = Flux.onehotbatch(dbb.Y, Ylevels)
-    ZA = Flux.onehotbatch(dba.Z, Zlevels)
     ZB = Flux.onehotbatch(dbb.Z, Zlevels)
 
     XYA = vcat(XA, YA)
