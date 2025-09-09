@@ -46,7 +46,6 @@ include("otrecod.jl")
 
 export accuracy
 
-
 accuracy(ypred::AbstractVector, ytrue::AbstractVector) = mean(ypred .== ytrue)
 
 function accuracy(data::DataFrame, yb_pred::AbstractVector, za_pred::AbstractVector)
@@ -75,6 +74,31 @@ function accuracy(sol::JointOTResult)
         accuracy(sol.za_true, sol.za_pred),
         accuracy(vcat(sol.yb_pred, sol.za_pred), vcat(sol.yb_true, sol.za_true))
 
+end
+
+export confusion_matrix
+
+"""
+$(SIGNATURES)
+
+made by claude.ai
+"""
+function confusion_matrix(y_true, y_pred)
+    
+    classes = sort(unique(vcat(y_true, y_pred)))
+    n_classes = length(classes)
+    
+    class_to_idx = Dict(class => i for (i, class) in enumerate(classes))
+    
+    cm = zeros(Int, n_classes, n_classes)
+    
+    for (true_label, pred_label) in zip(y_true, y_pred)
+        true_idx = class_to_idx[true_label]
+        pred_idx = class_to_idx[pred_label]
+        cm[true_idx, pred_idx] += 1
+    end
+    
+    return cm
 end
 
 end
