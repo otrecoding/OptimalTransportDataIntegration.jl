@@ -87,10 +87,8 @@ function joint_between_without_yz(
 
     end
 
-    ZApred = Flux.softmax(modelXA(XB))
-    YBpred = Flux.softmax(modelXB(XA))
-    @show size(YBpred)
-    @show size(ZApred)
+    YBpred = Flux.softmax(modelXB(XB))
+    ZApred = Flux.softmax(modelXA(XA))
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
@@ -116,11 +114,8 @@ function joint_between_without_yz(
         train!(modelXA, XA, ZA)
         train!(modelXB, XB, YB)
 
-        ZApred .= Flux.softmax(modelXA(XA))
         YBpred .= Flux.softmax(modelXB(XB))
-
-        @show size(YBpred)
-        @show size(ZApred)
+        ZApred .= Flux.softmax(modelXA(XA))
 
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
