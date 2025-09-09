@@ -87,8 +87,8 @@ function joint_between_without_yz(
 
     end
 
-    YBpred = Flux.softmax(modelXYA(XB))
-    ZApred = Flux.softmax(modelXZB(XA))
+    ZApred = Flux.softmax(modelXA(XB))
+    YBpred = Flux.softmax(modelXB(XA))
     @show size(YBpred)
     @show size(ZApred)
 
@@ -116,8 +116,8 @@ function joint_between_without_yz(
         train!(modelXA, XA, ZA)
         train!(modelXB, XB, YB)
 
-        YBpred .= Flux.softmax(modelXA(XB))
-        ZApred .= Flux.softmax(modelXB(XA))
+        ZApred .= Flux.softmax(modelXA(XA))
+        YBpred .= Flux.softmax(modelXB(XB))
 
         @show size(YBpred)
         @show size(ZApred)

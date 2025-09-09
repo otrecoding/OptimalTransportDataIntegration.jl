@@ -4,6 +4,8 @@ function joint_ot_within_base_continuous(
         alpha = 0.714,
         percent_closest = 0.2,
         distance = Euclidean(),
+        Ylevels = 1:4,
+        Zlevels = 1:3
     )
 
     digitize(x, bins) = searchsortedlast.(Ref(bins), x)
@@ -26,9 +28,6 @@ function joint_ot_within_base_continuous(
 
     Y = Vector(data.Y)
     Z = Vector(data.Z)
-
-    Ylevels = 1:4
-    Zlevels = 1:3
 
     database = data.database
 

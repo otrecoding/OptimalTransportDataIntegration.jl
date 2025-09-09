@@ -169,15 +169,16 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesRefJDOT)
 
     if discrete
 
-        yb_pred, za_pred = joint_ot_between_bases(
-            data,
-            method.reg,
-            method.reg_m1,
-            method.reg_m2;
-            Ylevels = method.Ylevels,
-            Zlevels = method.Zlevels,
+        yb_pred, za_pred = joint_between_ref_jdot(
+            data;
             iterations = method.iterations,
-            distance = method.distance,
+            hidden_layer_size = method.hidden_layer_size,
+            learning_rate = method.learning_rate,
+            batchsize = method.batchsize,
+            epochs = method.epochs,
+            reg = method.reg,
+            reg_m1 = method.reg_m1,
+            reg_m2 = method.reg_m2
         )
     else
         yb_pred, za_pred = joint_between_ref_jdot(
@@ -226,15 +227,16 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesRefOTDAx)
 
     if discrete
 
-        yb_pred, za_pred = joint_ot_between_bases(
-            data,
-            method.reg,
-            method.reg_m1,
-            method.reg_m2;
-            Ylevels = method.Ylevels,
-            Zlevels = method.Zlevels,
+        yb_pred, za_pred = joint_between_ref_otda_x(
+            data;
             iterations = method.iterations,
-            distance = method.distance,
+            hidden_layer_size = method.hidden_layer_size,
+            learning_rate = method.learning_rate,
+            batchsize = method.batchsize,
+            epochs = method.epochs,
+            reg = method.reg,
+            reg_m1 = method.reg_m1,
+            reg_m2 = method.reg_m2
         )
     else
         yb_pred, za_pred = joint_between_ref_otda_x(
@@ -283,15 +285,16 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesRefOTDAyz)
 
     if discrete
 
-        yb_pred, za_pred = joint_ot_between_bases(
-            data,
-            method.reg,
-            method.reg_m1,
-            method.reg_m2;
-            Ylevels = method.Ylevels,
-            Zlevels = method.Zlevels,
+        yb_pred, za_pred = joint_between_ref_otda_yz(
+            data;
             iterations = method.iterations,
-            distance = method.distance,
+            hidden_layer_size = method.hidden_layer_size,
+            learning_rate = method.learning_rate,
+            batchsize = method.batchsize,
+            epochs = method.epochs,
+            reg = method.reg,
+            reg_m1 = method.reg_m1,
+            reg_m2 = method.reg_m2
         )
     else
         yb_pred, za_pred = joint_between_ref_otda_yz(
@@ -339,15 +342,16 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesRefOTDAyzPred)
 
     if discrete
 
-        yb_pred, za_pred = joint_ot_between_bases(
-            data,
-            method.reg,
-            method.reg_m1,
-            method.reg_m2;
-            Ylevels = method.Ylevels,
-            Zlevels = method.Zlevels,
+        yb_pred, za_pred = joint_between_ref_otda_yz_pred(
+            data;
             iterations = method.iterations,
-            distance = method.distance,
+            hidden_layer_size = method.hidden_layer_size,
+            learning_rate = method.learning_rate,
+            batchsize = method.batchsize,
+            epochs = method.epochs,
+            reg = method.reg,
+            reg_m1 = method.reg_m1,
+            reg_m2 = method.reg_m2
         )
     else
         yb_pred, za_pred = joint_between_ref_otda_yz_pred(
@@ -395,15 +399,16 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesWithoutYZ)
 
     if discrete
 
-        yb_pred, za_pred = joint_ot_between_bases(
-            data,
-            method.reg,
-            method.reg_m1,
-            method.reg_m2;
-            Ylevels = method.Ylevels,
-            Zlevels = method.Zlevels,
+        yb_pred, za_pred = joint_between_without_yz(
+            data;
             iterations = method.iterations,
-            distance = method.distance,
+            hidden_layer_size = method.hidden_layer_size,
+            learning_rate = method.learning_rate,
+            batchsize = method.batchsize,
+            epochs = method.epochs,
+            reg = method.reg,
+            reg_m1 = method.reg_m1,
+            reg_m2 = method.reg_m2
         )
     else
         yb_pred, za_pred = joint_between_without_yz(
