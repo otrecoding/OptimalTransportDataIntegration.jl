@@ -83,9 +83,8 @@ $(SIGNATURES)
 
 made by claude.ai
 """
-function confusion_matrix(y_true, y_pred)
+function confusion_matrix(y_true, y_pred; classes = 1:4)
     
-    classes = sort(unique(vcat(y_true, y_pred)))
     n_classes = length(classes)
     
     class_to_idx = Dict(class => i for (i, class) in enumerate(classes))
