@@ -34,7 +34,7 @@ function joint_between_ref_jdot(
     wb = ones(nB) ./ nB
     #pour le cas p=1 il faut XA et XB en matrice ==> c'est le cas
     C0 = pairwise(Euclidean(), XA, XB, dims = 2)
-
+    C0=C0.^2
     C1 = C0 ./ maximum(C0)
     C2 = C0 ./ maximum(C0)
 

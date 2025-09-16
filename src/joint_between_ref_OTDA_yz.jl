@@ -32,9 +32,9 @@ function joint_between_ref_otda_yz(
     wb = ones(nB) ./ nB
 
     C0 = pairwise(Euclidean(), XA, XB, dims = 2)
-
-    C = C0 ./ maximum(C0)
-
+    C2=C0.^2
+    #C = C2 ./ maximum(C2)
+    C = C2
     G = ones(length(wa), length(wb))
 
     if reg > 0

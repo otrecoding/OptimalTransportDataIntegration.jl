@@ -35,7 +35,7 @@ function joint_between_ref_otda_yz_pred(
     wb = ones(nB) ./ nB
 
     C0 = pairwise(Euclidean(), XA, XB, dims = 2)
-
+    C0=C0.^2
     C = C0 ./ maximum(C0)
 
     dimXA = size(XA, 1)

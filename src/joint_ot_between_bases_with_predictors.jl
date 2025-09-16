@@ -35,7 +35,7 @@ function joint_between_with_predictors(
     wb = ones(nB) ./ nB
 
     C0 = pairwise(Euclidean(), XA, XB, dims = 2)
-
+    C0=C0.^2
     C = C0 ./ maximum(C0)
 
     dimXYA = size(XYA, 1)
