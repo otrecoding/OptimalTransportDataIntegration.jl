@@ -35,9 +35,10 @@ function joint_between_with_predictors(
     wb = ones(nB) ./ nB
 
     C0 = pairwise(Euclidean(), XA, XB, dims = 2)
+    
+    C0 = C0 ./ maximum(C0)
     C0=C0.^2
-    C = C0 ./ maximum(C0)
-
+    C = C0
     dimXYA = size(XYA, 1)
     dimXZB = size(XZB, 1)
     dimYA = size(YA, 1)
@@ -119,7 +120,7 @@ function joint_between_with_predictors(
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
 
-        fcost = loss_y .+ loss_z'
+        fcost = loss_y.^2 .+ loss_z'.^2
 
         cost = sum(G .* fcost)
 
@@ -130,7 +131,7 @@ function joint_between_with_predictors(
             break
         end
 
-        C .= C0 ./ maximum(C0) .+ fcost
+        C .= C0 .+ fcost
 
     end
 

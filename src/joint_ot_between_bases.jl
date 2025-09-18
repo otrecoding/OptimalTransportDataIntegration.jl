@@ -176,9 +176,10 @@ function joint_ot_between_bases(
     ## Optimal Transport
 
     C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1)
-    C0=C0.^2
+    
     C = C0 ./ maximum(C0)
-
+    C0=C0.^2
+    C=C0
     zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
     yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
 
@@ -219,13 +220,14 @@ function joint_ot_between_bases(
 
         chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
         chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
-        fcost = chinge1 .+ chinge2'
+        chinge2=chinge2'
+        fcost = chinge1.^2 .+ chinge2.^2
 
         cost = sum(G .* fcost)
 
         @info "Delta: $(delta) \t  Loss: $(cost) "
 
-        C .= C0 ./ maximum(C0) .+ fcost
+        C .= C0 .+ fcost
 
         for i in axes(XYA, 1)
             ind = findfirst(XYA[i, :] == v for v in XYA2)
