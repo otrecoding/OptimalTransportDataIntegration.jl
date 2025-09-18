@@ -91,7 +91,6 @@ end
 export JointOTBetweenBases
 
 @with_kw struct JointOTBetweenBases <: AbstractMethod
-
     reg::Float64 = 0.01
     reg_m1::Float64 = 0.05
     reg_m2::Float64 = 0.05
@@ -99,11 +98,6 @@ export JointOTBetweenBases
     Zlevels::AbstractVector = 1:3
     iterations::Int = 10
     distance::Distances.Metric = Hamming()
-    hidden_layer_size::Int = 10
-    learning_rate::Float64 = 0.01
-    batchsize::Int = 64
-    epochs::Int = 1000
-
 end
 
 function otrecod(data::DataFrame, method::JointOTBetweenBases)
@@ -179,26 +173,20 @@ export JointOTBetweenBasesc
     Zlevels::AbstractVector = 1:3
     iterations::Int = 10
     distance::Distances.Metric = Hamming()
-    hidden_layer_size::Int = 10
-    learning_rate::Float64 = 0.01
-    batchsize::Int = 64
-    epochs::Int = 1000
-
 end
 
 function otrecod(data::DataFrame, method::JointOTBetweenBasesc)
 
 
         yb_pred, za_pred = joint_ot_between_bases_c(
-            data;
+                       data,
+            method.reg,
+            method.reg_m1,
+            method.reg_m2;
+            Ylevels = method.Ylevels,
+            Zlevels = method.Zlevels,
             iterations = method.iterations,
-            hidden_layer_size = method.hidden_layer_size,
-            learning_rate = method.learning_rate,
-            batchsize = method.batchsize,
-            epochs = method.epochs,
-            reg = method.reg,
-            reg_m1 = method.reg_m1,
-            reg_m2 = method.reg_m2
+            distance = method.distance,
         )
 
     yb_true = data.Y[data.database .== 2]
