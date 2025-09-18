@@ -108,9 +108,6 @@ end
 
 function otrecod(data::DataFrame, method::JointOTBetweenBases)
 
-    discrete = all(isinteger.(data.X1))
-
-    if discrete
 
         yb_pred, za_pred = joint_ot_between_bases(
             data,
@@ -122,7 +119,36 @@ function otrecod(data::DataFrame, method::JointOTBetweenBases)
             iterations = method.iterations,
             distance = method.distance,
         )
-    else
+   
+
+    yb_true = data.Y[data.database .== 2]
+    za_true = data.Z[data.database .== 1]
+
+    return JointOTResult(yb_true, za_true, yb_pred, za_pred)
+
+end
+
+export JointOTBetweenBaseswithpred
+
+@with_kw struct JointOTBetweenBaseswithpred <: AbstractMethod
+
+    reg::Float64 = 0.01
+    reg_m1::Float64 = 0.05
+    reg_m2::Float64 = 0.05
+    Ylevels::AbstractVector = 1:4
+    Zlevels::AbstractVector = 1:3
+    iterations::Int = 10
+    distance::Distances.Metric = Hamming()
+    hidden_layer_size::Int = 10
+    learning_rate::Float64 = 0.01
+    batchsize::Int = 64
+    epochs::Int = 1000
+
+end
+
+function otrecod(data::DataFrame, method::JointOTBetweenBaseswithpred)
+
+
         yb_pred, za_pred = joint_between_with_predictors(
             data;
             iterations = method.iterations,
@@ -135,8 +161,6 @@ function otrecod(data::DataFrame, method::JointOTBetweenBases)
             reg_m2 = method.reg_m2
         )
 
-    end
-
     yb_true = data.Y[data.database .== 2]
     za_true = data.Z[data.database .== 1]
 
@@ -144,7 +168,45 @@ function otrecod(data::DataFrame, method::JointOTBetweenBases)
 
 end
 
+export JointOTBetweenBasesc
 
+@with_kw struct JointOTBetweenBasesc <: AbstractMethod
+
+    reg::Float64 = 0.01
+    reg_m1::Float64 = 0.05
+    reg_m2::Float64 = 0.05
+    Ylevels::AbstractVector = 1:4
+    Zlevels::AbstractVector = 1:3
+    iterations::Int = 10
+    distance::Distances.Metric = Hamming()
+    hidden_layer_size::Int = 10
+    learning_rate::Float64 = 0.01
+    batchsize::Int = 64
+    epochs::Int = 1000
+
+end
+
+function otrecod(data::DataFrame, method::JointOTBetweenBasesc)
+
+
+        yb_pred, za_pred = joint_ot_between_bases_c(
+            data;
+            iterations = method.iterations,
+            hidden_layer_size = method.hidden_layer_size,
+            learning_rate = method.learning_rate,
+            batchsize = method.batchsize,
+            epochs = method.epochs,
+            reg = method.reg,
+            reg_m1 = method.reg_m1,
+            reg_m2 = method.reg_m2
+        )
+
+    yb_true = data.Y[data.database .== 2]
+    za_true = data.Z[data.database .== 1]
+
+    return JointOTResult(yb_true, za_true, yb_pred, za_pred)
+
+end
 export JointOTBetweenBasesRefJDOT
 
 @with_kw struct JointOTBetweenBasesRefJDOT <: AbstractMethod
