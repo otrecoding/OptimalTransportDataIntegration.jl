@@ -177,7 +177,7 @@ function joint_ot_between_bases(
 
     C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1)
     
-    C = C0 ./ maximum(C0)
+    C0 = C0 ./ maximum(C0)
     C0=C0.^2
     C=C0
     zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
