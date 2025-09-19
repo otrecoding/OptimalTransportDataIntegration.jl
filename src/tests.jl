@@ -77,7 +77,7 @@ params = DataParameters(
 rng = DiscreteDataGenerator(params; scenario = 2)
 data = generate(rng)
 
-reg=0
+reg=0.0
 reg_m1=0
 reg_m2=0
 Ylevels = 1:4
@@ -208,7 +208,13 @@ cost = Inf
 display(C)
 display(wa2)
 display(wb2)
-G = PythonOT.emd(a=Float64.(wa2), b = Float64.(wb2), M = C, reg)
+a = Float64[0.474, 0.526]
+b = Float64[0.82, 0.18]
+M = Float64[0.0 1.0; 1.0 0.0]
+reg = 0.0
+
+G = PythonOT.emd(a = a, b = b, M = M, reg = reg)
+#G = PythonOT.emd(a=Float64.(wa2), b = Float64.(wb2), M = C, reg=0.0)
 
 
     
