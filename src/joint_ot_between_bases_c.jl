@@ -122,11 +122,11 @@ function joint_ot_between_bases_c(
     nbXA = length(indXA)
     nbXB = length(indXB)
 
-    wa = vec([sum(indXA[x][YA[indXA[x]] .== y]) for y in Ylevels, x in 1:nbXA])
-    wb = vec([sum(indXB[x][ZB[indXB[x]] .== z]) for z in Zlevels, x in 1:nbXB])
+    wa = vec([length(indXA[x][findall(XYA[indXA[x]] .== y)]) / nA for y in Ylevels, x in 1:nbXA])
+    wb = vec([length(indXB[x][findall(XZB[indXB[x]] .== z)]) / nB for z in Zlevels, x in 1:nbXB])
 
     wa2 = filter(>(0), wa)
-    wb2 = filter(>(0), wb) ./ sum(wa2)
+    wb2 = filter(>(0), wb) 
 
 
     XYA2 = Vector{T}[]
@@ -175,7 +175,7 @@ function joint_ot_between_bases_c(
     alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
 
     ## Optimal Transport
-    C0 = pairwise(Euclidean(), XA, XB, dims = 2)
+    C0 = pairwise(Euclidean(), XA, XB, dims = 1)
     
     C0 = C0 ./ maximum(C0)
     C0 .= C0.^2
@@ -200,7 +200,7 @@ function joint_ot_between_bases_c(
         if reg_m1 > 0.0 && reg_m2 > 0.0
             G = PythonOT.mm_unbalanced(wa2, wb2, C, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
-            G = PythonOT.sinkhorn(wa2, wb2, C, reg)
+            G = PythonOT.emd(wa2, wb2, C, reg)
         end
 
         delta = norm(G .- Gold)

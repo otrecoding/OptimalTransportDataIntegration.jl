@@ -172,7 +172,7 @@ export JointOTBetweenBasesc
     Ylevels::AbstractVector = 1:4
     Zlevels::AbstractVector = 1:3
     iterations::Int = 10
-    distance::Distances.Metric = Hamming()
+    distance::Distances.Metric = Euclidean()
 end
 
 function otrecod(data::DataFrame, method::JointOTBetweenBasesc)
