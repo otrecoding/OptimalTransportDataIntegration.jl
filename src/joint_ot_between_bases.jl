@@ -121,8 +121,8 @@ function joint_ot_between_bases(
     nbXA = length(indXA)
     nbXB = length(indXB)
 
-    wa = vec([length(indXA[x][findall(XYA[indXA[x]] .== y)]) / nA for y in Ylevels, x in 1:nbXA])
-    wb = vec([length(indXB[x][findall(XZB[indXB[x]] .== z)]) / nB for z in Zlevels, x in 1:nbXB])
+    wa = vec([length(indXA[x][findall(YA[indXA[x]] .== y)]) / nA for y in Ylevels, x in 1:nbXA])
+    wb = vec([length(indXB[x][findall(ZB[indXB[x]] .== z)]) / nB for z in Zlevels, x in 1:nbXB])
 
     wa2 = filter(>(0), wa)
     wb2 = filter(>(0), wb)
