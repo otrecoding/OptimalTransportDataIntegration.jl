@@ -208,13 +208,9 @@ cost = Inf
 display(C)
 display(wa2)
 display(wb2)
-a = Float64[0.474, 0.526]
-b = Float64[0.82, 0.18]
-M = Float64[0.0 1.0; 1.0 0.0]
-reg = 0.0
 
-G = PythonOT.emd(a = a, b = b, M = M, reg = reg)
-#G = PythonOT.emd(a=Float64.(wa2), b = Float64.(wb2), M = C, reg=0.0)
+
+G = PythonOT.emd(wa2, wb2,  C)
 
 
     

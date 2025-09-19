@@ -200,7 +200,7 @@ function joint_ot_between_bases_c(
         if reg_m1 > 0.0 && reg_m2 > 0.0
             G = PythonOT.mm_unbalanced(wa2, wb2, C, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
-            G = PythonOT.emd(wa2, wb2, C, reg)
+            G = PythonOT.emd(wa2, wb2, C)
         end
 
         delta = norm(G .- Gold)
