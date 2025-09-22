@@ -9,7 +9,7 @@ using PythonOT
 using .Iterators: product
 using Distances: pairwise, Hamming, Euclidean
 using LinearAlgebra: norm
-
+using Flux
 onecold(X) = map(argmax, eachrow(X))
 
 """
@@ -167,7 +167,8 @@ display(nx)
 XA_hot = stack([v[1:nx] for v in XYA2], dims = 1)
     # les x parmi les XZB observés, potentiellement des valeurs repetées
 XB_hot = stack([v[1:nx] for v in XZB2], dims = 1)
-
+display(XYA2) 
+display(XZB2) 
 yA = last.(XYA2) # les y parmi les XYA observés, potentiellement des valeurs repetées
 yA_hot = one_hot_encoder(yA, Ylevels)
 zB = last.(XZB2) # les z parmi les XZB observés, potentiellement des valeurs repetées
@@ -189,7 +190,7 @@ alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
 #XA_hot.= Float64.(XA_hot)
 #XB_hot.= Float64.(XB_hot)
 C0 = pairwise(Euclidean(), XA_hot, XB_hot, dims = 1)
-    
+   
 C0 = C0 ./ maximum(C0)
 C0 .= C0.^2
 C = C0
@@ -209,8 +210,28 @@ display(C)
 display(wa2)
 display(wb2)
 
-
+Gold = copy(G)
+costold = cost
 G = PythonOT.emd(wa2, wb2,  C)
 
+delta = norm(G .- Gold)
 
-    
+
+for j in eachindex(yB_pred)
+            yB_pred[j] = Ylevels[argmin(modality_cost(Yloss, view(G, :, j)))]
+end
+
+for i in eachindex(zA_pred)
+            zA_pred[i] = Zlevels[argmin(modality_cost(Zloss, view(G, i, :)))]
+end
+
+yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
+zA_pred_hot = one_hot_encoder(zA_pred, Zlevels)
+
+        ### Update Cost matrix
+
+chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
+chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
+ 
+display(chinge1.size)
+display(chinge2.size)

@@ -65,7 +65,7 @@ function joint_ot_between_bases_c(
         Ylevels = 1:4,
         Zlevels = 1:3,
         iterations = 1,
-        distance = Hamming(),
+        distance = Euclidean(),
     )
 
     T = Int32
@@ -175,7 +175,7 @@ function joint_ot_between_bases_c(
     alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
 
     ## Optimal Transport
-    C0 = pairwise(Euclidean(), XA, XB, dims = 1)
+    C0 = pairwise(Euclidean(), XA_hot, XB_hot, dims = 1)
     
     C0 = C0 ./ maximum(C0)
     C0 .= C0.^2
@@ -222,7 +222,7 @@ function joint_ot_between_bases_c(
         chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
         chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
     
-        fcost = chinge1.^2 .+ chinge2'^2
+        fcost = chinge1.^2 .+ chinge2'.^2
 
         cost = sum(G .* fcost)
 

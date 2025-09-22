@@ -126,6 +126,10 @@ function joint_ot_between_bases(
 
     wa2 = filter(>(0), wa)
     wb2 = filter(>(0), wb)
+    #wa = vec([sum(indXA[x][YA[indXA[x]] .== y]) for y in Ylevels, x in 1:nbXA])
+    #wb = vec([sum(indXB[x][ZB[indXB[x]] .== z]) for z in Zlevels, x in 1:nbXB])
+    #wa2 = filter(>(0), wa)
+    #wb2 = filter(>(0), wb) ./ sum(wa2)
 
     XYA2 = Vector{T}[]
     XZB2 = Vector{T}[]

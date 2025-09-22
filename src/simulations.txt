@@ -1,0 +1,59 @@
+
+1. Senario 1. 3 variable explicatives continues
+senario de reference: Sref n=1000 n^A/n^B=1 R2=0.6 m^A=(0,0,0) m^B=(1,1,0) \epsilon = 0
+senarios:
+- Effect of the sample size n=100,1000,10000
+- Effect of the ratio n^A/n^B n^A/n^B=1,2,10
+- Effect of the link between the explanatory variables and Y and Z R2=0.2,0.4,0.6,0.8\
+- Covariate shift assumption m^B=(0,0,0) m^B=(1,0,0) m^B=(1,1,0) m^B=(1,1,1)
+- Changes in Conditional distributions $Y|\boldsymbol{X}$ and $Z|\boldsymbol{X}$ \epsilon = 0,0.1,0.5,1
+
+methodes
+Simple learning
+OT within
+OT withing +relaxation + regularisation
+OT between (avec emd)
+OT beween +relaxation + regularisation
+
+Les paramètres sont optimisé sur Sref
+2. Senario 2. 3 variable explicatives continues
+senarios
+- Covariate shift assumption m^B=(0,0,0) m^B=(1,0,0) m^B=(1,1,0) m^B=(1,1,1)
+
+methodes
+Simple learning
+OT within
+OT withing +relaxation + regularisation
+OT between (avec emd)
+OT withing +relaxation + regularisation
+Utilisation des hyperparamètres du senario précédent (les données sont équilibrés (même proportion pour Y et Z) dans les deux bases) pour le senario 2
+
+3. Senario 1 3 variables explicatives discrete 2, 3, et 4 catégories
+senario de reference: Sref n=1000 n^A/n^B=1 R2=0.6 m^A=(0,0,0) m^B=(1,1,0) \epsilon = 0
+senarios
+- Covariate shift assumption 
+- Changes in Conditional distributions $Y|\boldsymbol{X}$ and $Z|\boldsymbol{X}$ \epsilon = 0,0.1,0.5,1
+methodes
+
+utiliser meme hyperparamètres que précédent
+En annexe
+4. Senario 2. 3 variables explicatives discrete 2, 3, et 4 catégories
+- Covariate shift assumption
+
+5.Comparer  avec 3 variable explicatives continues et senario de référence
+senario 1 et senario 2
+ - SL. Simple learning.  On apprend $f$ en utilisant les observations $(X^A_i, Y^A_i)$ et $\widehat{Y}^B_j=\widehat{f}(X^B_j)$. Idem pour $Z^B_j$
+- OTDA(x). Transport $X^A$ sur $X^B$. On transporte $X^B_j$ dans A, ce qui donne $X^{B,t}_i.$  On apprend $f$ en utilisant les observations $(X^{B,t}_i,Y^{A}_i)$. $\widehat{Y}^B_j=\widehat{f}(X^B_j)$.
+- OTDA(y,z). Transport $X^A$ sur $X^B$. On transporte $Y^A_i$ dans B, ce qui donne $Y^{A,t}_j.$  $\widehat{Y}^B_j=Y^{A,t}_j$.
+-  OTDA(y,z) avec prédicteurs. Transport $X^A$ sur $X^B$. On transporte $Y^A_i$ dans B, ce qui donne $Y^{A,t}_j.$ On apprend $f$ en utilisant les observations $(X^B_j,Y^{A,t}_j)$. $\widehat{Y}^B_j=\widehat{f}(X^B_j)$.
+$\hat{P}^A=n\boldsymbol{\gamma}^T P^B$
+- JDOT dans A et B.
+
+- OT between bases with $Y=f(X)$, $Z=g(X)$.
+- OT between bases with $Y=f(X,Z)$, $Z=g(X,Y)$.
+- OT within bases
+
+6. Senario 1. 3 variable explicatives continues
+senario de reference: Sref n=1000 n^A/n^B=1 R2=0.6 m^A=(0,0,0) m^B=(1,1,0) \epsilon = 0
+
+ different OT beween  + regularisation avec différent paramètres de relaxation
