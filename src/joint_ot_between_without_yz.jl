@@ -1,4 +1,4 @@
-function joint_between_with_predictors(
+function joint_between_without_yz(
         data;
         iterations = 10,
         learning_rate = 0.01,
@@ -14,13 +14,13 @@ function joint_between_with_predictors(
 
     T = Int32
 
-
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
-    colnames = names(data, r"^X")
-    XA = transpose(Matrix{Float32}(dba[!, colnames]))
-    XB = transpose(Matrix{Float32}(dbb[!, colnames]))
+    cols = names(dba, r"^X")   
+
+    XA = transpose(Matrix{Float32}(dba[:, cols]))
+    XB = transpose(Matrix{Float32}(dbb[:, cols]))
 
     YA = Flux.onehotbatch(dba.Y, Ylevels)
     ZB = Flux.onehotbatch(dbb.Z, Zlevels)
@@ -35,17 +35,17 @@ function joint_between_with_predictors(
     wb = ones(nB) ./ nB
 
     C0 = pairwise(Euclidean(), XA, XB, dims = 2)
-    
-    C0 = C0 ./ maximum(C0)
-    C0 .= C0.^2
-    C = C0
-    dimXYA = size(XYA, 1)
-    dimXZB = size(XZB, 1)
+    C0=C0.^2
+    C = C0 ./ maximum(C0)
+
+    dimXA = size(XA, 1)
+    dimXB = size(XB, 1)
+
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
 
-    modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
-    modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
+    modelXA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
+    modelXB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
 
     function train!(model, x, y)
 
@@ -87,8 +87,8 @@ function joint_between_with_predictors(
 
     end
 
-    YBpred = Flux.softmax(modelXZB(XZB))
-    ZApred = Flux.softmax(modelXYA(XYA))
+    YBpred = Flux.softmax(modelXB(XB))
+    ZApred = Flux.softmax(modelXA(XA))
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
@@ -111,16 +111,16 @@ function joint_between_with_predictors(
         YB = nB .* YA * G
         ZA = nA .* ZB * G'
 
-        train!(modelXYA, XYA, ZA)
-        train!(modelXZB, XZB, YB)
+        train!(modelXA, XA, ZA)
+        train!(modelXB, XB, YB)
 
-        YBpred .= modelXZB(XZB)
-        ZApred .= modelXYA(XYA)
+        YBpred .= Flux.softmax(modelXB(XB))
+        ZApred .= Flux.softmax(modelXA(XA))
 
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
 
-        fcost = loss_y.^2 .+ loss_z'.^2
+        fcost = loss_y .+ loss_z'
 
         cost = sum(G .* fcost)
 
@@ -131,7 +131,7 @@ function joint_between_with_predictors(
             break
         end
 
-        C .= C0 .+ fcost
+        C .= C0 ./ maximum(C0) .+ fcost
 
     end
 

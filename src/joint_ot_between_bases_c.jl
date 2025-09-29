@@ -55,9 +55,9 @@ function modality_cost(loss, weight)
 
     return Flux.softmax(cost_for_each_modality)
 
-end
+end 
 
-function joint_ot_between_bases(
+function joint_ot_between_bases_c(
         data,
         reg,
         reg_m1,
@@ -65,7 +65,7 @@ function joint_ot_between_bases(
         Ylevels = 1:4,
         Zlevels = 1:3,
         iterations = 1,
-        distance = Hamming(),
+        distance = Euclidean(),
     )
 
     T = Int32
@@ -76,7 +76,8 @@ function joint_ot_between_bases(
     indB = findall(base .== 2)
 
     colnames = names(data, r"^X")
-    X_hot = Matrix{T}(one_hot_encoder(data[!, colnames]))
+    #X_hot = Matrix{T}(one_hot_encoder(data[!, colnames]))
+    X_hot = Matrix{T}(data[!, colnames])
     Y = Vector{T}(data.Y)
     Z = Vector{T}(data.Z)
 
@@ -125,11 +126,8 @@ function joint_ot_between_bases(
     wb = vec([length(indXB[x][findall(ZB[indXB[x]] .== z)]) / nB for z in Zlevels, x in 1:nbXB])
 
     wa2 = filter(>(0), wa)
-    wb2 = filter(>(0), wb)
-    #wa = vec([sum(indXA[x][YA[indXA[x]] .== y]) for y in Ylevels, x in 1:nbXA])
-    #wb = vec([sum(indXB[x][ZB[indXB[x]] .== z]) for z in Zlevels, x in 1:nbXB])
-    #wa2 = filter(>(0), wa)
-    #wb2 = filter(>(0), wb) ./ sum(wa2)
+    wb2 = filter(>(0), wb) 
+
 
     XYA2 = Vector{T}[]
     XZB2 = Vector{T}[]
@@ -177,12 +175,12 @@ function joint_ot_between_bases(
     alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
 
     ## Optimal Transport
-
-    C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1)
+    C0 = pairwise(Euclidean(), XA_hot, XB_hot, dims = 1)
     
     C0 = C0 ./ maximum(C0)
     C0 .= C0.^2
-    C =C0
+    C = C0
+  
     zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
     yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
 
@@ -223,7 +221,7 @@ function joint_ot_between_bases(
 
         chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
         chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
-
+    
         fcost = chinge1.^2 .+ chinge2'.^2
 
         cost = sum(G .* fcost)

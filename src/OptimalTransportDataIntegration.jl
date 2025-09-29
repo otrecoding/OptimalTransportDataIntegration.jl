@@ -23,10 +23,15 @@ include("joint_ot_within_base_continuous.jl")
 include("entropic_partial_wasserstein.jl")
 include("joint_ot_between_bases.jl")
 include("joint_ot_between_bases_with_predictors.jl")
+include("joint_ot_between_without_yz.jl")
+include("joint_ot_between_bases_c.jl")
 include("simple_learning.jl")
 include("simple_learning_with_continuous_data.jl")
 
-# Generic interface
+include("joint_between_ref_JDOT.jl")
+include("joint_between_ref_OTDA_x.jl")
+include("joint_between_ref_OTDA_yz.jl")
+include("joint_between_ref_OTDA_yz_pred.jl")
 
 struct JointOTResult
 
@@ -40,7 +45,6 @@ end
 include("otrecod.jl")
 
 export accuracy
-
 
 accuracy(ypred::AbstractVector, ytrue::AbstractVector) = mean(ypred .== ytrue)
 
@@ -70,6 +74,30 @@ function accuracy(sol::JointOTResult)
         accuracy(sol.za_true, sol.za_pred),
         accuracy(vcat(sol.yb_pred, sol.za_pred), vcat(sol.yb_true, sol.za_true))
 
+end
+
+export confusion_matrix
+
+"""
+$(SIGNATURES)
+
+made by claude.ai
+"""
+function confusion_matrix(y_true, y_pred; classes = 1:4)
+    
+    n_classes = length(classes)
+    
+    class_to_idx = Dict(class => i for (i, class) in enumerate(classes))
+    
+    cm = zeros(Int, n_classes, n_classes)
+    
+    for (true_label, pred_label) in zip(y_true, y_pred)
+        true_idx = class_to_idx[true_label]
+        pred_idx = class_to_idx[pred_label]
+        cm[true_idx, pred_idx] += 1
+    end
+    
+    return cm
 end
 
 end
