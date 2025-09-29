@@ -34,8 +34,17 @@ struct ContinuousDataGenerator
             cr2 *
             sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
 
-        Base1 = X1' * aA .+ rand(Normal(0.0, sqrt(varerrorA)), params.nA)
-        Base2 = X2' * aB .+ rand(Normal(0.0, sqrt(varerrorB)), params.nB)
+        if varerrorA == 0
+            Base1 = X1' * aA
+        else
+            Base1 = X1' * aA .+ rand(Normal(0.0, sqrt(varerrorA)), params.nA)
+        end
+
+        if varerrorB == 0
+            Base2 = X2' * aB
+        else
+            Base2 = X2' * aB .+ rand(Normal(0.0, sqrt(varerrorB)), params.nB)
+        end
 
         bYA = quantile(Base1, [0.25, 0.5, 0.75])
         bYB = quantile(Base2, [0.25, 0.5, 0.75])
@@ -105,8 +114,18 @@ function generate(generator::ContinuousDataGenerator; eps = 0.0)
             cr2 *
             sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
 
-    Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(varerrorA)), params.nA)
-    Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(varerrorB)), params.nB)
+    
+    if varerrorA == 0
+        Y1 = X1' * aA
+    else
+        Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(varerrorA)), params.nA)
+    end
+
+    if varerrorB == 0
+        Y2 = X2' * aB
+    else
+        Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(varerrorB)), params.nB)
+    end
 
     YA = digitize(Y1, generator.binsYA)
     ZA = digitize(Y1, generator.binsZA)
