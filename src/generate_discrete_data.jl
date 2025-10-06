@@ -27,15 +27,15 @@ struct DiscreteDataGenerator
 
         q = length(params.mA)
 
-        XA = stack([rand(Categorical(params.pA[i]), params.nA) for i in 1:q], dims=1)
-        XB = stack([rand(Categorical(params.pB[i]), params.nB) for i in 1:q], dims=1)
+        XA = stack([rand(Categorical(params.pA[i]), params.nA) for i in 1:q], dims = 1)
+        XB = stack([rand(Categorical(params.pB[i]), params.nB) for i in 1:q], dims = 1)
 
         X1 = XA
         X2 = XB
 
         if q === 1
-            covA = fill(cov(vec(XA)), (1,1))
-            covB = fill(cov(vec(XB)), (1,1))
+            covA = fill(cov(vec(XA)), (1, 1))
+            covB = fill(cov(vec(XB)), (1, 1))
         else
             covA = cov(XA, dims = 1)
             covB = cov(XB, dims = 1)
@@ -46,9 +46,9 @@ struct DiscreteDataGenerator
 
         cr2 = 1 / params.r2 - 1
 
-        σA = cr2 * sum([params.aA[i]*aA[j]*cov(XA[i,:], XA[j,:]) for i in 1:q, j in 1:q])
-        σB = cr2 * sum([params.aB[i]*aB[j]*cov(XB[i,:], XB[j,:]) for i in 1:q, j in 1:q])
-        
+        σA = cr2 * sum([params.aA[i] * aA[j] * cov(XA[i, :], XA[j, :]) for i in 1:q, j in 1:q])
+        σB = cr2 * sum([params.aB[i] * aB[j] * cov(XB[i, :], XB[j, :]) for i in 1:q, j in 1:q])
+
         Base1 = X1' * params.aA[1:q] .+ rand(Normal(0.0, sqrt(σA)), params.nA)
         Base2 = X2' * params.aB[1:q] .+ rand(Normal(0.0, sqrt(σB)), params.nB)
 
@@ -100,8 +100,8 @@ function generate(generator::DiscreteDataGenerator; eps = 0.0)
 
     q = length(params.mA)
 
-    XA = stack([rand(Categorical(params.pA[i]), params.nA) for i in 1:q], dims=1)
-    XB = stack([rand(Categorical(params.pB[i]), params.nB) for i in 1:q], dims=1)
+    XA = stack([rand(Categorical(params.pA[i]), params.nA) for i in 1:q], dims = 1)
+    XB = stack([rand(Categorical(params.pB[i]), params.nB) for i in 1:q], dims = 1)
 
     X1 = XA
     X2 = XB
@@ -115,8 +115,8 @@ function generate(generator::DiscreteDataGenerator; eps = 0.0)
     covB = generator.covB
 
     cr2 = 1 / params.r2 - 1
-    σA = cr2 * sum([aA[i]*aA[j]*cov(XA[i,:], XA[j,:]) for i in 1:q, j in 1:q])
-    σB = cr2 * sum([aB[i]*aB[j]*cov(XB[i,:], XB[j,:]) for i in 1:q, j in 1:q])
+    σA = cr2 * sum([aA[i] * aA[j] * cov(XA[i, :], XA[j, :]) for i in 1:q, j in 1:q])
+    σB = cr2 * sum([aB[i] * aB[j] * cov(XB[i, :], XB[j, :]) for i in 1:q, j in 1:q])
 
     Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(σA)), params.nA)
     Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(σB)), params.nB)
@@ -128,11 +128,11 @@ function generate(generator::DiscreteDataGenerator; eps = 0.0)
     ZB = digitize(Y2, generator.binsZB .+ eps)
 
     for j in 1:q
-        @info "Categories in XA$j $(sort!(OrderedDict(countmap(XA[j,:]))))"
-        @info "Categories in XB$j $(sort!(OrderedDict(countmap(XB[j,:]))))"
+        @info "Categories in XA$j $(sort!(OrderedDict(countmap(XA[j, :]))))"
+        @info "Categories in XB$j $(sort!(OrderedDict(countmap(XB[j, :]))))"
     end
 
-    colnames = Symbol.("X" .* string.(1:q)) 
+    colnames = Symbol.("X" .* string.(1:q))
 
     df = DataFrame(hcat(X1, X2)', colnames)
 

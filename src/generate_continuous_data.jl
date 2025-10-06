@@ -16,8 +16,8 @@ struct ContinuousDataGenerator
         X1 = XA
         X2 = XB
 
-        qA = size(XA,1)
-        qB = size(XB,1)
+        qA = size(XA, 1)
+        qB = size(XB, 1)
 
         aA = params.aA[1:qA]
         aB = params.aB[1:qB]
@@ -26,7 +26,7 @@ struct ContinuousDataGenerator
 
         covA = params.covA
         covB = params.covB
-        
+
         varerrorA =
             cr2 *
             sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
@@ -81,7 +81,7 @@ r2 is the coefficient of determination
 function generate(generator::ContinuousDataGenerator; eps = 0.0)
 
     params = generator.params
- 
+
     XA = rand(MvNormal(params.mA, params.covA), params.nA)
     XB = rand(MvNormal(params.mB, params.covB), params.nB)
     X1 = XA
@@ -89,8 +89,8 @@ function generate(generator::ContinuousDataGenerator; eps = 0.0)
 
     cr2 = 1.0 / params.r2 - 1
 
-    qA = size(XA,1)
-    qB = size(XB,1)
+    qA = size(XA, 1)
+    qB = size(XB, 1)
 
     aA = params.aA[1:qA]
     aB = params.aB[1:qB]
@@ -99,11 +99,11 @@ function generate(generator::ContinuousDataGenerator; eps = 0.0)
     covB = params.covB
 
     varerrorA =
-            cr2 *
-            sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
+        cr2 *
+        sum([aA[i] * aA[j] * covA[i, j] for i in axes(covA, 1), j in axes(covA, 2)])
     varerrorB =
-            cr2 *
-            sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
+        cr2 *
+        sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
 
     Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(varerrorA)), params.nA)
     Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(varerrorB)), params.nB)
@@ -115,7 +115,7 @@ function generate(generator::ContinuousDataGenerator; eps = 0.0)
     ZB = digitize(Y2, generator.binsZB .+ eps)
 
     p = length(aA)
-    colnames = Symbol.("X" .* string.(1:p))  
+    colnames = Symbol.("X" .* string.(1:p))
     df = DataFrame(vcat(X1', X2'), colnames)
     df.Y = vcat(YA, YB)
     df.Z = vcat(ZA, ZB)

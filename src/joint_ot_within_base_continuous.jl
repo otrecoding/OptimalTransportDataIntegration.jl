@@ -15,7 +15,7 @@ function joint_ot_within_base_continuous(
     bins = vcat(-Inf, b, +Inf)
     X1 = digitize(XA.X1, bins)
     X2 = digitize(XB.X1, bins)
-    X  = vcat(X1, X2)
+    X = vcat(X1, X2)
 
     for col in names(data, r"^X")[2:end]
 
