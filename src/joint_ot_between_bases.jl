@@ -13,7 +13,7 @@ onecold(X) = map(argmax, eachrow(X))
 Cross entropy is typically used as a loss in multi-class classification, in which case the labels y are given in a one-hot format. dims specifies the dimension (or the dimensions) containing the class probabilities. The prediction ŷ is usually probabilities but in our case it is also one hot encoded vector.
 
 """
-function loss_crossentropy(Y::AbstractMatrix{T}, F::AbstractMatrix{T}) where {T}
+function loss_crossentropy(Y::Matrix{Bool}, F::Matrix{Bool}) 
     ϵ = 1.0e-12
     nf, nclasses = size(F)
     ny = size(Y, 1)
@@ -42,7 +42,7 @@ end
 
 Returns the scalar product <loss[level,],weight> 
 """
-function modality_cost(loss, weight)
+function modality_cost(loss::Matrix{Float32}, weight::Vector{Float32})
 
     cost_for_each_modality = Float64[]
     for j in axes(loss, 2)
@@ -191,7 +191,7 @@ function joint_ot_between_bases(
     YBpred = zeros(T, nB)
     ZApred = zeros(T, nA)
 
-    G = ones(length(wa2), length(wb2))
+    G = ones(Float32, length(wa2), length(wb2))
     cost = Inf
 
     for iter in 1:iterations
@@ -200,20 +200,20 @@ function joint_ot_between_bases(
         costold = cost
 
         if reg_m1 > 0.0 && reg_m2 > 0.0
-            G = PythonOT.mm_unbalanced(wa2, wb2, C, (reg_m1, reg_m2); reg = reg, div = "kl")
+            G .= PythonOT.mm_unbalanced(wa2, wb2, C, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
-            G = PythonOT.emd(wa2, wb2, C)
+            G .= PythonOT.emd(wa2, wb2, C)
         end
 
         delta = norm(G .- Gold)
 
 
         for j in eachindex(yB_pred)
-            yB_pred[j] = Ylevels[argmin(modality_cost(Yloss, view(G, :, j)))]
+            yB_pred[j] = Ylevels[argmin(modality_cost(Yloss, G[ :, j]))]
         end
 
         for i in eachindex(zA_pred)
-            zA_pred[i] = Zlevels[argmin(modality_cost(Zloss, view(G, i, :)))]
+            zA_pred[i] = Zlevels[argmin(modality_cost(Zloss, G[ i, :]))]
         end
 
         yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)

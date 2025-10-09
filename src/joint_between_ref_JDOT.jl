@@ -91,8 +91,8 @@ function joint_between_ref_jdot(
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
-    G1 = ones(length(wa), length(wb))
-    G2 = ones(length(wa), length(wb))
+    G1 = ones(Float32, length(wa), length(wb))
+    G2 = ones(Float32, ength(wa), length(wb))
     cost = Inf
 
     for iter in 1:iterations # BCD algorithm

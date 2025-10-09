@@ -5,7 +5,6 @@ import .Iterators: product
 import Distances: pairwise, Hamming
 import LinearAlgebra: norm
 
-onecold(X) = map(argmax, eachrow(X))
 
 """
     loss_crossentropy(Y, F)
