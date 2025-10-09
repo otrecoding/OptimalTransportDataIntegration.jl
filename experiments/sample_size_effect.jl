@@ -71,10 +71,10 @@ end
 
 all_params = [
     DataParameters(nA = 100, nB = 100),
-    #DataParameters(nA = 1000, nB = 1000),
-    #DataParameters(nA = 10000, nB = 10000),
+    DataParameters(nA = 1000, nB = 1000),
+    DataParameters(nA = 10000, nB = 10000),
 ]
 
-nsimulations = 1
+nsimulations = 1000
 
 @time sample_size_effect(all_params, nsimulations)
