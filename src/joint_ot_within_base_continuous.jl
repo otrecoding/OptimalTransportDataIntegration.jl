@@ -10,8 +10,8 @@ function joint_ot_within_base_continuous(
 
     digitize(x, bins) = searchsortedlast.(Ref(bins), x)
 
-    XA = subset(data, :database => x -> x .== 1.0)
-    XB = subset(data, :database => x -> x .== 2.0)
+    XA = subset(data, :database => x -> x .== 1)
+    XB = subset(data, :database => x -> x .== 2)
 
     X = Vector{Float64}[]
     for col in names(data, r"^X")

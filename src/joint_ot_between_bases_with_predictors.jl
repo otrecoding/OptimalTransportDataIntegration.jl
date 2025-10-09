@@ -1,4 +1,4 @@
-function joint_between_with_predictors(
+function joint_ot_between_with_predictors(
         data;
         iterations = 10,
         learning_rate = 0.01,
@@ -92,7 +92,7 @@ function joint_between_with_predictors(
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
-    G = ones(length(wa), length(wb))
+    G = ones(Float32, length(wa), length(wb))
     cost = Inf
 
     for iter in 1:iterations # BCD algorithm
@@ -101,9 +101,9 @@ function joint_between_with_predictors(
         costold = cost
 
         if reg > 0
-            G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
+            G .= PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
-            G = PythonOT.emd(wa, wb, C)
+            G .= PythonOT.emd(wa, wb, C)
         end
 
         delta = norm(G .- Gold)
