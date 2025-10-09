@@ -22,7 +22,7 @@ using OptimalTransportDataIntegration
 function sample_ratio_effect(nsimulations::Int, ratios)
 
     outfile = "sample_ratio_effect.csv"
-    header = ["id", "nA", "nB", "estya", "estzb", "estimation", "method", "scenario"]
+    header = ["id", "nA", "nB", "estyb", "estza", "est", "method", "scenario"]
 
     return open(outfile, "w") do io
 
@@ -33,7 +33,7 @@ function sample_ratio_effect(nsimulations::Int, ratios)
             nA = 1000
             nB = nA ÷ r
             params = DataParameters(nB = nB)
-            rng = DiscreteDataGenerator(params, scenario = scenario)
+            rng = ContinuousDataGenerator(params, scenario = scenario)
 
             for i in 1:nsimulations
 
@@ -51,14 +51,9 @@ function sample_ratio_effect(nsimulations::Int, ratios)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi-r" scenario])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
+                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "be-un" scenario])
-
-                #OTE Regularized unbalanced transport
-                result = otrecod(data, JointOTBetweenBases())
-                estyb, estza, est = accuracy(result)
-                writedlm(io, [i params.nA params.nB estyb estza est "be-un-r" scenario])
 
                 #SL Simple Learning
                 result = otrecod(data, SimpleLearning())
@@ -73,6 +68,6 @@ function sample_ratio_effect(nsimulations::Int, ratios)
 
 end
 
-nsimulations = 100
+nsimulations = 1000
 
 @time sample_ratio_effect(nsimulations, (1, 2, 5, 10))
