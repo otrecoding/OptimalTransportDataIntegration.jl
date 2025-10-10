@@ -21,7 +21,7 @@ using OptimalTransportDataIntegration
 function covariates_shift_assumption_continuous(nsimulations::Int, shift)
 
     outfile = "covariates_shift_assumption_continuous.csv"
-    header = ["id", "mB", "estyb", "estza", "estimation", "method", "scenario"]
+    header = ["id", "mB", "estyb", "estza", "est", "method", "scenario"]
 
     return open(outfile, "w") do io
 
@@ -39,18 +39,19 @@ function covariates_shift_assumption_continuous(nsimulations::Int, shift)
 
                     data = generate(rng)
 
-                    #OT Transport of the joint distribution of covariates and outcomes.
-                    alpha, lambda = 0.1, 0.1
+                    alpha, lambda = 0.0, 0.0
                     result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i repr(mB) estyb estza est "within" scenario])
+                    writedlm(io, [i repr(mB) estyb estza est "wi" scenario])
 
-                    #OTE Regularized unbalanced transport
-                    result = otrecod(data, JointOTBetweenBases())
+                    result = otrecod(data, JointOTWithinBase())
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i repr(mB) estyb estza est "between" scenario])
+                    writedlm(io, [i repr(mB) estyb estza est "wi-r" scenario])
 
-                    #SL Simple Learning
+                    result = otrecod(data, JointOTBetweenBasesWithPredictors(reg=0.0))
+                    estyb, estza, est = accuracy(result)
+                    writedlm(io, [i repr(mB) estyb estza est "be" scenario])
+
                     result = otrecod(data, SimpleLearning())
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i repr(mB) estyb estza est "sl" scenario])
@@ -65,7 +66,7 @@ function covariates_shift_assumption_continuous(nsimulations::Int, shift)
 
 end
 
-nsimulations = 100
-shift = ([5, 5, 5], [0, 0, 0], [1, 0, 0], [1, 1, 0], [1, 2, 0])
+nsimulations = 1000
+shift = ([0, 0, 0], [1, 0, 0], [1, 1, 0], [1, 1, 1])
 
 @time covariates_shift_assumption_continuous(nsimulations, shift)

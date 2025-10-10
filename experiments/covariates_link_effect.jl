@@ -21,7 +21,7 @@ using OptimalTransportDataIntegration
 function covariates_link_effect(nsimulations::Int, r2values)
 
     outfile = "covariates_link_effect.csv"
-    header = ["id", "r2", "estyb", "estza", "accuracy", "method", "scenario"]
+    header = ["id", "r2", "estyb", "estza", "est", "method", "scenario"]
 
     return open(outfile, "w") do io
 
@@ -31,7 +31,7 @@ function covariates_link_effect(nsimulations::Int, r2values)
 
             params = DataParameters(r2 = r2)
 
-            rng = DiscreteDataGenerator(params, scenario = scenario)
+            rng = ContinuousDataGenerator(params, scenario = scenario)
 
             for i in 1:nsimulations
 
@@ -41,22 +41,17 @@ function covariates_link_effect(nsimulations::Int, r2values)
                 alpha, lambda = 0.0, 0.0
                 result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i r2 estyb estza est "ot" scenario])
+                writedlm(io, [i r2 estyb estza est "wi" scenario])
 
                 #OT-r Regularized Transport
                 result = otrecod(data, JointOTWithinBase())
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i r2 estyb estza est "ot-r" scenario])
+                writedlm(io, [i r2 estyb estza est "wi-r" scenario])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
+                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0))
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i r2 estyb estza est "ote" scenario])
-
-                #OTE Regularized unbalanced transport
-                result = otrecod(data, JointOTBetweenBases())
-                estyb, estza, est = accuracy(result)
-                writedlm(io, [i r2 estyb estza est "ote-r" scenario])
+                writedlm(io, [i r2 estyb estza est "be" scenario])
 
                 #SL Simple Learning
                 result = otrecod(data, SimpleLearning())
@@ -71,6 +66,6 @@ function covariates_link_effect(nsimulations::Int, r2values)
 
 end
 
-nsimulations = 100
+nsimulations = 1000
 
-@time covariates_link_effect(nsimulations, (0.2, 0.4, 0.6, 0.8))
+@time covariates_link_effect(nsimulations, (0.2, 0.4, 0.6, 0.8, 1.0))

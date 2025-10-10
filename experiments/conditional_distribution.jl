@@ -20,18 +20,18 @@ using OptimalTransportDataIntegration
 # +
 function conditional_distribution(nsimulations::Int, epsilons)
 
-    outfile = "conditional_distribution.csv"
-    header = ["id", "epsilon", "estyb", "estza", "accuracy", "method", "scenario"]
+    outfile = "conditional_distribution_contnuous.csv"
+    header = ["id", "epsilon", "estyb", "estza", "est", "method", "scenario"]
 
     return open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
-        params = DataParameters(mB = [0, 0, 0])
+        params = DataParameters()
 
         for scenario in (1, 2)
 
-            rng = DiscreteDataGenerator(params, scenario = scenario)
+            rng = ContinuousDataGenerator(params, scenario = scenario)
 
             for eps in epsilons
 
@@ -51,12 +51,12 @@ function conditional_distribution(nsimulations::Int, epsilons)
                     writedlm(io, [i eps estyb estza est "wi-r" scenario])
 
                     #OTE Balanced transport of covariates and estimated outcomes
-                    result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
+                    result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0))
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i eps estyb estza est "be-un" scenario])
 
                     #OTE Regularized unbalanced transport
-                    result = otrecod(data, JointOTBetweenBases())
+                    result = otrecod(data, JointOTBetweenBasesWithPredictors())
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i eps estyb estza est "be-un-r" scenario])
 
@@ -75,7 +75,7 @@ function conditional_distribution(nsimulations::Int, epsilons)
 
 end
 
-nsimulations = 100
+nsimulations = 1000
 epsilons = (0.0, 0.1, 0.5, 1.0)
 
 @time conditional_distribution(nsimulations, epsilons)
