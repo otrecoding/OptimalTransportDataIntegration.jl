@@ -18,7 +18,7 @@ function joint_between_ref_jdot(
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
-    cols = names(dba, r"^X")              # toutes les colonnes dont le nom commence par "X"
+    cols = names(dba, r"^X")   
     XA = transpose(Matrix{Float32}(dba[:, cols]))
     XB = transpose(Matrix{Float32}(dbb[:, cols]))
     YA = Flux.onehotbatch(dba.Y, Ylevels)
@@ -32,9 +32,9 @@ function joint_between_ref_jdot(
 
     wa = ones(nA) ./ nA
     wb = ones(nB) ./ nB
-    #pour le cas p=1 il faut XA et XB en matrice ==> c'est le cas
+    
     C0 = pairwise(Euclidean(), XA, XB, dims = 2)
-    C0=C0.^2
+    C0 .= C0.^2
     C1 = C0 ./ maximum(C0)
     C2 = C0 ./ maximum(C0)
 
@@ -92,8 +92,11 @@ function joint_between_ref_jdot(
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
     G1 = ones(Float32, length(wa), length(wb))
-    G2 = ones(Float32, ength(wa), length(wb))
+    G2 = ones(Float32, length(wa), length(wb))
     cost = Inf
+
+    YB = zeros(Float32, nB)
+    ZA = zeros(Float32, nA)
 
     for iter in 1:iterations # BCD algorithm
 
@@ -101,17 +104,17 @@ function joint_between_ref_jdot(
         costold = cost
 
         if reg > 0
-            G1 = PythonOT.mm_unbalanced(wa, wb, C1, (reg_m1, reg_m2); reg = reg, div = "kl")
-            G2 = PythonOT.mm_unbalanced(wa, wb, C2, (reg_m1, reg_m2); reg = reg, div = "kl")
+            G1 .= PythonOT.mm_unbalanced(wa, wb, C1, (reg_m1, reg_m2); reg = reg, div = "kl")
+            G2 .= PythonOT.mm_unbalanced(wa, wb, C2, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
-            G1 = PythonOT.emd(wa, wb, C1)
-            G2 = PythonOT.emd(wa, wb, C2)
+            G1 .= PythonOT.emd(wa, wb, C1)
+            G2 .= PythonOT.emd(wa, wb, C2)
         end
 
         delta = norm(G1 .- Gold)
 
-        YB = nB .* YA * G1
-        ZA = nA .* ZB * G2'
+        YB .= nB .* YA * G1
+        ZA .= nA .* ZB * G2'
 
         train!(modelXYA, XB, YB)
         train!(modelXZB, XA, ZA)
