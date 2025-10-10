@@ -56,7 +56,7 @@ sol = otrecod(data, JointOTBetweenBasesRefOTDAyzPred())
 
 @show accuracy(otrecod(data, JointOTWithinBase()))
 
-@show accuracy(otrecod(data, JointOTBetweenBaseswithpred(reg = 0.0)))
+@show accuracy(otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0)))
 
 @show accuracy(otrecod(data, JointOTBetweenBasesWithoutYZ(reg = 0.0)))
 
