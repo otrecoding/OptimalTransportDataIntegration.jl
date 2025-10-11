@@ -18,7 +18,7 @@ function joint_between_ref_jdot(
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
-    cols = names(dba, r"^X")   
+    cols = names(dba, r"^X")              
     XA = transpose(Matrix{Float32}(dba[:, cols]))
     XB = transpose(Matrix{Float32}(dbb[:, cols]))
     YA = Flux.onehotbatch(dba.Y, Ylevels)
@@ -30,11 +30,10 @@ function joint_between_ref_jdot(
     nA = size(dba, 1)
     nB = size(dbb, 1)
 
-    wa = ones(nA) ./ nA
-    wb = ones(nB) ./ nB
+    wa = ones(Float32, nA) ./ nA
+    wb = ones(Float32, nB) ./ nB
     
-    C0 = pairwise(Euclidean(), XA, XB, dims = 2)
-    C0 .= C0.^2
+    C0 = pairwise(SqEuclidean(), XA, XB, dims = 2)
     C1 = C0 ./ maximum(C0)
     C2 = C0 ./ maximum(C0)
 
@@ -91,12 +90,12 @@ function joint_between_ref_jdot(
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
-    G1 = ones(Float32, length(wa), length(wb))
-    G2 = ones(Float32, length(wa), length(wb))
+    G1 = ones(Float32, nA, nB)
+    G2 = ones(Float32, nA, nB)
     cost = Inf
 
-    YB = zeros(Float32, nB)
-    ZA = zeros(Float32, nA)
+    YB = zeros(Float32, size(YA,1), nB)
+    ZA = zeros(Float32, size(ZB,1), nA)
 
     for iter in 1:iterations # BCD algorithm
 
@@ -122,8 +121,8 @@ function joint_between_ref_jdot(
         YBpred .= modelXYA(XB)
         ZApred .= modelXZB(XA)
 
-        loss_y = alpha1 * loss_crossentropy(YA, YBpred)
-        loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
+        loss_y = alpha1 * Flux.Losses.crossentropy(YA, YBpred)
+        loss_z = alpha2 * Flux.Losses.crossentropy(ZB, ZApred)
 
         fcost = loss_y .+ loss_z'
 
