@@ -72,7 +72,6 @@ end
     @test all(accuracy(otrecod(data, JointOTWithinBase())) .> 0.5)
     @test all(accuracy(otrecod(data, JointOTBetweenBases())) .> 0.5)
 
-
 end
 
 @testset "Aqua.jl" begin
