@@ -16,7 +16,7 @@ function joint_ot_within_base_continuous(
     X = Vector{Float64}[]
     for col in names(data, r"^X")
 
-        b = quantile(data[!, col], collect(0.1:0.1:0.9))
+        b = quantile(data[!, col], collect(0.25:0.25:0.75))
         bins = vcat(-Inf, b, +Inf)
 
         X1 = digitize(XA[!, col], bins)

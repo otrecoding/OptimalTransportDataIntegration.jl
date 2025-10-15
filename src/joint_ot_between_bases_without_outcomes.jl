@@ -1,4 +1,4 @@
-function joint_between_without_yz(
+function joint_ot_between_bases_without_outcomes(
         data;
         iterations = 10,
         learning_rate = 0.01,
@@ -34,8 +34,8 @@ function joint_between_without_yz(
     wa = ones(Float32, nA) ./ nA
     wb = ones(Float32, nB) ./ nB
 
-    C0 = pairwise(SqEuclidean(), XA, XB, dims = 2)
-    C0 = C0 ./ maximum(C0)
+    C0 = Float32.(pairwise(SqEuclidean(), XA, XB, dims = 2))
+    C0 .= C0 ./ maximum(C0)
     C = copy(C0)
 
     dimXA = size(XA, 1)
@@ -93,14 +93,14 @@ function joint_between_without_yz(
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
     G = ones(Float32, nA, nB)
+    Gold = copy(G)
     cost = Inf
 
-    YB = nB .* YA * G
-    ZA = nA .* ZB * G'
+    YB = Float32.(nB .* YA * G)
+    ZA = Float32.(nA .* ZB * G')
 
     for iter in 1:iterations # BCD algorithm
 
-        Gold = copy(G)
         costold = cost
 
         if reg > 0
@@ -110,6 +110,7 @@ function joint_between_without_yz(
         end
 
         delta = norm(G .- Gold)
+        Gold .= G
 
         YB .= nB .* YA * G
         ZA .= nA .* ZB * G'

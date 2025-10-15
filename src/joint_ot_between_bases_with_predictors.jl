@@ -1,4 +1,4 @@
-function joint_ot_between_with_predictors(
+function joint_ot_between_bases_with_predictors(
         data;
         iterations = 10,
         learning_rate = 0.01,

@@ -20,64 +20,29 @@ params = DataParameters(nA = 1000,
 rng = ContinuousDataGenerator(params; scenario = 2)
 data = generate(rng)
 
-#= sol = otrecod(data, SimpleLearning())
-@show accuracy(sol)
-@show confusion_matrix(sol.yb_pred, sol.yb_true)
-@show confusion_matrix(sol.za_pred, sol.za_true)
-sol = otrecod(data, JointOTWithinBase())
-@show accuracy(sol)
-@show confusion_matrix(sol.yb_pred, sol.yb_true)
-@show confusion_matrix(sol.za_pred, sol.za_true)
-sol = otrecod(data, JointOTBetweenBases())
-@show accuracy(sol)
-@show confusion_matrix(sol.yb_pred, sol.yb_true)
-@show confusion_matrix(sol.za_pred, sol.za_true)
-sol = otrecod(data, JointOTBetweenBasesWithoutYZ())
-@show accuracy(sol)
-@show confusion_matrix(sol.yb_pred, sol.yb_true)
-@show confusion_matrix(sol.za_pred, sol.za_true)
-sol = otrecod(data, JointOTBetweenBasesRefJDOT())
-@show accuracy(sol)
-@show confusion_matrix(sol.yb_pred, sol.yb_true)
-@show confusion_matrix(sol.za_pred, sol.za_true)
-sol = otrecod(data, JointOTBetweenBasesRefOTDAx())
-@show accuracy(sol)
-@show confusion_matrix(sol.yb_pred, sol.yb_true)
-@show confusion_matrix(sol.za_pred, sol.za_true)
-sol = otrecod(data, JointOTBetweenBasesRefOTDAyz())
-@show accuracy(sol)
-@show confusion_matrix(sol.yb_pred, sol.yb_true)
-@show confusion_matrix(sol.za_pred, sol.za_true)
-sol = otrecod(data, JointOTBetweenBasesRefOTDAyzPred())
-@show accuracy(sol)
-@show confusion_matrix(sol.yb_pred, sol.yb_true)
-@show confusion_matrix(sol.za_pred, sol.za_true) =#
+@timeit to "SimpleLearning" est = accuracy(otrecod(data, SimpleLearning()))
+println("SimpleLearning : $est")
 
+@timeit to "JointOTWithinBase" accuracy(otrecod(data, JointOTWithinBase()))
+println("JointOTWithinBase : $est")
 
+@timeit to "JointOTBetweenBasesWithPredictors"  est = accuracy(otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0)))
+println("JointOTBetweenBasesWithPredictors $est")
 
-@timeit to "Simple Learning" est = accuracy(otrecod(data, SimpleLearning()))
-println("simple learning : $est")
+@timeit to "JointOTBetweenBasesWithoutOutcomes" est = accuracy(otrecod(data, JointOTBetweenBasesWithoutOutcomes(reg = 0.0)))
+println("JointOTBetweenBasesWithoutOutcomes $est")
 
-# @timeit to "Within" accuracy(otrecod(data, JointOTWithinBase()))
+@timeit to "JointOTBetweenBasesJDOT" est = accuracy(otrecod(data, JointOTBetweenBasesJDOT(reg = 0.0)))
+println("JointOTBetweenBasesJDOT $est")
 
-@timeit to "Between with predictors"  est = accuracy(otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0)))
-println("between with predictors $est")
+@timeit to "JointOTDABetweenBasesCovariables" est = accuracy( otrecod(data, JointOTDABetweenBasesCovariables(reg = 0.0)))
+println("JointOTDABetweenBasesCovariables $est")
 
-@timeit to "Between without outcomes" est = accuracy(otrecod(data, JointOTBetweenBasesWithoutYZ(reg = 0.0)))
-println("between without outcomes $est")
+@timeit to "JointOTDABetweenBasesOutcomes" est = accuracy(otrecod(data, JointOTDABetweenBasesOutcomes(reg = 0.0)))
+println("JointOTDABetweenBasesOutcomes $est")
 
-@timeit to "JDOT" est = accuracy(otrecod(data, JointOTBetweenBasesRefJDOT(reg = 0.0)))
-println("jdot $est")
-
-@timeit to "OTDA covariates" est = accuracy( otrecod(data, JointOTBetweenBasesRefOTDAx(reg = 0.0)))
-println("otda covariates $est")
-
-@timeit to "OTDA outcomes" est = accuracy(otrecod(data, JointOTBetweenBasesRefOTDAyz(reg = 0.0)))
-println("otda outcomes $est")
-
-@timeit to "OTDA outcomes with predictors" est = accuracy( otrecod(data, JointOTBetweenBasesRefOTDAyzPred(reg = 0.0)))
-println("otda with predictors $est")
-
+@timeit to "JointOTDABetweenBasesOutcomesWithPredictors" est = accuracy( otrecod(data, JointOTDABetweenBasesOutcomesWithPredictors(reg = 0.0)))
+println("JointOTDABetweenBasesOutcomesWithPredictors $est")
 
 @show(to)
 

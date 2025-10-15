@@ -1,4 +1,4 @@
-function joint_between_ref_otda_x(
+function joint_ot_between_bases_da_covariables(
         data;
         learning_rate = 0.01,
         batchsize = 512,

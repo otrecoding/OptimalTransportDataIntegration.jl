@@ -1,4 +1,4 @@
-function joint_between_ref_jdot(
+function joint_ot_between_bases_jdot(
         data;
         iterations = 10,
         learning_rate = 0.01,

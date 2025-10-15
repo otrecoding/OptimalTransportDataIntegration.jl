@@ -43,8 +43,14 @@ include("otrecod.jl")
 
 export accuracy
 
+"""
+$(SIGNATURES)
+"""
 accuracy(ypred::AbstractVector, ytrue::AbstractVector) = mean(ypred .== ytrue)
 
+"""
+$(SIGNATURES)
+"""
 function accuracy(data::DataFrame, yb_pred::AbstractVector, za_pred::AbstractVector)
 
     base = data.database
@@ -65,6 +71,9 @@ function accuracy(data::DataFrame, yb_pred::AbstractVector, za_pred::AbstractVec
 end
 
 
+"""
+$(SIGNATURES)
+"""
 function accuracy(sol::JointOTResult)
 
     return accuracy(sol.yb_true, sol.yb_pred),
