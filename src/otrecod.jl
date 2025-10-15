@@ -267,7 +267,6 @@ export JointOTBetweenBasesRefOTDAx
     reg_m2::Float64 = 0.05
     Ylevels::AbstractVector = 1:4
     Zlevels::AbstractVector = 1:3
-    iterations::Int = 10
     distance::Distances.Metric = Hamming()
     hidden_layer_size::Int = 10
     learning_rate::Float64 = 0.01
@@ -284,7 +283,6 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesRefOTDAx)
 
         yb_pred, za_pred = joint_between_ref_otda_x(
             data;
-            iterations = method.iterations,
             hidden_layer_size = method.hidden_layer_size,
             learning_rate = method.learning_rate,
             batchsize = method.batchsize,
@@ -296,7 +294,6 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesRefOTDAx)
     else
         yb_pred, za_pred = joint_between_ref_otda_x(
             data;
-            iterations = method.iterations,
             hidden_layer_size = method.hidden_layer_size,
             learning_rate = method.learning_rate,
             batchsize = method.batchsize,

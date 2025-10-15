@@ -1,6 +1,5 @@
 function joint_between_ref_otda_x(
         data;
-        iterations = 10,
         learning_rate = 0.01,
         batchsize = 512,
         epochs = 500,
@@ -11,9 +10,6 @@ function joint_between_ref_otda_x(
         Ylevels = 1:4,
         Zlevels = 1:3
     )
-
-    T = Int32
-
 
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
@@ -31,11 +27,10 @@ function joint_between_ref_otda_x(
     nA = size(dba, 1)
     nB = size(dbb, 1)
 
-    wa = ones(nA) ./ nA
-    wb = ones(nB) ./ nB
+    wa = ones(Float32, nA) ./ nA
+    wb = ones(Float32, nB) ./ nB
 
-    C0 = pairwise(Euclidean(), XA, XB, dims = 2)
-    C2=C0.^2
+    C2 = pairwise(SqEuclidean(), XA, XB, dims = 2)
     C = C2 ./ maximum(C2)
 
     dimXA = size(XA, 1)
@@ -64,37 +59,15 @@ function joint_between_ref_otda_x(
         return
     end
 
-    function loss_crossentropy(Y, F)
-
-        ϵ = 1.0e-12
-        res = zeros(Float32, size(Y, 2), size(F, 2))
-        logF = zeros(Float32, size(F))
-
-        for i in eachindex(F)
-            if F[i] ≈ 1.0
-                logF[i] = log(1.0 - ϵ)
-            else
-                logF[i] = log(ϵ)
-            end
-        end
-
-        for i in axes(Y, 1)
-            res .+= -Y[i, :] .* logF[i, :]'
-        end
-
-        return res
-
-    end
-
     ZApred = modelXZB(XA)
     YBpred = modelXYA(XB)
 
-    G = ones(length(wa), length(wb))
+    G = ones(Float32, nA, nB)
 
     if reg > 0
-        G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
+        G .= PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
     else
-        G = PythonOT.emd(wa, wb, C)
+        G .= PythonOT.emd(wa, wb, C)
     end
 
     XAt = similar(XA)

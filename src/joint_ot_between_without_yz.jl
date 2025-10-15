@@ -3,7 +3,7 @@ function joint_between_without_yz(
         iterations = 10,
         learning_rate = 0.01,
         batchsize = 512,
-        epochs = 500,
+        epochs = 1000,
         hidden_layer_size = 10,
         reg = 0.0,
         reg_m1 = 0.0,
@@ -31,12 +31,12 @@ function joint_between_without_yz(
     nA = size(dba, 1)
     nB = size(dbb, 1)
 
-    wa = ones(nA) ./ nA
-    wb = ones(nB) ./ nB
+    wa = ones(Float32, nA) ./ nA
+    wb = ones(Float32, nB) ./ nB
 
-    C0 = pairwise(Euclidean(), XA, XB, dims = 2)
-    C0=C0.^2
-    C = C0 ./ maximum(C0)
+    C0 = pairwise(SqEuclidean(), XA, XB, dims = 2)
+    C0 = C0 ./ maximum(C0)
+    C = copy(C0)
 
     dimXA = size(XA, 1)
     dimXB = size(XB, 1)
@@ -80,7 +80,7 @@ function joint_between_without_yz(
         end
 
         for i in axes(Y, 1)
-            res .+= -Y[i, :] .* logF[i, :]'
+            res .+= - view(Y,i, :) .* view(logF,i, :)'
         end
 
         return res
@@ -92,8 +92,11 @@ function joint_between_without_yz(
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
-    G = ones(length(wa), length(wb))
+    G = ones(Float32, nA, nB)
     cost = Inf
+
+    YB = nB .* YA * G
+    ZA = nA .* ZB * G'
 
     for iter in 1:iterations # BCD algorithm
 
@@ -101,15 +104,15 @@ function joint_between_without_yz(
         costold = cost
 
         if reg > 0
-            G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
+            G .= PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
-            G = PythonOT.emd(wa, wb, C)
+            G .= PythonOT.emd(wa, wb, C)
         end
 
         delta = norm(G .- Gold)
 
-        YB = nB .* YA * G
-        ZA = nA .* ZB * G'
+        YB .= nB .* YA * G
+        ZA .= nA .* ZB * G'
 
         train!(modelXA, XA, ZA)
         train!(modelXB, XB, YB)
@@ -131,7 +134,7 @@ function joint_between_without_yz(
             break
         end
 
-        C .= C0 ./ maximum(C0) .+ fcost
+        C .= C0 .+ fcost
 
     end
 

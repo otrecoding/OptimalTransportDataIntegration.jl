@@ -97,6 +97,9 @@ function joint_between_ref_jdot(
     YB = zeros(Float32, size(YA,1), nB)
     ZA = zeros(Float32, size(ZB,1), nA)
 
+    loss_y = alpha1 .* loss_crossentropy(YA, YBpred)
+    loss_z = alpha2 .* loss_crossentropy(ZB, ZApred)
+
     for iter in 1:iterations # BCD algorithm
 
         Gold = copy(G1)
@@ -121,8 +124,8 @@ function joint_between_ref_jdot(
         YBpred .= modelXYA(XB)
         ZApred .= modelXZB(XA)
 
-        loss_y = alpha1 * Flux.Losses.crossentropy(YA, YBpred)
-        loss_z = alpha2 * Flux.Losses.crossentropy(ZB, ZApred)
+        loss_y .= alpha1 .* loss_crossentropy(YA, YBpred)
+        loss_z .= alpha2 .* loss_crossentropy(ZB, ZApred)
 
         fcost = loss_y .+ loss_z'
 
