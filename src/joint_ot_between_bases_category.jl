@@ -2,17 +2,16 @@ using CSV
 using DataFrames
 import PythonOT
 import .Iterators: product
-import Distances: pairwise, Hamming
 import LinearAlgebra: norm
 
-function joint_ot_between_bases_continuous(
+function joint_ot_between_bases_category(
         data,
         reg,
         reg_m1,
         reg_m2;
         Ylevels = 1:4,
         Zlevels = 1:3,
-        iterations = 1,
+        iterations = 1
     )
 
     T = Int32
@@ -60,7 +59,7 @@ function joint_ot_between_bases_continuous(
 
     colnames = names(data, r"^X")
     
-    X_hot = Matrix{T}(data[!, colnames])
+    X = Matrix{Float32}(data[!, colnames])
     Y = Vector{T}(data.Y)
     Z = Vector{T}(data.Z)
 
@@ -69,8 +68,8 @@ function joint_ot_between_bases_continuous(
     ZA = view(Z, indA)
     ZB = view(Z, indB)
 
-    XA = view(X_hot, indA, :)
-    XB = view(X_hot, indB, :)
+    XA = view(X, indA, :)
+    XB = view(X, indB, :)
 
     YA_hot = one_hot_encoder(YA, Ylevels)
     ZA_hot = one_hot_encoder(ZA, Zlevels)
@@ -92,7 +91,7 @@ function joint_ot_between_bases_continuous(
     # Compute the indexes of individuals with same covariates
     indXA = Dict{T, Array{T}}()
     indXB = Dict{T, Array{T}}()
-    Xlevels = sort(unique(eachrow(X_hot)))
+    Xlevels = sort(unique(eachrow(X)))
 
     distance = Euclidean()
 
@@ -129,7 +128,7 @@ function joint_ot_between_bases_continuous(
     Ylevels_hot = one_hot_encoder(Ylevels)
     Zlevels_hot = one_hot_encoder(Zlevels)
 
-    nx = size(X_hot, 2) ## Nb modalités x
+    nx = size(X, 2) ## Nb modalités x
 
     # les x parmi les XYA observés, potentiellement des valeurs repetées
     XA_hot = stack([v[1:nx] for v in XYA2], dims = 1)
@@ -158,8 +157,7 @@ function joint_ot_between_bases_continuous(
     alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
 
     ## Optimal Transport
-    C0 = pairwise(SqEuclidean(), XA_hot, XB_hot, dims = 1)
-    
+    C0 = Float32.(pairwise(SqEuclidean(), XA_hot, XB_hot, dims = 1))
     C0 .= C0 ./ maximum(C0)
     C = copy(C0)
   
@@ -171,7 +169,7 @@ function joint_ot_between_bases_continuous(
     YBpred = zeros(T, nB)
     ZApred = zeros(T, nA)
 
-    G = ones(length(wa2), length(wb2))
+    G = ones(Float32, length(wa2), length(wb2))
     Gold = copy(G)
     cost = Inf
 

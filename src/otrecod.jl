@@ -106,32 +106,53 @@ function otrecod(data::DataFrame, method::JointOTBetweenBases)
     xcols = names(data, r"^X")
     discrete = all(isinteger.(Matrix(data[!, xcols])))
 
-    if discrete 
+    @assert discrete 
 
-        yb_pred, za_pred = joint_ot_between_bases_discrete(
-            data,
-            method.reg,
-            method.reg_m1,
-            method.reg_m2;
-            Ylevels = method.Ylevels,
-            Zlevels = method.Zlevels,
-            iterations = method.iterations
-        )
+    yb_pred, za_pred = joint_ot_between_bases_discrete(
+        data,
+        method.reg,
+        method.reg_m1,
+        method.reg_m2;
+        Ylevels = method.Ylevels,
+        Zlevels = method.Zlevels,
+        iterations = method.iterations
+    )
 
-    else
+    yb_true = data.Y[data.database .== 2]
+    za_true = data.Z[data.database .== 1]
 
-        yb_pred, za_pred = joint_ot_between_bases_continuous(
-            data,
-            method.reg,
-            method.reg_m1,
-            method.reg_m2;
-            Ylevels = method.Ylevels,
-            Zlevels = method.Zlevels,
-            iterations = method.iterations
-        )
+    return JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
-    end
-   
+end
+
+export JointOTBetweenBasesCategory
+
+@with_kw struct JointOTBetweenBasesCategory <: AbstractMethod
+    reg::Float64 = 0.01
+    reg_m1::Float64 = 0.05
+    reg_m2::Float64 = 0.05
+    Ylevels::Vector{Int} = 1:4
+    Zlevels::Vector{Int} = 1:3
+    iterations::Int = 10
+end
+
+function otrecod(data::DataFrame, method::JointOTBetweenBasesCategory)
+
+    xcols = names(data, r"^X")
+    discrete = all(isinteger.(Matrix(data[!, xcols])))
+
+    @assert discrete 
+
+    yb_pred, za_pred = joint_ot_between_bases_category(
+        data,
+        method.reg,
+        method.reg_m1,
+        method.reg_m2;
+        Ylevels = method.Ylevels,
+        Zlevels = method.Zlevels,
+        iterations = method.iterations
+    )
+
     yb_true = data.Y[data.database .== 2]
     za_true = data.Z[data.database .== 1]
 
