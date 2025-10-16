@@ -1,4 +1,4 @@
-function joint_between_ref_otda_yz(
+function joint_ot_between_bases_da_outcomes(
         data;
         iterations = 10,
         learning_rate = 0.01,
@@ -19,8 +19,8 @@ function joint_between_ref_otda_yz(
 
     cols = names(dba, r"^X")   
 
-    XA = transpose(Matrix(dba[:, cols]))
-    XB = transpose(Matrix(dbb[:, cols]))
+    XA = transpose(Matrix{Float32}(dba[:, cols]))
+    XB = transpose(Matrix{Float32}(dbb[:, cols]))
 
     YA = Flux.onehotbatch(dba.Y, Ylevels)
     ZB = Flux.onehotbatch(dbb.Z, Zlevels)
@@ -31,11 +31,8 @@ function joint_between_ref_otda_yz(
     wa = ones(nA) ./ nA
     wb = ones(nB) ./ nB
 
-    C0 = pairwise(Euclidean(), XA, XB, dims = 2)
-    C2=C0.^2
-    #C = C2 ./ maximum(C2)
-    C = C2
-    G = ones(length(wa), length(wb))
+    C = Float32.(pairwise(SqEuclidean(), XA, XB, dims = 2))
+    G = ones(Float32, length(wa), length(wb))
 
     if reg > 0
         G .= PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")

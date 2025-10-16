@@ -17,7 +17,8 @@ end
 
 function otrecod(data::DataFrame, method::JointOTWithinBase)
 
-    discrete = all(isinteger.(data.X1))
+    xcols = names(data, r"^X")
+    discrete = all(isinteger.(Matrix(data[!, xcols])))
 
     if discrete
 
@@ -61,7 +62,8 @@ end
 
 function otrecod(data::DataFrame, method::SimpleLearning)
 
-    discrete = all(isinteger.(data.X1))
+    xcols = names(data, r"^X")
+    discrete = all(isinteger.(Matrix(data[!, xcols])))
 
     if discrete
         yb_pred, za_pred = simple_learning(
@@ -94,28 +96,63 @@ export JointOTBetweenBases
     reg::Float64 = 0.01
     reg_m1::Float64 = 0.05
     reg_m2::Float64 = 0.05
-    Ylevels::AbstractVector = 1:4
-    Zlevels::AbstractVector = 1:3
+    Ylevels::Vector{Int} = 1:4
+    Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
-    distance::Distances.Metric = Hamming()
 end
 
 function otrecod(data::DataFrame, method::JointOTBetweenBases)
 
-    discrete = all(isinteger.(data.X1))
-    @assert discrete
+    xcols = names(data, r"^X")
+    discrete = all(isinteger.(Matrix(data[!, xcols])))
 
-    yb_pred, za_pred = joint_ot_between_bases(
+    @assert discrete "JointOTBetweenBases: covariables must be categorical"
+
+    yb_pred, za_pred = joint_ot_between_bases_discrete(
         data,
         method.reg,
         method.reg_m1,
         method.reg_m2;
         Ylevels = method.Ylevels,
         Zlevels = method.Zlevels,
-        iterations = method.iterations,
-        distance = method.distance,
+        iterations = method.iterations
     )
-   
+
+    yb_true = data.Y[data.database .== 2]
+    za_true = data.Z[data.database .== 1]
+
+    return JointOTResult(yb_true, za_true, yb_pred, za_pred)
+
+end
+
+export JointOTBetweenBasesCategory
+
+@with_kw struct JointOTBetweenBasesCategory <: AbstractMethod
+    reg::Float64 = 0.01
+    reg_m1::Float64 = 0.05
+    reg_m2::Float64 = 0.05
+    Ylevels::Vector{Int} = 1:4
+    Zlevels::Vector{Int} = 1:3
+    iterations::Int = 10
+end
+
+function otrecod(data::DataFrame, method::JointOTBetweenBasesCategory)
+
+    xcols = names(data, r"^X")
+    discrete = all(isinteger.(Matrix(data[!, xcols])))
+
+    @assert discrete "JointOTBetweenBasesCategory: covariables must be categorical"
+ 
+    yb_pred, za_pred = joint_ot_between_bases_category(
+        data,
+        method.reg,
+        method.reg_m1,
+        method.reg_m2;
+        Ylevels = method.Ylevels,
+        Zlevels = method.Zlevels,
+        iterations = method.iterations
+    )
+
     yb_true = data.Y[data.database .== 2]
     za_true = data.Z[data.database .== 1]
 
@@ -130,8 +167,8 @@ export JointOTBetweenBasesWithPredictors
     reg::Float64 = 0.01
     reg_m1::Float64 = 0.05
     reg_m2::Float64 = 0.05
-    Ylevels::AbstractVector = 1:4
-    Zlevels::AbstractVector = 1:3
+    Ylevels::Vector{Int} = 1:4
+    Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
     hidden_layer_size::Int = 10
     learning_rate::Float64 = 0.01
@@ -143,10 +180,11 @@ end
 function otrecod(data::DataFrame, method::JointOTBetweenBasesWithPredictors)
 
 
-    discrete = all(isinteger.(data.X1))
-    @assert !discrete
+    xcols = names(data, r"^X")
+    discrete = all(isinteger.(Matrix(data[!, xcols])))
+    @assert !discrete "Covariable data must be continuous with JointOTBetweenBasesWithPredictors"
 
-    yb_pred, za_pred = joint_ot_between_with_predictors(
+    yb_pred, za_pred = joint_ot_between_bases_with_predictors(
         data;
         iterations = method.iterations,
         hidden_layer_size = method.hidden_layer_size,
@@ -160,39 +198,6 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesWithPredictors)
         reg_m2 = method.reg_m2
     )
 
-    yb_true = data.Y[data.database .== 2]
-    za_true = data.Z[data.database .== 1]
-
-    return JointOTResult(yb_true, za_true, yb_pred, za_pred)
-
-end
-
-export JointOTBetweenBasesc
-
-@with_kw struct JointOTBetweenBasesc <: AbstractMethod
-
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
-    Ylevels::AbstractVector = 1:4
-    Zlevels::AbstractVector = 1:3
-    iterations::Int = 10
-    distance::Distances.Metric = Euclidean()
-end
-
-function otrecod(data::DataFrame, method::JointOTBetweenBasesc)
-
-
-        yb_pred, za_pred = joint_ot_between_bases_c(
-                       data,
-            method.reg,
-            method.reg_m1,
-            method.reg_m2;
-            Ylevels = method.Ylevels,
-            Zlevels = method.Zlevels,
-            iterations = method.iterations,
-            distance = method.distance,
-        )
 
     yb_true = data.Y[data.database .== 2]
     za_true = data.Z[data.database .== 1]
@@ -200,15 +205,17 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesc)
     return JointOTResult(yb_true, za_true, yb_pred, za_pred)
 
 end
-export JointOTBetweenBasesRefJDOT
 
-@with_kw struct JointOTBetweenBasesRefJDOT <: AbstractMethod
+
+export JointOTBetweenBasesJDOT
+
+@with_kw struct JointOTBetweenBasesJDOT <: AbstractMethod
 
     reg::Float64 = 0.01
     reg_m1::Float64 = 0.05
     reg_m2::Float64 = 0.05
-    Ylevels::AbstractVector = 1:4
-    Zlevels::AbstractVector = 1:3
+    Ylevels::Vector{Int} = 1:4
+    Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
     distance::Distances.Metric = Hamming()
     hidden_layer_size::Int = 10
@@ -218,37 +225,24 @@ export JointOTBetweenBasesRefJDOT
 
 end
 
-function otrecod(data::DataFrame, method::JointOTBetweenBasesRefJDOT)
+function otrecod(data::DataFrame, method::JointOTBetweenBasesJDOT)
 
-    discrete = all(isinteger.(data.X1))
+    xcols = names(data, r"^X")
+    discrete = all(isinteger.(Matrix(data[!, xcols])))
 
-    if discrete
+    @assert !discrete
 
-        yb_pred, za_pred = joint_between_ref_jdot(
-            data;
-            iterations = method.iterations,
-            hidden_layer_size = method.hidden_layer_size,
-            learning_rate = method.learning_rate,
-            batchsize = method.batchsize,
-            epochs = method.epochs,
-            reg = method.reg,
-            reg_m1 = method.reg_m1,
-            reg_m2 = method.reg_m2
-        )
-    else
-        yb_pred, za_pred = joint_between_ref_jdot(
-            data;
-            iterations = method.iterations,
-            hidden_layer_size = method.hidden_layer_size,
-            learning_rate = method.learning_rate,
-            batchsize = method.batchsize,
-            epochs = method.epochs,
-            reg = method.reg,
-            reg_m1 = method.reg_m1,
-            reg_m2 = method.reg_m2
-        )
-
-    end
+    yb_pred, za_pred = joint_ot_between_bases_jdot(
+        data;
+        iterations = method.iterations,
+        hidden_layer_size = method.hidden_layer_size,
+        learning_rate = method.learning_rate,
+        batchsize = method.batchsize,
+        epochs = method.epochs,
+        reg = method.reg,
+        reg_m1 = method.reg_m1,
+        reg_m2 = method.reg_m2
+    )
 
     yb_true = data.Y[data.database .== 2]
     za_true = data.Z[data.database .== 1]
@@ -258,16 +252,15 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesRefJDOT)
 end
 
 
-export JointOTBetweenBasesRefOTDAx
+export JointOTDABetweenBasesCovariables
 
-@with_kw struct JointOTBetweenBasesRefOTDAx <: AbstractMethod
+@with_kw struct JointOTDABetweenBasesCovariables <: AbstractMethod
 
     reg::Float64 = 0.01
     reg_m1::Float64 = 0.05
     reg_m2::Float64 = 0.05
-    Ylevels::AbstractVector = 1:4
-    Zlevels::AbstractVector = 1:3
-    iterations::Int = 10
+    Ylevels::Vector{Int} = 1:4
+    Zlevels::Vector{Int} = 1:3
     distance::Distances.Metric = Hamming()
     hidden_layer_size::Int = 10
     learning_rate::Float64 = 0.01
@@ -276,37 +269,22 @@ export JointOTBetweenBasesRefOTDAx
 
 end
 
-function otrecod(data::DataFrame, method::JointOTBetweenBasesRefOTDAx)
+function otrecod(data::DataFrame, method::JointOTDABetweenBasesCovariables)
 
-    discrete = all(isinteger.(data.X1))
+    xcols = names(data, r"^X")
+    discrete = all(isinteger.(Matrix(data[!, xcols])))
 
-    if discrete
+    @assert !discrete
 
-        yb_pred, za_pred = joint_between_ref_otda_x(
-            data;
-            iterations = method.iterations,
-            hidden_layer_size = method.hidden_layer_size,
-            learning_rate = method.learning_rate,
-            batchsize = method.batchsize,
-            epochs = method.epochs,
-            reg = method.reg,
-            reg_m1 = method.reg_m1,
-            reg_m2 = method.reg_m2
-        )
-    else
-        yb_pred, za_pred = joint_between_ref_otda_x(
-            data;
-            iterations = method.iterations,
-            hidden_layer_size = method.hidden_layer_size,
-            learning_rate = method.learning_rate,
-            batchsize = method.batchsize,
-            epochs = method.epochs,
-            reg = method.reg,
-            reg_m1 = method.reg_m1,
-            reg_m2 = method.reg_m2
-        )
-
-    end
+    yb_pred, za_pred = joint_ot_between_bases_da_covariables(
+        data;
+        hidden_layer_size = method.hidden_layer_size,
+        learning_rate = method.learning_rate,
+        batchsize = method.batchsize,
+        epochs = method.epochs,
+        reg = method.reg,
+        reg_m1 = method.reg_m1,
+        reg_m2 = method.reg_m2)
 
     yb_true = data.Y[data.database .== 2]
     za_true = data.Z[data.database .== 1]
@@ -316,15 +294,15 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesRefOTDAx)
 end
 
 
-export JointOTBetweenBasesRefOTDAyz
+export JointOTDABetweenBasesOutcomes
 
-@with_kw struct JointOTBetweenBasesRefOTDAyz <: AbstractMethod
+@with_kw struct JointOTDABetweenBasesOutcomes <: AbstractMethod
 
     reg::Float64 = 0.01
     reg_m1::Float64 = 0.05
     reg_m2::Float64 = 0.05
-    Ylevels::AbstractVector = 1:4
-    Zlevels::AbstractVector = 1:3
+    Ylevels::Vector{Int} = 1:4
+    Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
     distance::Distances.Metric = Hamming()
     hidden_layer_size::Int = 10
@@ -334,37 +312,24 @@ export JointOTBetweenBasesRefOTDAyz
 
 end
 
-function otrecod(data::DataFrame, method::JointOTBetweenBasesRefOTDAyz)
+function otrecod(data::DataFrame, method::JointOTDABetweenBasesOutcomes)
 
-    discrete = all(isinteger.(data.X1))
+    xcols = names(data, r"^X")
+    discrete = all(isinteger.(Matrix(data[!, xcols])))
 
-    if discrete
+    @assert !discrete
 
-        yb_pred, za_pred = joint_between_ref_otda_yz(
-            data;
-            iterations = method.iterations,
-            hidden_layer_size = method.hidden_layer_size,
-            learning_rate = method.learning_rate,
-            batchsize = method.batchsize,
-            epochs = method.epochs,
-            reg = method.reg,
-            reg_m1 = method.reg_m1,
-            reg_m2 = method.reg_m2
-        )
-    else
-        yb_pred, za_pred = joint_between_ref_otda_yz(
-            data;
-            iterations = method.iterations,
-            hidden_layer_size = method.hidden_layer_size,
-            learning_rate = method.learning_rate,
-            batchsize = method.batchsize,
-            epochs = method.epochs,
-            reg = method.reg,
-            reg_m1 = method.reg_m1,
-            reg_m2 = method.reg_m2
-        )
-
-    end
+    yb_pred, za_pred = joint_ot_between_bases_da_outcomes(
+        data;
+        iterations = method.iterations,
+        hidden_layer_size = method.hidden_layer_size,
+        learning_rate = method.learning_rate,
+        batchsize = method.batchsize,
+        epochs = method.epochs,
+        reg = method.reg,
+        reg_m1 = method.reg_m1,
+        reg_m2 = method.reg_m2
+    )
 
     yb_true = data.Y[data.database .== 2]
     za_true = data.Z[data.database .== 1]
@@ -373,17 +338,16 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesRefOTDAyz)
 
 end
 
-export JointOTBetweenBasesRefOTDAyzPred
+export JointOTDABetweenBasesOutcomesWithPredictors
 
-@with_kw struct JointOTBetweenBasesRefOTDAyzPred <: AbstractMethod
+@with_kw struct JointOTDABetweenBasesOutcomesWithPredictors <: AbstractMethod
 
     reg::Float64 = 0.01
     reg_m1::Float64 = 0.05
     reg_m2::Float64 = 0.05
-    Ylevels::AbstractVector = 1:4
-    Zlevels::AbstractVector = 1:3
+    Ylevels::Vector{Int} = 1:4
+    Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
-    distance::Distances.Metric = Hamming()
     hidden_layer_size::Int = 10
     learning_rate::Float64 = 0.01
     batchsize::Int = 64
@@ -391,37 +355,24 @@ export JointOTBetweenBasesRefOTDAyzPred
 
 end
 
-function otrecod(data::DataFrame, method::JointOTBetweenBasesRefOTDAyzPred)
+function otrecod(data::DataFrame, method::JointOTDABetweenBasesOutcomesWithPredictors)
 
-    discrete = all(isinteger.(data.X1))
+    xcols = names(data, r"^X")
+    discrete = all(isinteger.(Matrix(data[!, xcols])))
 
-    if discrete
+    @assert !discrete
 
-        yb_pred, za_pred = joint_between_ref_otda_yz_pred(
-            data;
-            iterations = method.iterations,
-            hidden_layer_size = method.hidden_layer_size,
-            learning_rate = method.learning_rate,
-            batchsize = method.batchsize,
-            epochs = method.epochs,
-            reg = method.reg,
-            reg_m1 = method.reg_m1,
-            reg_m2 = method.reg_m2
-        )
-    else
-        yb_pred, za_pred = joint_between_ref_otda_yz_pred(
-            data;
-            iterations = method.iterations,
-            hidden_layer_size = method.hidden_layer_size,
-            learning_rate = method.learning_rate,
-            batchsize = method.batchsize,
-            epochs = method.epochs,
-            reg = method.reg,
-            reg_m1 = method.reg_m1,
-            reg_m2 = method.reg_m2
-        )
-
-    end
+    yb_pred, za_pred = joint_ot_between_bases_da_outcomes_with_predictors(
+        data;
+        iterations = method.iterations,
+        hidden_layer_size = method.hidden_layer_size,
+        learning_rate = method.learning_rate,
+        batchsize = method.batchsize,
+        epochs = method.epochs,
+        reg = method.reg,
+        reg_m1 = method.reg_m1,
+        reg_m2 = method.reg_m2
+    )
 
     yb_true = data.Y[data.database .== 2]
     za_true = data.Z[data.database .== 1]
@@ -430,17 +381,16 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesRefOTDAyzPred)
 
 end
 
-export JointOTBetweenBasesWithoutYZ
+export JointOTBetweenBasesWithoutOutcomes
 
-@with_kw struct JointOTBetweenBasesWithoutYZ <: AbstractMethod
+@with_kw struct JointOTBetweenBasesWithoutOutcomes <: AbstractMethod
 
     reg::Float64 = 0.01
     reg_m1::Float64 = 0.05
     reg_m2::Float64 = 0.05
-    Ylevels::AbstractVector = 1:4
-    Zlevels::AbstractVector = 1:3
+    Ylevels::Vector{Int} = 1:4
+    Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
-    distance::Distances.Metric = Hamming()
     hidden_layer_size::Int = 10
     learning_rate::Float64 = 0.01
     batchsize::Int = 64
@@ -448,37 +398,24 @@ export JointOTBetweenBasesWithoutYZ
 
 end
 
-function otrecod(data::DataFrame, method::JointOTBetweenBasesWithoutYZ)
+function otrecod(data::DataFrame, method::JointOTBetweenBasesWithoutOutcomes)
 
-    discrete = all(isinteger.(data.X1))
+    xcols = names(data, r"^X")
+    discrete = all(isinteger.(Matrix(data[!, xcols])))
 
-    if discrete
+    @assert !discrete
 
-        yb_pred, za_pred = joint_between_without_yz(
-            data;
-            iterations = method.iterations,
-            hidden_layer_size = method.hidden_layer_size,
-            learning_rate = method.learning_rate,
-            batchsize = method.batchsize,
-            epochs = method.epochs,
-            reg = method.reg,
-            reg_m1 = method.reg_m1,
-            reg_m2 = method.reg_m2
-        )
-    else
-        yb_pred, za_pred = joint_between_without_yz(
-            data;
-            iterations = method.iterations,
-            hidden_layer_size = method.hidden_layer_size,
-            learning_rate = method.learning_rate,
-            batchsize = method.batchsize,
-            epochs = method.epochs,
-            reg = method.reg,
-            reg_m1 = method.reg_m1,
-            reg_m2 = method.reg_m2
-        )
-
-    end
+    yb_pred, za_pred = joint_ot_between_bases_without_outcomes(
+        data;
+        iterations = method.iterations,
+        hidden_layer_size = method.hidden_layer_size,
+        learning_rate = method.learning_rate,
+        batchsize = method.batchsize,
+        epochs = method.epochs,
+        reg = method.reg,
+        reg_m1 = method.reg_m1,
+        reg_m2 = method.reg_m2
+    )
 
     yb_true = data.Y[data.database .== 2]
     za_true = data.Z[data.database .== 1]

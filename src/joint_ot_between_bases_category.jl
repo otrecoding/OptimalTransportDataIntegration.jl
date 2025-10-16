@@ -2,72 +2,55 @@ using CSV
 using DataFrames
 import PythonOT
 import .Iterators: product
-import Distances: pairwise, Hamming
 import LinearAlgebra: norm
 
-
-"""
-    loss_crossentropy(Y, F)
-
-Cross entropy is typically used as a loss in multi-class classification, in which case the labels y are given in a one-hot format. dims specifies the dimension (or the dimensions) containing the class probabilities. The prediction ŷ is usually probabilities but in our case it is also one hot encoded vector.
-
-"""
-function loss_crossentropy(Y::AbstractMatrix{T}, F::AbstractMatrix{T}) where {T}
-    ϵ = 1.0e-12
-    nf, nclasses = size(F)
-    ny = size(Y, 1)
-    @assert nclasses == size(Y, 2)
-    res = zeros(Float32, ny, nf)
-    logF = zeros(Float32, size(F))
-
-    for i in eachindex(F)
-        logF[i] = F[i] ≈ 1.0 ? log(1.0 - ϵ) : log(ϵ)
-    end
-
-    for i in axes(Y, 2)
-        res .+= - view(Y, :, i) .* view(logF, :, i)'
-    end
-
-    return res
-
-end
-
-
-"""
-    modality_cost(loss, weight)
-
-- loss: matrix of size len(weight) * len(levels)
-- weight: vector of weights 
-
-Returns the scalar product <loss[level,],weight> 
-"""
-function modality_cost(loss, weight)
-
-    cost_for_each_modality = Float64[]
-    for j in axes(loss, 2)
-        s = zero(Float64)
-        for i in axes(loss, 1)
-            s += loss[i, j] * weight[i]
-        end
-        push!(cost_for_each_modality, s)
-    end
-
-    return Flux.softmax(cost_for_each_modality)
-
-end 
-
-function joint_ot_between_bases_c(
+function joint_ot_between_bases_category(
         data,
         reg,
         reg_m1,
         reg_m2;
         Ylevels = 1:4,
         Zlevels = 1:3,
-        iterations = 1,
-        distance = Euclidean(),
+        iterations = 1
     )
 
     T = Int32
+
+    function loss_crossentropy(Y::AbstractMatrix{T}, F::AbstractMatrix{T}) where {T}
+        ϵ = 1.0e-12
+        nf, nclasses = size(F)
+        ny = size(Y, 1)
+        @assert nclasses == size(Y, 2)
+        res = zeros(Float32, ny, nf)
+        logF = zeros(Float32, size(F))
+    
+        for i in eachindex(F)
+            logF[i] = F[i] ≈ 1.0 ? log(1.0 - ϵ) : log(ϵ)
+        end
+    
+        for i in axes(Y, 2)
+            res .+= - view(Y, :, i) .* view(logF, :, i)'
+        end
+    
+        return res
+    
+    end
+    
+    function modality_cost(loss, weight)
+    
+        cost_for_each_modality = Float64[]
+        for j in axes(loss, 2)
+            s = zero(Float64)
+            for i in axes(loss, 1)
+                s += loss[i, j] * weight[i]
+            end
+            push!(cost_for_each_modality, s)
+        end
+    
+        return Flux.softmax(cost_for_each_modality)
+    
+    end 
+
 
     base = data.database
 
@@ -75,8 +58,8 @@ function joint_ot_between_bases_c(
     indB = findall(base .== 2)
 
     colnames = names(data, r"^X")
-    #X_hot = Matrix{T}(one_hot_encoder(data[!, colnames]))
-    X_hot = Matrix{T}(data[!, colnames])
+    
+    X = Matrix{Float32}(data[!, colnames])
     Y = Vector{T}(data.Y)
     Z = Vector{T}(data.Z)
 
@@ -85,8 +68,8 @@ function joint_ot_between_bases_c(
     ZA = view(Z, indA)
     ZB = view(Z, indB)
 
-    XA = view(X_hot, indA, :)
-    XB = view(X_hot, indB, :)
+    XA = view(X, indA, :)
+    XB = view(X, indB, :)
 
     YA_hot = one_hot_encoder(YA, Ylevels)
     ZA_hot = one_hot_encoder(ZA, Zlevels)
@@ -95,7 +78,6 @@ function joint_ot_between_bases_c(
 
     XYA = hcat(XA, YA)
     XZB = hcat(XB, ZB)
-
 
     # Compute data for aggregation of the individuals
 
@@ -109,7 +91,9 @@ function joint_ot_between_bases_c(
     # Compute the indexes of individuals with same covariates
     indXA = Dict{T, Array{T}}()
     indXB = Dict{T, Array{T}}()
-    Xlevels = sort(unique(eachrow(X_hot)))
+    Xlevels = sort(unique(eachrow(X)))
+
+    distance = Euclidean()
 
     for (i, x) in enumerate(Xlevels)
         distA = vec(pairwise(distance, x[:, :], XA', dims = 2))
@@ -141,11 +125,10 @@ function joint_ot_between_bases_c(
         wb[i] > 0 && push!(XZB2, [x...; z])
     end
 
-    # +
     Ylevels_hot = one_hot_encoder(Ylevels)
     Zlevels_hot = one_hot_encoder(Zlevels)
 
-    nx = size(X_hot, 2) ## Nb modalités x
+    nx = size(X, 2) ## Nb modalités x
 
     # les x parmi les XYA observés, potentiellement des valeurs repetées
     XA_hot = stack([v[1:nx] for v in XYA2], dims = 1)
@@ -174,11 +157,9 @@ function joint_ot_between_bases_c(
     alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
 
     ## Optimal Transport
-    C0 = pairwise(Euclidean(), XA_hot, XB_hot, dims = 1)
-    
-    C0 = C0 ./ maximum(C0)
-    C0 .= C0.^2
-    C = C0
+    C0 = Float32.(pairwise(SqEuclidean(), XA_hot, XB_hot, dims = 1))
+    C0 .= C0 ./ maximum(C0)
+    C = copy(C0)
   
     zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
     yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
@@ -188,22 +169,23 @@ function joint_ot_between_bases_c(
     YBpred = zeros(T, nB)
     ZApred = zeros(T, nA)
 
-    G = ones(length(wa2), length(wb2))
+    G = ones(Float32, length(wa2), length(wb2))
+    Gold = copy(G)
     cost = Inf
 
     for iter in 1:iterations
 
-        Gold = copy(G)
         costold = cost
 
         if reg_m1 > 0.0 && reg_m2 > 0.0
-            G = PythonOT.mm_unbalanced(wa2, wb2, C, (reg_m1, reg_m2); reg = reg, div = "kl")
+            G .= PythonOT.mm_unbalanced(wa2, wb2, C, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
-            G = PythonOT.emd(wa2, wb2, C)
+            G .= PythonOT.emd(wa2, wb2, C)
         end
 
         delta = norm(G .- Gold)
 
+        Gold .= G
 
         for j in eachindex(yB_pred)
             yB_pred[j] = Ylevels[argmin(modality_cost(Yloss, view(G, :, j)))]
@@ -250,6 +232,5 @@ function joint_ot_between_bases_c(
     end
 
     return YBpred, ZApred
-
 
 end

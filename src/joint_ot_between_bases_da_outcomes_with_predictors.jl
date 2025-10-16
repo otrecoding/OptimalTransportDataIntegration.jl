@@ -1,4 +1,4 @@
-function joint_between_ref_otda_yz_pred(
+function joint_ot_between_bases_da_outcomes_with_predictors(
     data;
     iterations = 10,
     learning_rate = 0.01,
@@ -31,11 +31,10 @@ function joint_between_ref_otda_yz_pred(
     nA = size(dba, 1)
     nB = size(dbb, 1)
 
-    wa = ones(nA) ./ nA
-    wb = ones(nB) ./ nB
+    wa = ones(Float32, nA) ./ nA
+    wb = ones(Float32, nB) ./ nB
 
-    C0 = pairwise(Euclidean(), XA, XB, dims = 2)
-    C0=C0.^2
+    C0 = Float32.(pairwise(SqEuclidean(), XA, XB, dims = 2))
     C = C0 ./ maximum(C0)
 
     dimXA = size(XA, 1)
@@ -89,19 +88,19 @@ function joint_between_ref_otda_yz_pred(
     YBpred = Flux.softmax(modelXYA(XB))
     ZApred = Flux.softmax(modelXZB(XA))
 
-    G = ones(length(wa), length(wb))
+    G = ones(Float32, length(wa), length(wb))
 
     if reg > 0
-        G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
+        G .= PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
     else
-        G = PythonOT.emd(wa, wb, C)
+        G .= PythonOT.emd(wa, wb, C)
     end
 
     YBt = similar(YBpred)
     ZAt = similar(ZApred)
 
-    YBt = nB .* YA * G
-    ZAt = nA .* ZB * G'
+    YBt .= nB .* YA * G
+    ZAt .= nA .* ZB * G'
 
     train!(modelXYA, XB, YBt)
     train!(modelXZB, XA, ZAt)

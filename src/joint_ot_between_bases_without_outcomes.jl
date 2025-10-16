@@ -1,9 +1,9 @@
-function joint_between_ref_otda_x(
+function joint_ot_between_bases_without_outcomes(
         data;
         iterations = 10,
         learning_rate = 0.01,
         batchsize = 512,
-        epochs = 500,
+        epochs = 1000,
         hidden_layer_size = 10,
         reg = 0.0,
         reg_m1 = 0.0,
@@ -14,11 +14,11 @@ function joint_between_ref_otda_x(
 
     T = Int32
 
-
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
-    cols = names(dba, r"^X")    
+    cols = names(dba, r"^X")   
+
     XA = transpose(Matrix{Float32}(dba[:, cols]))
     XB = transpose(Matrix{Float32}(dbb[:, cols]))
 
@@ -31,20 +31,21 @@ function joint_between_ref_otda_x(
     nA = size(dba, 1)
     nB = size(dbb, 1)
 
-    wa = ones(nA) ./ nA
-    wb = ones(nB) ./ nB
+    wa = ones(Float32, nA) ./ nA
+    wb = ones(Float32, nB) ./ nB
 
-    C0 = pairwise(Euclidean(), XA, XB, dims = 2)
-    C2=C0.^2
-    C = C2 ./ maximum(C2)
+    C0 = Float32.(pairwise(SqEuclidean(), XA, XB, dims = 2))
+    C0 .= C0 ./ maximum(C0)
+    C = copy(C0)
 
     dimXA = size(XA, 1)
     dimXB = size(XB, 1)
+
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
 
-    modelXYA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
-    modelXZB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
+    modelXA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
+    modelXB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
 
     function train!(model, x, y)
 
@@ -79,35 +80,64 @@ function joint_between_ref_otda_x(
         end
 
         for i in axes(Y, 1)
-            res .+= -Y[i, :] .* logF[i, :]'
+            res .+= - view(Y,i, :) .* view(logF,i, :)'
         end
 
         return res
 
     end
 
-    ZApred = modelXZB(XA)
-    YBpred = modelXYA(XB)
+    YBpred = Flux.softmax(modelXB(XB))
+    ZApred = Flux.softmax(modelXA(XA))
 
-    G = ones(length(wa), length(wb))
+    alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
-    if reg > 0
-        G = PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
-    else
-        G = PythonOT.emd(wa, wb, C)
+    G = ones(Float32, nA, nB)
+    Gold = copy(G)
+    cost = Inf
+
+    YB = Float32.(nB .* YA * G)
+    ZA = Float32.(nA .* ZB * G')
+
+    for iter in 1:iterations # BCD algorithm
+
+        costold = cost
+
+        if reg > 0
+            G .= PythonOT.mm_unbalanced(wa, wb, C, (reg_m1, reg_m2); reg = reg, div = "kl")
+        else
+            G .= PythonOT.emd(wa, wb, C)
+        end
+
+        delta = norm(G .- Gold)
+        Gold .= G
+
+        YB .= nB .* YA * G
+        ZA .= nA .* ZB * G'
+
+        train!(modelXA, XA, ZA)
+        train!(modelXB, XB, YB)
+
+        YBpred .= Flux.softmax(modelXB(XB))
+        ZApred .= Flux.softmax(modelXA(XA))
+
+        loss_y = alpha1 * loss_crossentropy(YA, YBpred)
+        loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
+
+        fcost = loss_y .+ loss_z'
+
+        cost = sum(G .* fcost)
+
+        @info "Delta: $(delta) \t  Loss: $(cost) "
+
+        if delta < 1.0e-16 || abs(costold - cost) < 1.0e-7
+            @info "converged at iter $iter "
+            break
+        end
+
+        C .= C0 .+ fcost
+
     end
-
-    XAt = similar(XA)
-    XBt = similar(XB)
-
-    XBt .= nB .* XA * G
-    XAt .= nA .* XB * G'
-
-    train!(modelXYA, XAt, YA)
-    train!(modelXZB, XBt, ZB)
-
-    ZApred .= modelXZB(XA)
-    YBpred .= modelXYA(XB)
 
     return Flux.onecold(YBpred), Flux.onecold(ZApred)
 

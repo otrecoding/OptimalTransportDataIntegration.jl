@@ -57,7 +57,7 @@ function modality_cost(loss::Matrix{Float32}, weight::Vector{Float32})
 
 end
 
-function joint_ot_between_bases(
+function joint_ot_between_bases_discrete(
         data,
         reg,
         reg_m1,

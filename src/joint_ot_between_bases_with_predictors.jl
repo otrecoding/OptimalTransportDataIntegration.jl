@@ -1,4 +1,4 @@
-function joint_ot_between_with_predictors(
+function joint_ot_between_bases_with_predictors(
         data;
         iterations = 10,
         learning_rate = 0.01,
@@ -31,14 +31,14 @@ function joint_ot_between_with_predictors(
     nA = size(dba, 1)
     nB = size(dbb, 1)
 
-    wa = ones(nA) ./ nA
-    wb = ones(nB) ./ nB
+    wa = ones(Float32, nA) ./ nA
+    wb = ones(Float32, nB) ./ nB
 
-    C0 = pairwise(Euclidean(), XA, XB, dims = 2)
-    
-    C0 = C0 ./ maximum(C0)
-    C0 .= C0.^2
-    C = C0
+    C0 = pairwise(SqEuclidean(), XA, XB, dims = 2)
+    C0 .= C0 ./ maximum(C0)
+
+    C = copy(C0)
+
     dimXYA = size(XYA, 1)
     dimXZB = size(XZB, 1)
     dimYA = size(YA, 1)
@@ -92,8 +92,11 @@ function joint_ot_between_with_predictors(
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
-    G = ones(Float32, length(wa), length(wb))
+    G = ones(Float32, nA, nB)
     cost = Inf
+
+    YB = nB .* YA * G
+    ZA = nA .* ZB * G'
 
     for iter in 1:iterations # BCD algorithm
 
@@ -108,8 +111,8 @@ function joint_ot_between_with_predictors(
 
         delta = norm(G .- Gold)
 
-        YB = nB .* YA * G
-        ZA = nA .* ZB * G'
+        YB .= nB .* YA * G
+        ZA .= nA .* ZB * G'
 
         train!(modelXYA, XYA, ZA)
         train!(modelXZB, XZB, YB)
