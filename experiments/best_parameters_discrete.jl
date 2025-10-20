@@ -1,7 +1,4 @@
 using OptimalTransportDataIntegration
-using DataFrames
-using CSV
-using Printf
 using DelimitedFiles
 
 function best_parameters_discrete(start, stop)

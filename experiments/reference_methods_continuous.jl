@@ -1,7 +1,8 @@
 using OptimalTransportDataIntegration
+import OptimalTransportDataIntegration: AbstractMethod
 using DelimitedFiles
 
-function best_parameters_continuous(start, stop)
+function reference_methods_continuous(start, stop)
 
     alpha = collect(0:0.1:2)
     lambda = collect(0:0.1:1)
@@ -11,11 +12,8 @@ function best_parameters_continuous(start, stop)
     scenario = 1
     discrete = false
 
-    outfile = "best_parameters_continuous.csv"
-    header = [
-        "id", "alpha", "lambda", "est_yb", "est_za", "est", "method", "scenario", "discrete",
-        "reg", "reg_m",
-    ]
+    outfile = "reference_methods_continuous_scenario1.csv"
+    header = ["id", "est_yb", "est_za", "est", "method", "scenario", "discrete"]
 
     return open(outfile, "w") do io
 
@@ -24,24 +22,24 @@ function best_parameters_continuous(start, stop)
 
         rng = ContinuousDataGenerator(params, scenario = scenario)
 
+        methods = Dict{String, AbstractMethod}("sl" => SimpleLearning(),
+
+
+        "wi" => JointOTWithinBase(),
+        "be-with-predictors" => JointOTBetweenBasesWithPredictors(),
+        "be-without-outcomes" => JointOTBetweenBasesWithoutOutcomes(),
+        "jdot" => JointOTBetweenBasesJDOT(),
+        "otda-x" => JointOTDABetweenBasesCovariables(),
+        "otda-yz" => JointOTDABetweenBasesOutcomes())
+
         for i in start:stop
 
             data = generate(rng)
 
-            for m in alpha, λ in lambda
-
-                result = otrecod(data, JointOTWithinBase(alpha = m, lambda = λ))
+            for (name, method) in methods
+                result = otrecod(data, JointOTWithinBase())
                 est_yb, est_za, est = accuracy(result)
-                writedlm(io, [i m λ est_yb est_za est "within" scenario discrete missing missing])
-
-            end
-
-            for r in reg, r_m in reg_m
-
-                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = r, reg_m1 = r_m, reg_m2 = r_m))
-                est_yb, est_za, est = accuracy(result)
-                writedlm(io, [i missing missing est_yb est_za est "between" scenario discrete r r_m])
-
+                writedlm(io, [i est_yb est_za est name scenario discrete])
             end
 
         end
@@ -51,7 +49,7 @@ function best_parameters_continuous(start, stop)
 
 end
 
-best_parameters_continuous(1, 100)
+reference_methods_continuous(1, 100)
 
 #import Statistics: mean
 #data = CSV.read("best_parameters.csv", DataFrame)
