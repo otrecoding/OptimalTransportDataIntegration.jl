@@ -18,9 +18,9 @@ using DelimitedFiles
 using OptimalTransportDataIntegration
 
 # +
-function covariates_shift_assumption_continuous(nsimulations::Int, shift)
+function covariates_shift_assumption_discrete(nsimulations::Int, shift)
 
-    outfile = "covariates_shift_assumption_continuous.csv"
+    outfile = "covariates_shift_assumption_discrete.csv"
     header = ["id", "mB", "estyb", "estza", "est", "method", "scenario"]
 
     return open(outfile, "w") do io
@@ -33,7 +33,7 @@ function covariates_shift_assumption_continuous(nsimulations::Int, shift)
 
             for scenario in 1:2
 
-                rng = ContinuousDataGenerator(params, scenario = scenario)
+                rng = DiscreteDataGenerator(params, scenario = scenario)
 
                 for i in 1:nsimulations
 
@@ -48,7 +48,7 @@ function covariates_shift_assumption_continuous(nsimulations::Int, shift)
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i repr(mB) estyb estza est "wi-r" scenario])
 
-                    result = otrecod(data, JointOTBetweenBasesWithPredictors(reg=0.0))
+                    result = otrecod(data, JointOTBetweenBases(reg=0.0))
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i repr(mB) estyb estza est "be" scenario])
 
@@ -69,4 +69,4 @@ end
 nsimulations = 100
 shift = ([0, 0, 0], [1, 0, 0], [1, 1, 0], [1, 1, 1])
 
-@time covariates_shift_assumption_continuous(nsimulations, shift)
+@time covariates_shift_assumption_discrete(nsimulations, shift)

@@ -18,9 +18,9 @@ using DelimitedFiles
 using OptimalTransportDataIntegration
 
 # +
-function conditional_distribution(nsimulations::Int, epsilons)
+function conditional_distribution_continuous(nsimulations::Int, epsilons)
 
-    outfile = "conditional_distribution_contnuous.csv"
+    outfile = "conditional_distribution_continuous.csv"
     header = ["id", "epsilon", "estyb", "estza", "est", "method", "scenario"]
 
     return open(outfile, "w") do io
@@ -75,7 +75,7 @@ function conditional_distribution(nsimulations::Int, epsilons)
 
 end
 
-nsimulations = 1000
+nsimulations = 100
 epsilons = (0.0, 0.1, 0.5, 1.0)
 
-@time conditional_distribution(nsimulations, epsilons)
+@time conditional_distribution_continuous(nsimulations, epsilons)

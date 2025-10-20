@@ -18,18 +18,16 @@ using DelimitedFiles
 using OptimalTransportDataIntegration
 
 # +
-function covariates_link_effect(nsimulations::Int, r2values)
+function sample_size_effect_continuous(all_params, nsimulations)
 
-    outfile = "covariates_link_effect.csv"
-    header = ["id", "r2", "estyb", "estza", "est", "method", "scenario"]
+    outfile = "sample_size_effect_continuous.csv"
+    header = ["id", "nA", "nB", "estyb", "estza", "est", "method", "scenario"]
 
     return open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
-        for r2 in r2values, scenario in (1, 2)
-
-            params = DataParameters(r2 = r2)
+        for params in all_params, scenario in (1, 2)
 
             rng = ContinuousDataGenerator(params, scenario = scenario)
 
@@ -37,26 +35,31 @@ function covariates_link_effect(nsimulations::Int, r2values)
 
                 data = generate(rng)
 
-                #OT Transport of the joint distribution of covariates and outcomes.
+                #within non-regularized
                 alpha, lambda = 0.0, 0.0
                 result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i r2 estyb estza est "wi" scenario])
 
-                #OT-r Regularized Transport
+                writedlm(io, [i params.nA params.nB estyb estza est "wi" scenario])
+
+                #within regularized
                 result = otrecod(data, JointOTWithinBase())
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i r2 estyb estza est "wi-r" scenario])
 
-                #OTE Balanced transport of covariates and estimated outcomes
-                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0))
+                writedlm(io, [i params.nA params.nB estyb estza est "wi-r" scenario])
+
+                #between with predictors
+                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg=0.0))
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i r2 estyb estza est "be" scenario])
+
+                writedlm(io, [i params.nA params.nB estyb estza est "be" scenario])
 
                 #SL Simple Learning
                 result = otrecod(data, SimpleLearning())
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i r2 estyb estza est "sl" scenario])
+
+                writedlm(io, [i params.nA params.nB estyb estza est "sl"  scenario])
+
 
             end
 
@@ -66,6 +69,12 @@ function covariates_link_effect(nsimulations::Int, r2values)
 
 end
 
-nsimulations = 1000
+all_params = [
+    DataParameters(nA = 100, nB = 100),
+    DataParameters(nA = 1000, nB = 1000),
+    DataParameters(nA = 10000, nB = 10000),
+]
 
-@time covariates_link_effect(nsimulations, (0.2, 0.4, 0.6, 0.8, 1.0))
+nsimulations = 100
+
+@time sample_size_effect_continuous(all_params, nsimulations)
