@@ -1,10 +1,11 @@
 using DelimitedFiles
 using OptimalTransportDataIntegration
 
-function covariates_shift_assumption_continuous(nsimulations::Int, shift)
+function covariates_shift_assumption_continuous(nsimulations::Int)
 
     outfile = "covariates_shift_assumption_continuous.csv"
     header = ["id", "mB", "estyb", "estza", "est", "method", "scenario"]
+    shift = ([0, 0, 0], [1, 0, 0], [1, 1, 0], [1, 1, 1])
 
     return open(outfile, "w") do io
 
@@ -53,18 +54,24 @@ function covariates_shift_assumption_continuous(nsimulations::Int, shift)
 
 end
 
-function covariates_shift_assumption_discrete(nsimulations::Int, shift)
+function covariates_shift_assumption_discrete(nsimulations::Int)
 
     outfile = "covariates_shift_assumption_discrete.csv"
-    header = ["id", "mB", "estyb", "estza", "est", "method", "scenario"]
+    header = ["id", "pB", "estyb", "estza", "est", "method", "scenario"]
+
+    pA = [[0.5, 0.5],[1/3,1/3,1/3],[0.25, 0.25, 0.25, 0.25]]
+    pB = [[[0.5, 0.5],[1/3,1/3,1/3],[0.25, 0.25, 0.25, 0.25]]]
+    push!(pB , [[0.8, 0.2],[1/3,1/3,1/3],[0.25, 0.25, 0.25, 0.25]])
+    push!(pB , [[0.8, 0.2],[0.6,0.2,0.2],[0.25, 0.25, 0.25, 0.25]])
+    push!(pB , [[0.8, 0.2],[0.6,0.2,0.2],[0.6, 0.2, 0.1, 0.1]])
 
     return open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
-        for mB in shift
+        for shift in pB
 
-            params = DataParameters(mB = mB)
+            params = DataParameters(pB = shift)
 
             for scenario in 1:2
 
@@ -77,23 +84,23 @@ function covariates_shift_assumption_discrete(nsimulations::Int, shift)
                     alpha, lambda = 0.0, 0.0
                     result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i repr(mB) estyb estza est "wi" scenario])
+                    writedlm(io, [i repr(shift) estyb estza est "wi" scenario])
 
                     result = otrecod(data, JointOTWithinBase())
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i repr(mB) estyb estza est "wi-r" scenario])
+                    writedlm(io, [i repr(shift) estyb estza est "wi-r" scenario])
 
                     result = otrecod(data, JointOTBetweenBases(reg=0.0))
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i repr(mB) estyb estza est "be" scenario])
+                    writedlm(io, [i repr(shift) estyb estza est "be" scenario])
 
                     result = otrecod(data, JointOTBetweenBases(reg=0.001, reg_m1=0.25, reg_m2=0.25))
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i repr(mB) estyb estza est "be-r" scenario])
+                    writedlm(io, [i repr(shift) estyb estza est "be-r" scenario])
 
                     result = otrecod(data, SimpleLearning())
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i repr(mB) estyb estza est "sl" scenario])
+                    writedlm(io, [i repr(shift) estyb estza est "sl" scenario])
 
                 end
 
@@ -106,6 +113,5 @@ function covariates_shift_assumption_discrete(nsimulations::Int, shift)
 end
 
 nsimulations = 100
-shift = ([0, 0, 0], [1, 0, 0], [1, 1, 0], [1, 1, 1])
-@time covariates_shift_assumption_continuous(nsimulations, shift)
-@time covariates_shift_assumption_discrete(nsimulations, shift)
+# @time covariates_shift_assumption_continuous(nsimulations)
+@time covariates_shift_assumption_discrete(nsimulations)
