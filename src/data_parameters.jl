@@ -14,16 +14,8 @@ export save_params
     aA::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
     aB::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
     r2::Float64 = 0.6
-    pA::Vector{Vector{Float64}} = [
-        [0.5, 0.5],                # 2 categories
-        [1 / 3, 1 / 3, 1 / 3],             # 3 categories
-        [0.25, 0.25, 0.25, 0.25],  # 4 categories
-    ]
-    pB::Vector{Vector{Float64}} = [
-        [0.8, 0.2],                # 2 categories
-        [1 / 3, 1 / 3, 1 / 3],             # 3 categories
-        [0.25, 0.25, 0.25, 0.25],  # 4 categories
-    ]
+    pA::Vector{Vector{Float64}} = [[0.5, 0.5], [1/3, 1/3, 1/3], [0.25, 0.25, 0.25, 0.25]]
+    pB::Vector{Vector{Float64}} = [[0.8, 0.2], [1/3, 1/3, 1/3], [0.25, 0.25, 0.25, 0.25]]
 
 end
 

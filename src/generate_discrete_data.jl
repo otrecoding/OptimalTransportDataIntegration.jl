@@ -49,14 +49,12 @@ struct DiscreteDataGenerator
         σA = cr2 * sum([params.aA[i]*aA[j]*cov(XA[i,:], XA[j,:]) for i in 1:q, j in 1:q])
         σB = cr2 * sum([params.aB[i]*aB[j]*cov(XB[i,:], XB[j,:]) for i in 1:q, j in 1:q])
         
-        # Base1
         if σA == 0
             Base1 = X1' * params.aA[1:q]  # pas de bruit
         else
             Base1 = X1' * params.aA[1:q] .+ rand(Normal(0.0, sqrt(σA)), params.nA)
         end
 
-# Base2
         if σB == 0
             Base2 = X2' * params.aB[1:q]  # pas de bruit
         else
@@ -166,6 +164,5 @@ function generate(generator::DiscreteDataGenerator; eps = 0.0)
     @info "Categories in ZB $(sort!(OrderedDict(countmap(ZB))))"
 
     return df
-
 
 end

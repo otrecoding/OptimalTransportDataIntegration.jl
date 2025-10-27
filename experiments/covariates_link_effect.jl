@@ -6,11 +6,12 @@ function covariates_link_effect_continuous(nsimulations::Int, r2values)
     outfile = "covariates_link_effect_continuous.csv"
     header = ["id", "r2", "estyb", "estza", "est", "method", "scenario"]
 
+    scenario = 1
     return open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
-        for r2 in r2values, scenario in (1, 2)
+        for r2 in r2values
 
             params = DataParameters(r2 = r2)
 
@@ -59,11 +60,12 @@ function covariates_link_effect_discrete(nsimulations::Int, r2values)
     outfile = "covariates_link_effect_discrete.csv"
     header = ["id", "r2", "estyb", "estza", "est", "method", "scenario"]
 
+    scenario = 1
     return open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
-        for r2 in r2values, scenario in (1, 2)
+        for r2 in r2values
 
             params = DataParameters(r2 = r2)
 
