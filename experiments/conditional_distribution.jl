@@ -12,43 +12,41 @@ function conditional_distribution_continuous(nsimulations::Int, epsilons)
 
         params = DataParameters()
 
-        for scenario in (1, 2)
+        scenario = 1
 
-            rng = ContinuousDataGenerator(params, scenario = scenario)
+        rng = ContinuousDataGenerator(params, scenario = scenario)
 
-            for eps in epsilons
+        for eps in epsilons
 
-                for i in 1:nsimulations
+            for i in 1:nsimulations
 
-                    data = generate(rng, eps = eps)
+                data = generate(rng, eps = eps)
 
-                    #OT Transport of the joint distribution of covariates and outcomes.
-                    alpha, lambda = 0.0, 0.0
-                    result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
-                    estyb, estza, est = accuracy(result)
-                    writedlm(io, [i eps estyb estza est "wi" scenario])
+                #OT Transport of the joint distribution of covariates and outcomes.
+                alpha, lambda = 0.0, 0.0
+                result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
+                estyb, estza, est = accuracy(result)
+                writedlm(io, [i eps estyb estza est "wi" scenario])
 
-                    #OT-r Regularized Transport
-                    result = otrecod(data, JointOTWithinBase())
-                    estyb, estza, est = accuracy(result)
-                    writedlm(io, [i eps estyb estza est "wi-r" scenario])
+                #OT-r Regularized Transport
+                result = otrecod(data, JointOTWithinBase())
+                estyb, estza, est = accuracy(result)
+                writedlm(io, [i eps estyb estza est "wi-r" scenario])
 
-                    #OTE Balanced transport of covariates and estimated outcomes
-                    result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0))
-                    estyb, estza, est = accuracy(result)
-                    writedlm(io, [i eps estyb estza est "be-un" scenario])
+                #OTE Balanced transport of covariates and estimated outcomes
+                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0))
+                estyb, estza, est = accuracy(result)
+                writedlm(io, [i eps estyb estza est "be-un" scenario])
 
-                    #OTE Regularized unbalanced transport
-                    result = otrecod(data, JointOTBetweenBasesWithPredictors())
-                    estyb, estza, est = accuracy(result)
-                    writedlm(io, [i eps estyb estza est "be-un-r" scenario])
+                #OTE Regularized unbalanced transport
+                result = otrecod(data, JointOTBetweenBasesWithPredictors())
+                estyb, estza, est = accuracy(result)
+                writedlm(io, [i eps estyb estza est "be-un-r" scenario])
 
-                    #SL Simple Learning
-                    result = otrecod(data, SimpleLearning())
-                    estyb, estza, est = accuracy(result)
-                    writedlm(io, [i eps estyb estza est "sl" scenario])
-
-                end
+                #SL Simple Learning
+                result = otrecod(data, SimpleLearning())
+                estyb, estza, est = accuracy(result)
+                writedlm(io, [i eps estyb estza est "sl" scenario])
 
             end
 
@@ -69,43 +67,41 @@ function conditional_distribution_discrete(nsimulations::Int, epsilons)
 
         params = DataParameters()
 
-        for scenario in (1, 2)
+        scenario = 1
 
-            rng = DiscreteDataGenerator(params, scenario = scenario)
+        rng = DiscreteDataGenerator(params, scenario = scenario)
 
-            for eps in epsilons
+        for eps in epsilons
 
-                for i in 1:nsimulations
+            for i in 1:nsimulations
 
-                    data = generate(rng, eps = eps)
+                data = generate(rng, eps = eps)
 
-                    #OT Transport of the joint distribution of covariates and outcomes.
-                    alpha, lambda = 0.0, 0.0
-                    result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
-                    estyb, estza, est = accuracy(result)
-                    writedlm(io, [i eps estyb estza est "wi" scenario])
+                #OT Transport of the joint distribution of covariates and outcomes.
+                alpha, lambda = 0.0, 0.0
+                result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
+                estyb, estza, est = accuracy(result)
+                writedlm(io, [i eps estyb estza est "wi" scenario])
 
-                    #OT-r Regularized Transport
-                    result = otrecod(data, JointOTWithinBase())
-                    estyb, estza, est = accuracy(result)
-                    writedlm(io, [i eps estyb estza est "wi-r" scenario])
+                #OT-r Regularized Transport
+                result = otrecod(data, JointOTWithinBase())
+                estyb, estza, est = accuracy(result)
+                writedlm(io, [i eps estyb estza est "wi-r" scenario])
 
-                    #OTE Balanced transport of covariates and estimated outcomes
-                    result = otrecod(data, JointOTBetweenBases(reg = 0.0))
-                    estyb, estza, est = accuracy(result)
-                    writedlm(io, [i eps estyb estza est "be-un" scenario])
+                #OTE Balanced transport of covariates and estimated outcomes
+                result = otrecod(data, JointOTBetweenBases(reg = 0.0))
+                estyb, estza, est = accuracy(result)
+                writedlm(io, [i eps estyb estza est "be-un" scenario])
 
-                    #OTE Regularized unbalanced transport
-                    result = otrecod(data, JointOTBetweenBases(reg=0.001, reg_m1=0.25, reg_m2=0.25))
-                    estyb, estza, est = accuracy(result)
-                    writedlm(io, [i eps estyb estza est "be-un-r" scenario])
+                #OTE Regularized unbalanced transport
+                result = otrecod(data, JointOTBetweenBases(reg=0.001, reg_m1=0.25, reg_m2=0.25))
+                estyb, estza, est = accuracy(result)
+                writedlm(io, [i eps estyb estza est "be-un-r" scenario])
 
-                    #SL Simple Learning
-                    result = otrecod(data, SimpleLearning())
-                    estyb, estza, est = accuracy(result)
-                    writedlm(io, [i eps estyb estza est "sl" scenario])
-
-                end
+                #SL Simple Learning
+                result = otrecod(data, SimpleLearning())
+                estyb, estza, est = accuracy(result)
+                writedlm(io, [i eps estyb estza est "sl" scenario])
 
             end
 
