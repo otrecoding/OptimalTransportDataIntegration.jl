@@ -9,7 +9,7 @@ function reference_methods_continuous(start, stop)
     reg = [0.001, 0.01, 0.1, 1.0]
     reg_m = [0.01, 0.05, 0.1, 0.25, 0.5, 0.75]
     params = DataParameters()
-    scenario = 1
+    scenario = 2
     discrete = false
 
     outfile = "reference_methods_continuous_scenario1.csv"
