@@ -93,9 +93,9 @@ end
 export JointOTBetweenBases
 
 @with_kw struct JointOTBetweenBases <: AbstractMethod
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.25
+    reg_m2::Float64 = 0.25
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
@@ -164,9 +164,9 @@ export JointOTBetweenBasesWithPredictors
 
 @with_kw struct JointOTBetweenBasesWithPredictors <: AbstractMethod
 
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10

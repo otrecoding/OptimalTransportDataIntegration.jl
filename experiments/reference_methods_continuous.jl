@@ -37,7 +37,7 @@ function reference_methods_continuous(start, stop)
             data = generate(rng)
 
             for (name, method) in methods
-                result = otrecod(data, JointOTWithinBase())
+                result = otrecod(data, method)
                 est_yb, est_za, est = accuracy(result)
                 writedlm(io, [i est_yb est_za est name scenario discrete])
             end
