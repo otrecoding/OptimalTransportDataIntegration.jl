@@ -18,8 +18,8 @@ function reference_methods_continuous(start, stop)
         rng = ContinuousDataGenerator(params, scenario = scenario)
 
         methods = Dict{String, AbstractMethod}("sl" => SimpleLearning(),
-        "wi" => JointOTWithinBase(),
-        "be-with-predictors" => JointOTBetweenBasesWithPredictors(),
+        "wi-r" => JointOTWithinBase(),
+        "be-un-r" => JointOTBetweenBasesWithPredictors(),
         "be-without-outcomes" => JointOTBetweenBasesWithoutOutcomes(),
         "jdot" => JointOTBetweenBasesJDOT(),
         "otda-x" => JointOTDABetweenBasesCovariables(),
