@@ -111,4 +111,4 @@ end
 
 nsimulations = 100
 @time sample_ratio_effect_continuous(nsimulations, (1, 2, 5, 10))
-@time sample_ratio_effect_discrete(nsimulations, (1, 2, 5, 10))
+#@time sample_ratio_effect_discrete(nsimulations, (1, 2, 5, 10))

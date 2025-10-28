@@ -34,11 +34,11 @@ function covariates_shift_assumption_continuous(nsimulations::Int)
 
                     result = otrecod(data, JointOTBetweenBasesWithPredictors(reg=0.0))
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i repr(mB) estyb estza est "be" scenario])
+                    writedlm(io, [i repr(mB) estyb estza est "be-un" scenario])
 
                     result = otrecod(data, JointOTBetweenBasesWithPredictors())
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i repr(mB) estyb estza est "be-r" scenario])
+                    writedlm(io, [i repr(mB) estyb estza est "be-un-r" scenario])
 
                     result = otrecod(data, SimpleLearning())
                     estyb, estza, est = accuracy(result)
@@ -92,11 +92,11 @@ function covariates_shift_assumption_discrete(nsimulations::Int)
 
                     result = otrecod(data, JointOTBetweenBases(reg=0.0))
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i repr(shift) estyb estza est "be" scenario])
+                    writedlm(io, [i repr(shift) estyb estza est "be-un" scenario])
 
                     result = otrecod(data, JointOTBetweenBases(reg=0.001, reg_m1=0.25, reg_m2=0.25))
                     estyb, estza, est = accuracy(result)
-                    writedlm(io, [i repr(shift) estyb estza est "be-r" scenario])
+                    writedlm(io, [i repr(shift) estyb estza est "be-un-r" scenario])
 
                     result = otrecod(data, SimpleLearning())
                     estyb, estza, est = accuracy(result)
