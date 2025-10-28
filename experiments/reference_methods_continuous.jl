@@ -44,13 +44,3 @@ end
 
 reference_methods_continuous(1, 100)
 
-#import Statistics: mean
-#data = CSV.read("best_parameters.csv", DataFrame)
-#sort(
-#    combine(groupby(data, ["alpha", "lambda"]), :estimation => mean),
-#    order(:estimation_mean, rev = true),
-#)
-# equivalent with pandas
-# import pandas as pd
-# data = pd.read_csv("results_otjoint.csv", sep="\t")
-# data.groupby(["alpha", "lambda"]).estimation.mean().sort_values(ascending=False)
