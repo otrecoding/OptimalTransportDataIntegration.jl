@@ -1,5 +1,4 @@
 using OptimalTransportDataIntegration
-using Test
 
 params = DataParameters(
     mA = [0.0],

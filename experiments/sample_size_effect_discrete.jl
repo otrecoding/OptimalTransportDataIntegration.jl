@@ -14,56 +14,53 @@
 #     name: julia-1.11
 # ---
 
-
 using DelimitedFiles
 using OptimalTransportDataIntegration
 
 # +
-function sample_ratio_effect(nsimulations::Int, ratios)
+function sample_size_effect_discrete(all_params, nsimulations)
 
-    outfile = "sample_ratio_effect.csv"
-    header = ["id", "nA", "nB", "estya", "estzb", "estimation", "method", "scenario"]
+    outfile = "sample_size_effect_discrete.csv"
+    header = ["id", "nA", "nB", "estyb", "estza", "est", "method", "scenario"]
 
     return open(outfile, "w") do io
 
         writedlm(io, hcat(header...))
 
-        for r in ratios, scenario in (1, 2)
+        for params in all_params, scenario in (1, 2)
 
-            nA = 1000
-            nB = nA ÷ r
-            params = DataParameters(nB = nB)
             rng = DiscreteDataGenerator(params, scenario = scenario)
 
             for i in 1:nsimulations
 
                 data = generate(rng)
 
-                #OT Transport of the joint distribution of covariates and outcomes.
+                #within non-regularized
                 alpha, lambda = 0.0, 0.0
                 result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi" scenario])
 
-                #OT-r Regularized Transport
+                #within regularized
                 result = otrecod(data, JointOTWithinBase())
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi-r" scenario])
 
-                #OTE Balanced transport of covariates and estimated outcomes
-                result = otrecod(data, JointOTBetweenBases(reg_m1 = 0.0, reg_m2 = 0.0))
+                #between with predictors
+                result = otrecod(data, JointOTBetweenBases(reg = 0.0))
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i params.nA params.nB estyb estza est "be-un" scenario])
+                writedlm(io, [i params.nA params.nB estyb estza est "be" scenario])
 
-                #OTE Regularized unbalanced transport
-                result = otrecod(data, JointOTBetweenBases())
+                #between with predictors
+                result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = 0.25, reg_m2 = 0.25))
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i params.nA params.nB estyb estza est "be-un-r" scenario])
+                writedlm(io, [i params.nA params.nB estyb estza est "be-r" scenario])
 
                 #SL Simple Learning
                 result = otrecod(data, SimpleLearning())
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i params.nA params.nB estyb estza est "sl" scenario])
+                writedlm(io, [i params.nA params.nB estyb estza est "sl"  scenario])
+
 
             end
 
@@ -73,6 +70,12 @@ function sample_ratio_effect(nsimulations::Int, ratios)
 
 end
 
+all_params = [
+    DataParameters(nA = 100, nB = 100),
+    DataParameters(nA = 1000, nB = 1000),
+    DataParameters(nA = 10000, nB = 10000),
+]
+
 nsimulations = 100
 
-@time sample_ratio_effect(nsimulations, (1, 2, 5, 10))
+@time sample_size_effect_discrete(all_params, nsimulations)

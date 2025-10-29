@@ -1,0 +1,84 @@
+Scenario 1 Y^A|X^A sim  Y^B|X^B Scénario 2 Y^A|X^A sim  Y^B|T(X^B)
+1. Scenario 1. 3 variable explicatives continues
+scenario de réference: Sref n=1000 n^A/n^B=1 R2=0.6 m^A=(0,0,0) m^B=(1,1,0) \epsilon = 0
+scenarios:
+- Effect of the sample size n=100,1000,10000
+- Effect of the ratio n^A/n^B n^A/n^B=1,2,5,10
+- Effect of the link between the explanatory variables and Y and Z R2=0.2,0.4,0.6,0.8,1
+- Covariate shift assumption m^B=(0,0,0) m^B=(1,0,0) m^B=(1,1,0) m^B=(1,1,1) OT within mieux
+- Changes in Conditional distributions Y|\boldsymbol{X} and Z|\boldsymbol{X} \epsilon = 0,0.1,0.5,1
+
+méthodes
+Simple learning
+OT within
+OT withing +relaxation + régularisation
+OT between (avec emd)
+OT beween +relaxation + régularisation
+
+Les paramètres sont optimisés sur Sref
+
+2. Scenario 2. 3 variables explicatives continues
+scenarios
+- Effect of the sample size n=100,1000,10000
+- Effect of the ratio n^A/n^B n^A/n^B=1,2,5,10
+- Effect of the link between the explanatory variables and Y and Z R2=0.2,0.4,0.6,0.8,1 
+- Covariate shift assumption m^B=(0,0,0) m^B=(1,0,0) m^B=(1,1,0) m^B=(1,1,1) OT between marche mieux dès m^B=(1,0,0) 
+
+méthodes
+Simple learning
+OT within
+OT withing +relaxation + régularisation
+OT between (avec emd)
+OT withing +relaxation + régularisation
+Utilisation des hyperparamètres du scénario précédent (les données sont équilibrées (même proportion pour Y et Z) dans les deux bases) pour le scénario 2 dont version sans relaxation et régularisation devrait fonctionner
+
+3. Scenario 1. 3 variables explicatives discrètes 2, 3, et 4 catégories
+scénario de référence : Sref n=1000 n^A/n^B=1 R2=0.6  \epsilon = 0
+p^A_1=(0.5,0.5), p^A_2=(1/3,1/3,1/3) and p^A_3=(0.25,0.25,0.25,0.25) and p^B_1=(0.8,0.2), p^B_2=p^A_2 and p^B_3=p^A_3 
+
+scenarios
+- Covariate shift assumption 
+1:  p^B_1=p^A_1, p^B_2=p^A_2 and p^B_3=p^A_3
+2:  p^B_1=(0.8,0.2), p^B_2=p^A_2 and p^B_3=p^A_3 Ot within mieux
+3:  p^B_1=(0.8,0.2), p^B_2=(0.6,0.2,0.2) and p^B_3=p^A_3 
+4: p^B_1=(0.8,0.2), p^B_2=(0.6,0.2,0.2) and p^B_3=(0.6,0.2,0.1,0.1) 
+- Changes in Conditional distributions Y|\boldsymbol{X} and Z|\boldsymbol{X} \epsilon = 0,0.1,0.5,1
+méthodes
+
+utiliser mêmes hyperparamètres que précédent
+
+
+4. scénario 2. 3 variables explicatives discrètes 2, 3, et 4 catégories (annexe ou papier ??)
+- Covariate shift assumption
+1:  p^B_1=p^A_1, p^B_2=p^A_2 and p^B_3=p^A_3
+2:  p^B_1=(0.8,0.2), p^B_2=p^A_2 and p^B_3=p^A_3 Ot within moins bien que ot between ot within relaxation= 0.1 encore meilleur dans ce cas
+3:  p^B_1=(0.8,0.2), p^B_2=(0.6,0.2,0.2) and p^B_3=p^A_3 ot within relaxation= 0.1  toujours mieux
+4: p^B_1=(0.8,0.2), p^B_2=(0.6,0.2,0.2) and p^B_3=(0.6,0.2,0.1,0.1) ot between est mieux (si je mets les fortes valeurs ailleurs dans le vecteur ça doit rééquilibrer et OTwithin est mieux)
+Pour que OTwithin relaxation= 0.1 marche moins bien, il faut qu'il y ait vraiment peu d'observations dans les catégories...On ne fait l'hypothèse conditionnelle Y^A|X^A \sim Y^B|X^B que pour les marginales (et la il y a la relaxation). 
+Le cout n'a pas besoin de cette hypothèse (il dépend des valeurs des covariables dans A et B dans chaque catégorie Y et Z).
+ Donc finalement assez robuste dans le cas discret.
+ 
+Utiliser même hyperparamètres que précédent
+
+En annexe
+
+5.Comparer plusieurs méthodes simples avec 3 variables explicatives continues 
+sous scénario de référence
+scénario 2
+ - SL. Simple learning.  On apprend f en utilisant les observations (X^A_i, Y^A_i) et \widehat{Y}^B_j=\widehat{f}(X^B_j). Idem pour Z^B_j
+- OTDA(x). Transport X^A sur X^B. On transporte X^B_j dans A, ce qui donne X^{B,t}_i.  On apprend f en utilisant les observations (X^{B,t}_i,Y^{A}_i). \widehat{Y}^B_j=\widehat{f}(X^B_j).
+- OTDA(y,z). Transport X^A sur X^B. On transporte Y^A_i dans B, ce qui donne Y^{A,t}_j.  \widehat{Y}^B_j=Y^{A,t}_j.
+-  OTDA(y,z) avec prédicteurs. Transport X^A sur X^B. On transporte Y^A_i dans B, ce qui donne Y^{A,t}_j. On apprend f en utilisant les observations (X^B_j,Y^{A,t}_j). \widehat{Y}^B_j=\widehat{f}(X^B_j).
+\hat{P}^A=n\boldsymbol{\gamma}^T P^B
+- JDOT dans A et B.
+
+- OT between bases with Y=f(X), Z=g(X).
+- OT between bases with Y=f(X,Z), Z=g(X,Y).
+- OT within bases
+
+6. Scénario 1. 3 variables explicatives continues
+sous scénario de référence: Sref n=1000 n^A/n^B=1 R2=0.6 m^A=(0,0,0) m^B=(1,1,0) \epsilon = 0
+
+ diffèrent OT between  + relaxation (regul fixée) avec différents paramètres de relaxation
+
+

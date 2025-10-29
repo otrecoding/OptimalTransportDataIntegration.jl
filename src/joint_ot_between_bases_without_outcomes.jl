@@ -1,9 +1,9 @@
-function joint_ot_between_bases_with_predictors(
+function joint_ot_between_bases_without_outcomes(
         data;
         iterations = 10,
         learning_rate = 0.01,
         batchsize = 512,
-        epochs = 500,
+        epochs = 1000,
         hidden_layer_size = 10,
         reg = 0.0,
         reg_m1 = 0.0,
@@ -14,13 +14,13 @@ function joint_ot_between_bases_with_predictors(
 
     T = Int32
 
-
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
-    colnames = names(data, r"^X")
-    XA = transpose(Matrix{Float32}(dba[!, colnames]))
-    XB = transpose(Matrix{Float32}(dbb[!, colnames]))
+    cols = names(dba, r"^X")
+
+    XA = transpose(Matrix{Float32}(dba[:, cols]))
+    XB = transpose(Matrix{Float32}(dbb[:, cols]))
 
     YA = Flux.onehotbatch(dba.Y, Ylevels)
     ZB = Flux.onehotbatch(dbb.Z, Zlevels)
@@ -34,18 +34,18 @@ function joint_ot_between_bases_with_predictors(
     wa = ones(Float32, nA) ./ nA
     wb = ones(Float32, nB) ./ nB
 
-    C0 = pairwise(SqEuclidean(), XA, XB, dims = 2)
+    C0 = Float32.(pairwise(SqEuclidean(), XA, XB, dims = 2))
     C0 .= C0 ./ maximum(C0)
-
     C = copy(C0)
 
-    dimXYA = size(XYA, 1)
-    dimXZB = size(XZB, 1)
+    dimXA = size(XA, 1)
+    dimXB = size(XB, 1)
+
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
 
-    modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
-    modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
+    modelXA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
+    modelXB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
 
     function train!(model, x, y)
 
@@ -80,27 +80,27 @@ function joint_ot_between_bases_with_predictors(
         end
 
         for i in axes(Y, 1)
-            res .+= -Y[i, :] .* logF[i, :]'
+            res .+= - view(Y, i, :) .* view(logF, i, :)'
         end
 
         return res
 
     end
 
-    YBpred = Flux.softmax(modelXZB(XZB))
-    ZApred = Flux.softmax(modelXYA(XYA))
+    YBpred = Flux.softmax(modelXB(XB))
+    ZApred = Flux.softmax(modelXA(XA))
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
     G = ones(Float32, nA, nB)
+    Gold = copy(G)
     cost = Inf
 
-    YB = nB .* YA * G
-    ZA = nA .* ZB * G'
+    YB = Float32.(nB .* YA * G)
+    ZA = Float32.(nA .* ZB * G')
 
     for iter in 1:iterations # BCD algorithm
 
-        Gold = copy(G)
         costold = cost
 
         if reg > 0
@@ -110,20 +110,21 @@ function joint_ot_between_bases_with_predictors(
         end
 
         delta = norm(G .- Gold)
+        Gold .= G
 
         YB .= nB .* YA * G
         ZA .= nA .* ZB * G'
 
-        train!(modelXYA, XYA, ZA)
-        train!(modelXZB, XZB, YB)
+        train!(modelXA, XA, ZA)
+        train!(modelXB, XB, YB)
 
-        YBpred .= modelXZB(XZB)
-        ZApred .= modelXYA(XYA)
+        YBpred .= Flux.softmax(modelXB(XB))
+        ZApred .= Flux.softmax(modelXA(XA))
 
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
 
-        fcost = loss_y .^ 2 .+ loss_z' .^ 2
+        fcost = loss_y .+ loss_z'
 
         cost = sum(G .* fcost)
 

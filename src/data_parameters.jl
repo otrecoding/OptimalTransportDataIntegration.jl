@@ -8,22 +8,14 @@ export save_params
     nA::Int = 1000
     nB::Int = 1000
     mA::Vector{Float64} = [0.0, 0.0, 0.0]
-    mB::Vector{Float64} = [0.0, 0.0, 0.0]
+    mB::Vector{Float64} = [1.0, 1.0, 0.0]
     covA::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
     covB::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
     aA::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
     aB::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
     r2::Float64 = 0.6
-    pA::Vector{Vector{Float64}} = [
-        [0.5, 0.5],                # 2 categories
-        [1 / 3, 1 / 3, 1 / 3],             # 3 categories
-        [0.25, 0.25, 0.25, 0.25],  # 4 categories
-    ]
-    pB::Vector{Vector{Float64}} = [
-        [0.7, 0.3],                # 2 categories
-        [1 / 3, 1 / 3, 1 / 3],             # 3 categories
-        [0.25, 0.25, 0.25, 0.25],  # 4 categories
-    ]
+    pA::Vector{Vector{Float64}} = [[0.5, 0.5], [1 / 3, 1 / 3, 1 / 3], [0.25, 0.25, 0.25, 0.25]]
+    pB::Vector{Vector{Float64}} = [[0.8, 0.2], [1 / 3, 1 / 3, 1 / 3], [0.25, 0.25, 0.25, 0.25]]
 
 end
 
@@ -49,8 +41,8 @@ function read(jsonfile::AbstractString)
     covB = stack([Float64.(x) for x in data["covB"]])
 
     r2 = Float64(data["r2"])
-    @show pA = [ Float64.(v) for v in data["pA"]]
-    @show pB = [ Float64.(v) for v in data["pB"]]
+    pA = [ Float64.(v) for v in data["pA"]]
+    pB = [ Float64.(v) for v in data["pB"]]
 
     return DataParameters(nA, nB, mA, mB, covA, covB, aA, aB, r2, pA, pB)
 

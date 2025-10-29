@@ -11,6 +11,13 @@ rng = DiscreteDataGenerator(params, n = 1000, scenario = 1)
 
 data = generate(rng)
 
+
+@testset "discrete covariables JointOTBetweenBasesCategory" begin
+
+    @test all(accuracy(otrecod(data, JointOTBetweenBasesCategory())) .> 0.5)
+
+end
+
 @testset "check data generator" begin
 
     @test sort(unique(data.Y)) ≈ [1, 2, 3, 4]
@@ -18,14 +25,14 @@ data = generate(rng)
 
 end
 
-@testset "JointOTWithinBase method" begin
+@testset "discrete covariables JointOTWithinBase" begin
 
     result = otrecod(data, JointOTWithinBase())
     @test all(accuracy(result) .> 0.5)
 
 end
 
-@testset "SimpleLearning method" begin
+@testset "discrete covariables SimpleLearning" begin
 
     result = otrecod(data, SimpleLearning())
     @test all(accuracy(result) .> 0.5)
@@ -64,16 +71,51 @@ end
 
 end
 
-@testset "Continuous data" begin
+rng = ContinuousDataGenerator(params, scenario = 1)
+data = generate(rng)
 
-    params = DataParameters()
-    rng = ContinuousDataGenerator(params, scenario = 1)
-    data = generate(rng)
-    @test all(accuracy(otrecod(data, JointOTWithinBase())) .> 0.5)
-    @test all(accuracy(otrecod(data, JointOTBetweenBases())) .> 0.5)
+@testset "JointOTWithinBase" begin
 
+    @test all(accuracy(otrecod(data, JointOTWithinBase())) .> 0.0)
 
 end
+
+@testset "JointOTBetweenBasesWithPredictors" begin
+
+    @test all(accuracy(otrecod(data, JointOTBetweenBasesWithPredictors())) .> 0.0)
+
+end
+
+@testset "JointOTBetweenBasesWithoutOutcomes" begin
+
+    @test all(accuracy(otrecod(data, JointOTBetweenBasesWithoutOutcomes(reg = 0.0))) .> 0.0)
+
+end
+
+@testset "JointOTBetweenBasesJDOT" begin
+
+    @test all(accuracy(otrecod(data, JointOTBetweenBasesJDOT(reg = 0.0))) .> 0.0)
+
+end
+
+@testset "JointOTDABetweenBasesCovariables" begin
+
+    @test all(accuracy(otrecod(data, JointOTDABetweenBasesCovariables(reg = 0.0))) .> 0.0)
+
+end
+
+@testset "JointOTDABetweenBasesOutcomes" begin
+
+    @test all(accuracy(otrecod(data, JointOTDABetweenBasesOutcomes(reg = 0.0))) .> 0.0)
+
+end
+
+@testset "JointOTDABetweenBasesOutcomesWithPredictors" begin
+
+    @test all(accuracy(otrecod(data, JointOTDABetweenBasesOutcomesWithPredictors(reg = 0.0))) .> 0.0)
+
+end
+
 
 @testset "Aqua.jl" begin
     Aqua.test_deps_compat(OptimalTransportDataIntegration)

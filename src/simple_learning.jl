@@ -17,8 +17,10 @@ function simple_learning(
         data;
         hidden_layer_size = 10,
         learning_rate = 0.01,
-        batchsize = 64,
+        batchsize = 512,
         epochs = 1000,
+        Ylevels = 1:4,
+        Zlevels = 1:3
     )
 
     dba = subset(data, :database => ByRow(==(1)))
@@ -28,8 +30,8 @@ function simple_learning(
     XA = onehot(Matrix(dba[!, colnames]))
     XB = onehot(Matrix(dbb[!, colnames]))
 
-    YA = Flux.onehotbatch(dba.Y, 1:4)
-    ZB = Flux.onehotbatch(dbb.Z, 1:3)
+    YA = Flux.onehotbatch(dba.Y, Ylevels)
+    ZB = Flux.onehotbatch(dbb.Z, Zlevels)
 
     dimXA = size(XA, 1)
     dimXB = size(XB, 1)

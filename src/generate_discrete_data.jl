@@ -49,8 +49,17 @@ struct DiscreteDataGenerator
         σA = cr2 * sum([params.aA[i] * aA[j] * cov(XA[i, :], XA[j, :]) for i in 1:q, j in 1:q])
         σB = cr2 * sum([params.aB[i] * aB[j] * cov(XB[i, :], XB[j, :]) for i in 1:q, j in 1:q])
 
-        Base1 = X1' * params.aA[1:q] .+ rand(Normal(0.0, sqrt(σA)), params.nA)
-        Base2 = X2' * params.aB[1:q] .+ rand(Normal(0.0, sqrt(σB)), params.nB)
+        if σA == 0
+            Base1 = X1' * params.aA[1:q]  # pas de bruit
+        else
+            Base1 = X1' * params.aA[1:q] .+ rand(Normal(0.0, sqrt(σA)), params.nA)
+        end
+
+        if σB == 0
+            Base2 = X2' * params.aB[1:q]  # pas de bruit
+        else
+            Base2 = X2' * params.aB[1:q] .+ rand(Normal(0.0, sqrt(σB)), params.nB)
+        end
 
         bYA = quantile(Base1, [0.25, 0.5, 0.75])
         bYB = quantile(Base2, [0.25, 0.5, 0.75])
@@ -118,8 +127,17 @@ function generate(generator::DiscreteDataGenerator; eps = 0.0)
     σA = cr2 * sum([aA[i] * aA[j] * cov(XA[i, :], XA[j, :]) for i in 1:q, j in 1:q])
     σB = cr2 * sum([aB[i] * aB[j] * cov(XB[i, :], XB[j, :]) for i in 1:q, j in 1:q])
 
-    Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(σA)), params.nA)
-    Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(σB)), params.nB)
+    if σA == 0
+        Y1 = X1' * aA
+    else
+        Y1 = X1' * aA .+ rand(Normal(0.0, sqrt(σA)), params.nA)
+    end
+
+    if σB == 0
+        Y2 = X2' * aB
+    else
+        Y2 = X2' * aB .+ rand(Normal(0.0, sqrt(σB)), params.nB)
+    end
 
     YA = digitize(Y1, generator.binsYA)
     ZA = digitize(Y1, generator.binsZA)
@@ -146,6 +164,5 @@ function generate(generator::DiscreteDataGenerator; eps = 0.0)
     @info "Categories in ZB $(sort!(OrderedDict(countmap(ZB))))"
 
     return df
-
 
 end
