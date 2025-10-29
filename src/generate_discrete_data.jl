@@ -46,9 +46,9 @@ struct DiscreteDataGenerator
 
         cr2 = 1 / params.r2 - 1
 
-        σA = cr2 * sum([params.aA[i]*aA[j]*cov(XA[i,:], XA[j,:]) for i in 1:q, j in 1:q])
-        σB = cr2 * sum([params.aB[i]*aB[j]*cov(XB[i,:], XB[j,:]) for i in 1:q, j in 1:q])
-        
+        σA = cr2 * sum([params.aA[i] * aA[j] * cov(XA[i, :], XA[j, :]) for i in 1:q, j in 1:q])
+        σB = cr2 * sum([params.aB[i] * aB[j] * cov(XB[i, :], XB[j, :]) for i in 1:q, j in 1:q])
+
         if σA == 0
             Base1 = X1' * params.aA[1:q]  # pas de bruit
         else

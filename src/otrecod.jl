@@ -142,7 +142,7 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesCategory)
     discrete = all(isinteger.(Matrix(data[!, xcols])))
 
     @assert discrete "JointOTBetweenBasesCategory: covariables must be categorical"
- 
+
     yb_pred, za_pred = joint_ot_between_bases_category(
         data,
         method.reg,
@@ -284,7 +284,8 @@ function otrecod(data::DataFrame, method::JointOTDABetweenBasesCovariables)
         epochs = method.epochs,
         reg = method.reg,
         reg_m1 = method.reg_m1,
-        reg_m2 = method.reg_m2)
+        reg_m2 = method.reg_m2
+    )
 
     yb_true = data.Y[data.database .== 2]
     za_true = data.Z[data.database .== 1]

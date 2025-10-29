@@ -94,7 +94,7 @@ function conditional_distribution_discrete(nsimulations::Int, epsilons)
                 writedlm(io, [i eps estyb estza est "be-un" scenario])
 
                 #OTE Regularized unbalanced transport
-                result = otrecod(data, JointOTBetweenBases(reg=0.001, reg_m1=0.25, reg_m2=0.25))
+                result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = 0.25, reg_m2 = 0.25))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i eps estyb estza est "be-un-r" scenario])
 

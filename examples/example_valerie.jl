@@ -24,16 +24,18 @@ using Flux
 using Plots
 
 # %%
-params = DataParameters(nA = 1000,
+params = DataParameters(
+    nA = 1000,
     nB = 1000,
     mA = [0.0],
     mB = [4.0],
-    covA = ones(1,1),
-    covB = ones(1,1),
+    covA = ones(1, 1),
+    covB = ones(1, 1),
     aA = [1.0],
     aB = [1.0],
-    r2 = 0.9)
- 
+    r2 = 0.9
+)
+
 rng = ContinuousDataGenerator(params; scenario = 2)
 data = generate(rng)
 
@@ -42,7 +44,7 @@ dba = subset(data, :database => ByRow(==(1)))
 dbb = subset(data, :database => ByRow(==(2)))
 
 
-cols = names(dba, r"^X")   
+cols = names(dba, r"^X")
 
 XA = transpose(Matrix(dba[:, cols]))
 XB = transpose(Matrix(dbb[:, cols]))
@@ -56,9 +58,9 @@ XB
 
 # %%
 plot(
-    histogram(vec(XA), bins=20, xlabel="XA", ylabel="Fréquence", title="Histogramme de XA"),
-    histogram(vec(XB), bins=20, xlabel="XB", ylabel="Fréquence", title="Histogramme de XB"),
-    layout = (1,2)   # 1 ligne, 2 colonnes
+    histogram(vec(XA), bins = 20, xlabel = "XA", ylabel = "Fréquence", title = "Histogramme de XA"),
+    histogram(vec(XB), bins = 20, xlabel = "XB", ylabel = "Fréquence", title = "Histogramme de XB"),
+    layout = (1, 2)   # 1 ligne, 2 colonnes
 )
 
 
@@ -67,7 +69,6 @@ Ylevels = 1:4
 Zlevels = 1:3
 YA = Flux.onehotbatch(dba.Y, Ylevels)
 ZB = Flux.onehotbatch(dbb.Z, Zlevels)
-
 
 
 # %%
@@ -89,7 +90,7 @@ wb = ones(nB) ./ nB
 C0 = pairwise(Euclidean(), XA, XB, dims = 2)
 
 C = C0 #./ maximum(C0)
-C2=C.^2
+C2 = C .^ 2
 display(C)
 display(wa)
 display(wb)
@@ -110,8 +111,8 @@ G .= PythonOT.emd(wa, wb, C2)
 show(size(ZB))
 show(size(G'))
 show(size(YA))
-ZApred =  nA .* ZB * G'
-YBpred =nB .* YA * G
+ZApred = nA .* ZB * G'
+YBpred = nB .* YA * G
 
 # %%
 display(XAi)
@@ -121,13 +122,13 @@ display(sort(vec(YA[io])))
 display(sort(vec(dba.Z[io])))
 display(io)
 display(sort(vec(XBj)))
-jo = sortperm(vec(XBj)) 
+jo = sortperm(vec(XBj))
 display(jo)
 display(sort(vec(ZB[io])))
 display(sort(vec(dbb.Y[io])))
-A = G[io,:]
+A = G[io, :]
 display(A)
-B=A[:,jo]
+B = A[:, jo]
 display(B)
 
 # %%
@@ -135,8 +136,8 @@ pos_idx = findall(x -> x > 0, G)
 display(pos_idx)
 
 # %%
-XAv=vec(XA)
-XBv=vec(XB)
+XAv = vec(XA)
+XBv = vec(XB)
 show(pos_idx[1])
 show(XAv[pos_idx[1][1]])
 show(XBv[pos_idx[1][2]])

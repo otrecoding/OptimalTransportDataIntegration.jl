@@ -47,12 +47,12 @@ function sample_size_effect_discrete(all_params, nsimulations)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi-r" scenario])
 
                 #between with predictors
-                result = otrecod(data, JointOTBetweenBases(reg=0.0))
+                result = otrecod(data, JointOTBetweenBases(reg = 0.0))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "be" scenario])
-                
+
                 #between with predictors
-                result = otrecod(data, JointOTBetweenBases(reg=0.001, reg_m1=0.25, reg_m2=0.25))
+                result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = 0.25, reg_m2 = 0.25))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "be-r" scenario])
 

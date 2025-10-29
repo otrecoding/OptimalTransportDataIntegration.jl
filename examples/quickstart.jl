@@ -27,7 +27,7 @@ for mB in [[1, 0, 0]] #, [5, 5, 5], [10, 10, 10]]
     data = generate(rng)
 
     result = otrecod(data, JointOTWithinBase())
-    println(" within-r : $(accuracy(result)) ") 
+    println(" within-r : $(accuracy(result)) ")
 
     result = otrecod(data, JointOTBetweenBases(reg = 0.1, reg_m1 = 0.0, reg_m2 = 0.0))
     println(" between : $(accuracy(result))")

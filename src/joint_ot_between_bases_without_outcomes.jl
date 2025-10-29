@@ -17,7 +17,7 @@ function joint_ot_between_bases_without_outcomes(
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
-    cols = names(dba, r"^X")   
+    cols = names(dba, r"^X")
 
     XA = transpose(Matrix{Float32}(dba[:, cols]))
     XB = transpose(Matrix{Float32}(dbb[:, cols]))
@@ -80,7 +80,7 @@ function joint_ot_between_bases_without_outcomes(
         end
 
         for i in axes(Y, 1)
-            res .+= - view(Y,i, :) .* view(logF,i, :)'
+            res .+= - view(Y, i, :) .* view(logF, i, :)'
         end
 
         return res

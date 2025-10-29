@@ -13,12 +13,14 @@ function onehot(x::AbstractMatrix)
     return stack(res, dims = 1)
 end
 
-params = DataParameters(mA = [0.0], 
-                        mB = [20.0],
-                        covA = ones(1,1),
-                        covB = ones(1,1),
-                        aA = [1.0],
-                        aB = [1.0])
+params = DataParameters(
+    mA = [0.0],
+    mB = [20.0],
+    covA = ones(1, 1),
+    covB = ones(1, 1),
+    aA = [1.0],
+    aB = [1.0]
+)
 data = generate(rng)
 data
 # dba = subset(data, :database => ByRow(==(1)))

@@ -60,26 +60,27 @@ function modality_cost(loss, weight)
 
     return Flux.softmax(cost_for_each_modality)
 
-end 
+end
 params = DataParameters(
     nA = 1000,
     nB = 1000,
     mA = [0.0],
     mB = [2.0],
-    covA = ones(1,1),
-    covB = ones(1,1),
+    covA = ones(1, 1),
+    covB = ones(1, 1),
     aA = [1.0],
     aB = [1.0],
     r2 = 0.9,
     pA = [[0.5, 0.5]],
-    pB= [[ 0.8, 0.2]]  )
- 
+    pB = [[0.8, 0.2]]
+)
+
 rng = DiscreteDataGenerator(params; scenario = 2)
 data = generate(rng)
 
-reg=0.0
-reg_m1=0
-reg_m2=0
+reg = 0.0
+reg_m1 = 0
+reg_m2 = 0
 Ylevels = 1:4
 Zlevels = 1:3
 iterations = 1
@@ -90,7 +91,7 @@ indA = findall(base .== 1)
 indB = findall(base .== 2)
 
 colnames = names(data, r"^X")
-    #X_hot = Matrix{T}(one_hot_encoder(data[!, colnames]))
+#X_hot = Matrix{T}(one_hot_encoder(data[!, colnames]))
 X_hot = Matrix{T}(data[!, colnames])
 Y = Vector{T}(data.Y)
 Z = Vector{T}(data.Z)
@@ -112,12 +113,12 @@ XYA = hcat(XA, YA)
 XZB = hcat(XB, ZB)
 
 
-    # Compute data for aggregation of the individuals
+# Compute data for aggregation of the individuals
 
 nA = length(indA)
 nB = length(indB)
 
-    # list the distinct modalities in A and B
+# list the distinct modalities in A and B
 indY = Dict((m, findall(YA .== m)) for m in Ylevels)
 indZ = Dict((m, findall(ZB .== m)) for m in Zlevels)
 
@@ -127,11 +128,11 @@ indXB = Dict{T, Array{T}}()
 Xlevels = sort(unique(eachrow(X_hot)))
 
 for (i, x) in enumerate(Xlevels)
-        distA = vec(pairwise(Euclidean(), x[:, :], XA', dims = 2))
-        distB = vec(pairwise(Euclidean(), x[:, :], XB', dims = 2))
-        indXA[i] = findall(distA .< 0.1)
-        indXB[i] = findall(distB .< 0.1)
-    end
+    distA = vec(pairwise(Euclidean(), x[:, :], XA', dims = 2))
+    distB = vec(pairwise(Euclidean(), x[:, :], XB', dims = 2))
+    indXA[i] = findall(distA .< 0.1)
+    indXB[i] = findall(distB .< 0.1)
+end
 
 nbXA = length(indXA)
 nbXB = length(indXB)
@@ -140,16 +141,16 @@ wa = vec([length(indXA[x][findall(YA[indXA[x]] .== y)]) / nA for y in Ylevels, x
 wb = vec([length(indXB[x][findall(ZB[indXB[x]] .== z)]) / nB for z in Zlevels, x in 1:nbXB])
 
 wa2 = filter(>(0), wa)
-wb2 = filter(>(0), wb) 
+wb2 = filter(>(0), wb)
 
 XZB2 = Vector{T}[]
 XYA2 = Vector{T}[]
 j = 0
 
 for (y, x) in product(Ylevels, Xlevels)
-        global j
-        j += 1
-        wa[j] > 0 && push!(XYA2, [x...; y])
+    global j
+    j += 1
+    wa[j] > 0 && push!(XYA2, [x...; y])
 end
 k = 0
 for (z, x) in product(Zlevels, Xlevels)
@@ -163,12 +164,12 @@ Zlevels_hot = one_hot_encoder(Zlevels)
 
 nx = size(X_hot, 2) ## Nb modalités x
 display(nx)
-    # les x parmi les XYA observés, potentiellement des valeurs repetées
+# les x parmi les XYA observés, potentiellement des valeurs repetées
 XA_hot = stack([v[1:nx] for v in XYA2], dims = 1)
-    # les x parmi les XZB observés, potentiellement des valeurs repetées
+# les x parmi les XZB observés, potentiellement des valeurs repetées
 XB_hot = stack([v[1:nx] for v in XZB2], dims = 1)
-display(XYA2) 
-display(XZB2) 
+display(XYA2)
+display(XZB2)
 yA = last.(XYA2) # les y parmi les XYA observés, potentiellement des valeurs repetées
 yA_hot = one_hot_encoder(yA, Ylevels)
 zB = last.(XZB2) # les z parmi les XZB observés, potentiellement des valeurs repetées
@@ -186,15 +187,15 @@ Zloss = loss_crossentropy(zB_hot, Zlevels_hot)
 alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
 alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
 
-    ## Optimal Transport
+## Optimal Transport
 #XA_hot.= Float64.(XA_hot)
 #XB_hot.= Float64.(XB_hot)
 C0 = pairwise(Euclidean(), XA_hot, XB_hot, dims = 1)
-   
+
 C0 = C0 ./ maximum(C0)
-C0 .= C0.^2
+C0 .= C0 .^ 2
 C = C0
-  
+
 zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
 yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
 
@@ -212,26 +213,26 @@ display(wb2)
 
 Gold = copy(G)
 costold = cost
-G = PythonOT.emd(wa2, wb2,  C)
+G = PythonOT.emd(wa2, wb2, C)
 
 delta = norm(G .- Gold)
 
 
 for j in eachindex(yB_pred)
-            yB_pred[j] = Ylevels[argmin(modality_cost(Yloss, view(G, :, j)))]
+    yB_pred[j] = Ylevels[argmin(modality_cost(Yloss, view(G, :, j)))]
 end
 
 for i in eachindex(zA_pred)
-            zA_pred[i] = Zlevels[argmin(modality_cost(Zloss, view(G, i, :)))]
+    zA_pred[i] = Zlevels[argmin(modality_cost(Zloss, view(G, i, :)))]
 end
 
 yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
 zA_pred_hot = one_hot_encoder(zA_pred, Zlevels)
 
-        ### Update Cost matrix
+### Update Cost matrix
 
 chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
 chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
- 
+
 display(chinge1.size)
 display(chinge2.size)

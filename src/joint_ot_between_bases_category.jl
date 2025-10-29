@@ -23,21 +23,21 @@ function joint_ot_between_bases_category(
         @assert nclasses == size(Y, 2)
         res = zeros(Float32, ny, nf)
         logF = zeros(Float32, size(F))
-    
+
         for i in eachindex(F)
             logF[i] = F[i] ≈ 1.0 ? log(1.0 - ϵ) : log(ϵ)
         end
-    
+
         for i in axes(Y, 2)
             res .+= - view(Y, :, i) .* view(logF, :, i)'
         end
-    
+
         return res
-    
+
     end
-    
+
     function modality_cost(loss, weight)
-    
+
         cost_for_each_modality = Float64[]
         for j in axes(loss, 2)
             s = zero(Float64)
@@ -46,10 +46,10 @@ function joint_ot_between_bases_category(
             end
             push!(cost_for_each_modality, s)
         end
-    
+
         return Flux.softmax(cost_for_each_modality)
-    
-    end 
+
+    end
 
 
     base = data.database
@@ -58,7 +58,7 @@ function joint_ot_between_bases_category(
     indB = findall(base .== 2)
 
     colnames = names(data, r"^X")
-    
+
     X = Matrix{Float32}(data[!, colnames])
     Y = Vector{T}(data.Y)
     Z = Vector{T}(data.Z)
@@ -109,7 +109,7 @@ function joint_ot_between_bases_category(
     wb = vec([length(indXB[x][findall(ZB[indXB[x]] .== z)]) / nB for z in Zlevels, x in 1:nbXB])
 
     wa2 = filter(>(0), wa)
-    wb2 = filter(>(0), wb) 
+    wb2 = filter(>(0), wb)
 
 
     XYA2 = Vector{T}[]
@@ -160,7 +160,7 @@ function joint_ot_between_bases_category(
     C0 = Float32.(pairwise(SqEuclidean(), XA_hot, XB_hot, dims = 1))
     C0 .= C0 ./ maximum(C0)
     C = copy(C0)
-  
+
     zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
     yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
 
@@ -202,8 +202,8 @@ function joint_ot_between_bases_category(
 
         chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
         chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
-    
-        fcost = chinge1.^2 .+ chinge2'.^2
+
+        fcost = chinge1 .^ 2 .+ chinge2' .^ 2
 
         cost = sum(G .* fcost)
 

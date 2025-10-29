@@ -1,16 +1,16 @@
 function joint_ot_between_bases_da_outcomes_with_predictors(
-    data;
-    iterations = 10,
-    learning_rate = 0.01,
-    batchsize = 512,
-    epochs = 500,
-    hidden_layer_size = 10,
-    reg = 0.0,
-    reg_m1 = 0.0,
-    reg_m2 = 0.0,
-    Ylevels = 1:4,
-    Zlevels = 1:3
-)
+        data;
+        iterations = 10,
+        learning_rate = 0.01,
+        batchsize = 512,
+        epochs = 500,
+        hidden_layer_size = 10,
+        reg = 0.0,
+        reg_m1 = 0.0,
+        reg_m2 = 0.0,
+        Ylevels = 1:4,
+        Zlevels = 1:3
+    )
 
     T = Int32
 
@@ -50,7 +50,7 @@ function joint_ot_between_bases_da_outcomes_with_predictors(
         loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)
         optim = Flux.setup(Flux.Adam(learning_rate), model)
 
-        for epoch = 1:epochs
+        for epoch in 1:epochs
             for (x, y) in loader
                 grads = Flux.gradient(model) do m
                     y_hat = m(x)

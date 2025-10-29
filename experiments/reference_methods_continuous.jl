@@ -17,13 +17,15 @@ function reference_methods_continuous(start, stop)
 
         rng = ContinuousDataGenerator(params, scenario = scenario)
 
-        methods = Dict{String, AbstractMethod}("sl" => SimpleLearning(),
-        "wi-r" => JointOTWithinBase(),
-        "be-un-r" => JointOTBetweenBasesWithPredictors(),
-        "be-without-outcomes" => JointOTBetweenBasesWithoutOutcomes(),
-        "jdot" => JointOTBetweenBasesJDOT(),
-        "otda-x" => JointOTDABetweenBasesCovariables(),
-        "otda-yz" => JointOTDABetweenBasesOutcomes())
+        methods = Dict{String, AbstractMethod}(
+            "sl" => SimpleLearning(),
+            "wi-r" => JointOTWithinBase(),
+            "be-un-r" => JointOTBetweenBasesWithPredictors(),
+            "be-without-outcomes" => JointOTBetweenBasesWithoutOutcomes(),
+            "jdot" => JointOTBetweenBasesJDOT(),
+            "otda-x" => JointOTDABetweenBasesCovariables(),
+            "otda-yz" => JointOTDABetweenBasesOutcomes()
+        )
 
         for i in start:stop
 
@@ -36,11 +38,10 @@ function reference_methods_continuous(start, stop)
             end
 
         end
-        
+
 
     end
 
 end
 
 reference_methods_continuous(1, 100)
-

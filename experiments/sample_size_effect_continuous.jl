@@ -47,7 +47,7 @@ function sample_size_effect_continuous(all_params, nsimulations)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi-r" scenario])
 
                 #between with predictors
-                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg=0.0))
+                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "be" scenario])
                 #

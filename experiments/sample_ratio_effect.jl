@@ -36,7 +36,7 @@ function sample_ratio_effect_continuous(nsimulations::Int, ratios)
                 result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "be-un" scenario])
-                
+
                 #OTE Balanced transport of covariates and estimated outcomes
                 result = otrecod(data, JointOTBetweenBasesWithPredictors())
                 estyb, estza, est = accuracy(result)
@@ -90,9 +90,9 @@ function sample_ratio_effect_discrete(nsimulations::Int, ratios)
                 result = otrecod(data, JointOTBetweenBases(reg = 0.0))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "be-un" scenario])
-                
+
                 #OTE Balanced transport of covariates and estimated outcomes
-                result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1=0.25, reg_m2=0.25))
+                result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = 0.25, reg_m2 = 0.25))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "be-un-r" scenario])
 

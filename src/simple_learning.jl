@@ -21,7 +21,7 @@ function simple_learning(
         epochs = 1000,
         Ylevels = 1:4,
         Zlevels = 1:3
-            )
+    )
 
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
@@ -40,7 +40,7 @@ function simple_learning(
 
     modelA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
     modelB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
-    
+
     function train!(model, x, y)
 
         loader = Flux.DataLoader((x, y), batchsize = batchsize, shuffle = true)

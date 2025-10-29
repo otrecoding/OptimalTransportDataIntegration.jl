@@ -32,7 +32,7 @@ function covariates_shift_assumption_continuous(nsimulations::Int)
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i repr(mB) estyb estza est "wi-r" scenario])
 
-                    result = otrecod(data, JointOTBetweenBasesWithPredictors(reg=0.0))
+                    result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0))
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i repr(mB) estyb estza est "be-un" scenario])
 
@@ -59,11 +59,11 @@ function covariates_shift_assumption_discrete(nsimulations::Int)
     outfile = "covariates_shift_assumption_discrete.csv"
     header = ["id", "pB", "estyb", "estza", "est", "method", "scenario"]
 
-    pA = [[0.5, 0.5],[1/3,1/3,1/3],[0.25, 0.25, 0.25, 0.25]]
-    pB = [[[0.5, 0.5],[1/3,1/3,1/3],[0.25, 0.25, 0.25, 0.25]]]
-    push!(pB , [[0.8, 0.2],[1/3,1/3,1/3],[0.25, 0.25, 0.25, 0.25]])
-    push!(pB , [[0.8, 0.2],[0.6,0.2,0.2],[0.25, 0.25, 0.25, 0.25]])
-    push!(pB , [[0.8, 0.2],[0.6,0.2,0.2],[0.6, 0.2, 0.1, 0.1]])
+    pA = [[0.5, 0.5], [1 / 3, 1 / 3, 1 / 3], [0.25, 0.25, 0.25, 0.25]]
+    pB = [[[0.5, 0.5], [1 / 3, 1 / 3, 1 / 3], [0.25, 0.25, 0.25, 0.25]]]
+    push!(pB, [[0.8, 0.2], [1 / 3, 1 / 3, 1 / 3], [0.25, 0.25, 0.25, 0.25]])
+    push!(pB, [[0.8, 0.2], [0.6, 0.2, 0.2], [0.25, 0.25, 0.25, 0.25]])
+    push!(pB, [[0.8, 0.2], [0.6, 0.2, 0.2], [0.6, 0.2, 0.1, 0.1]])
 
     return open(outfile, "w") do io
 
@@ -90,11 +90,11 @@ function covariates_shift_assumption_discrete(nsimulations::Int)
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i repr(shift) estyb estza est "wi-r" scenario])
 
-                    result = otrecod(data, JointOTBetweenBases(reg=0.0))
+                    result = otrecod(data, JointOTBetweenBases(reg = 0.0))
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i repr(shift) estyb estza est "be-un" scenario])
 
-                    result = otrecod(data, JointOTBetweenBases(reg=0.001, reg_m1=0.25, reg_m2=0.25))
+                    result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = 0.25, reg_m2 = 0.25))
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i repr(shift) estyb estza est "be-un-r" scenario])
 

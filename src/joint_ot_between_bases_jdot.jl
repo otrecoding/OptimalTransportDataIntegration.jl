@@ -18,7 +18,7 @@ function joint_ot_between_bases_jdot(
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
 
-    cols = names(dba, r"^X")              
+    cols = names(dba, r"^X")
     XA = transpose(Matrix{Float32}(dba[:, cols]))
     XB = transpose(Matrix{Float32}(dbb[:, cols]))
     YA = Flux.onehotbatch(dba.Y, Ylevels)
@@ -32,7 +32,7 @@ function joint_ot_between_bases_jdot(
 
     wa = ones(Float32, nA) ./ nA
     wb = ones(Float32, nB) ./ nB
-    
+
     C0 = pairwise(SqEuclidean(), XA, XB, dims = 2)
     C1 = C0 ./ maximum(C0)
     C2 = C0 ./ maximum(C0)
@@ -94,8 +94,8 @@ function joint_ot_between_bases_jdot(
     G2 = ones(Float32, nA, nB)
     cost = Inf
 
-    YB = zeros(Float32, size(YA,1), nB)
-    ZA = zeros(Float32, size(ZB,1), nA)
+    YB = zeros(Float32, size(YA, 1), nB)
+    ZA = zeros(Float32, size(ZB, 1), nA)
 
     loss_y = alpha1 .* loss_crossentropy(YA, YBpred)
     loss_z = alpha2 .* loss_crossentropy(ZB, ZApred)
@@ -138,7 +138,7 @@ function joint_ot_between_bases_jdot(
             break
         end
 
-        C1 .= C0 ./ maximum(C0) .+ loss_y 
+        C1 .= C0 ./ maximum(C0) .+ loss_y
         C2 .= C0 ./ maximum(C0) .+ loss_z'
 
     end

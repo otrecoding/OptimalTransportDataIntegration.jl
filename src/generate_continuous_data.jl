@@ -114,7 +114,7 @@ function generate(generator::ContinuousDataGenerator; eps = 0.0)
         cr2 *
         sum([aB[i] * aB[j] * covB[i, j] for i in axes(covB, 1), j in axes(covB, 2)])
 
-    
+
     if varerrorA == 0
         Y1 = X1' * aA
     else

@@ -13,7 +13,7 @@ onecold(X) = map(argmax, eachrow(X))
 Cross entropy is typically used as a loss in multi-class classification, in which case the labels y are given in a one-hot format. dims specifies the dimension (or the dimensions) containing the class probabilities. The prediction ŷ is usually probabilities but in our case it is also one hot encoded vector.
 
 """
-function loss_crossentropy(Y::Matrix{Bool}, F::Matrix{Bool}) 
+function loss_crossentropy(Y::Matrix{Bool}, F::Matrix{Bool})
     ϵ = 1.0e-12
     nf, nclasses = size(F)
     ny = size(Y, 1)
@@ -179,10 +179,10 @@ function joint_ot_between_bases_discrete(
     ## Optimal Transport
 
     C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1)
-    
+
     C0 = C0 ./ maximum(C0)
-    C0 .= C0.^2
-    C =C0
+    C0 .= C0 .^ 2
+    C = C0
     zA_pred_hot_i = zeros(T, (nA, length(Zlevels)))
     yB_pred_hot_i = zeros(T, (nB, length(Ylevels)))
 
@@ -209,11 +209,11 @@ function joint_ot_between_bases_discrete(
 
 
         for j in eachindex(yB_pred)
-            yB_pred[j] = Ylevels[argmin(modality_cost(Yloss, G[ :, j]))]
+            yB_pred[j] = Ylevels[argmin(modality_cost(Yloss, G[:, j]))]
         end
 
         for i in eachindex(zA_pred)
-            zA_pred[i] = Zlevels[argmin(modality_cost(Zloss, G[ i, :]))]
+            zA_pred[i] = Zlevels[argmin(modality_cost(Zloss, G[i, :]))]
         end
 
         yB_pred_hot = one_hot_encoder(yB_pred, Ylevels)
@@ -224,7 +224,7 @@ function joint_ot_between_bases_discrete(
         chinge1 = alpha1 * loss_crossentropy(yA_hot, yB_pred_hot)
         chinge2 = alpha2 * loss_crossentropy(zB_hot, zA_pred_hot)
 
-        fcost = chinge1.^2 .+ chinge2'.^2
+        fcost = chinge1 .^ 2 .+ chinge2' .^ 2
 
         cost = sum(G .* fcost)
 

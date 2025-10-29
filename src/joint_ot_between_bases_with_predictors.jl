@@ -123,7 +123,7 @@ function joint_ot_between_bases_with_predictors(
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
 
-        fcost = loss_y.^2 .+ loss_z'.^2
+        fcost = loss_y .^ 2 .+ loss_z' .^ 2
 
         cost = sum(G .* fcost)
 

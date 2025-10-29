@@ -76,43 +76,43 @@ data = generate(rng)
 
 @testset "JointOTWithinBase" begin
 
-    @test all(accuracy(otrecod(data, JointOTWithinBase())) .> 0.)
+    @test all(accuracy(otrecod(data, JointOTWithinBase())) .> 0.0)
 
 end
 
 @testset "JointOTBetweenBasesWithPredictors" begin
 
-    @test all(accuracy(otrecod(data, JointOTBetweenBasesWithPredictors())) .> 0.)
+    @test all(accuracy(otrecod(data, JointOTBetweenBasesWithPredictors())) .> 0.0)
 
 end
 
 @testset "JointOTBetweenBasesWithoutOutcomes" begin
 
-    @test all(accuracy(otrecod(data, JointOTBetweenBasesWithoutOutcomes(reg = 0.0))) .> 0.)
+    @test all(accuracy(otrecod(data, JointOTBetweenBasesWithoutOutcomes(reg = 0.0))) .> 0.0)
 
 end
 
 @testset "JointOTBetweenBasesJDOT" begin
 
-    @test all(accuracy(otrecod(data, JointOTBetweenBasesJDOT(reg = 0.0))) .> 0.)
+    @test all(accuracy(otrecod(data, JointOTBetweenBasesJDOT(reg = 0.0))) .> 0.0)
 
 end
 
 @testset "JointOTDABetweenBasesCovariables" begin
 
-    @test all(accuracy( otrecod(data, JointOTDABetweenBasesCovariables(reg = 0.0))) .> 0.)
+    @test all(accuracy(otrecod(data, JointOTDABetweenBasesCovariables(reg = 0.0))) .> 0.0)
 
 end
 
 @testset "JointOTDABetweenBasesOutcomes" begin
 
-    @test all(accuracy(otrecod(data, JointOTDABetweenBasesOutcomes(reg = 0.0))) .> 0.)
+    @test all(accuracy(otrecod(data, JointOTDABetweenBasesOutcomes(reg = 0.0))) .> 0.0)
 
 end
 
 @testset "JointOTDABetweenBasesOutcomesWithPredictors" begin
 
-    @test all(accuracy(otrecod(data, JointOTDABetweenBasesOutcomesWithPredictors(reg = 0.0))) .> 0.)
+    @test all(accuracy(otrecod(data, JointOTDABetweenBasesOutcomesWithPredictors(reg = 0.0))) .> 0.0)
 
 end
 

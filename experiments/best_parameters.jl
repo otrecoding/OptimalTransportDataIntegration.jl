@@ -45,7 +45,7 @@ function best_parameters_continuous(start, stop)
             end
 
         end
-        
+
 
     end
 
@@ -96,7 +96,7 @@ function best_parameters_discrete(start, stop)
             end
 
         end
-        
+
 
     end
 
@@ -115,4 +115,3 @@ best_parameters_continuous(1, 100)
 # import pandas as pd
 # data = pd.read_csv("results_otjoint.csv", sep="\t")
 # data.groupby(["alpha", "lambda"]).estimation.mean().sort_values(ascending=False)
-

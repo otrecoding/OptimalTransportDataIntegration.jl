@@ -90,19 +90,19 @@ $(SIGNATURES)
 made by claude.ai
 """
 function confusion_matrix(y_true, y_pred; classes = 1:4)
-    
+
     n_classes = length(classes)
-    
+
     class_to_idx = Dict(class => i for (i, class) in enumerate(classes))
-    
+
     cm = zeros(Int, n_classes, n_classes)
-    
+
     for (true_label, pred_label) in zip(y_true, y_pred)
         true_idx = class_to_idx[true_label]
         pred_idx = class_to_idx[pred_label]
         cm[true_idx, pred_idx] += 1
     end
-    
+
     return cm
 end
 
