@@ -53,7 +53,7 @@ function modality_cost(loss::Matrix{Float32}, weight::Vector{Float32})
         push!(cost_for_each_modality, s)
     end
 
-    return Flux.softmax(cost_for_each_modality)
+    return cost_for_each_modality
 
 end
 
