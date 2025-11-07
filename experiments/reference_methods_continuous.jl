@@ -20,12 +20,12 @@ function reference_methods_continuous(start, stop)
         methods = Dict{String, AbstractMethod}(
             "sl" => SimpleLearning(),
             "wi-r" => JointOTWithinBase(),
-            "be-un-r" => JointOTBetweenBasesWithPredictors(),
-            "be-without-outcomes" => JointOTBetweenBasesWithoutOutcomes(),
-            "jdot" => JointOTBetweenBasesJDOT(),
-            "otda-x" => JointOTDABetweenBasesCovariables(),
-            "otda-yz" => JointOTDABetweenBasesOutcomes()
-        )
+            "be" => JointOTBetweenBasesWithPredictors(reg=0.0),
+            "be-x" => JointOTBetweenBasesWithoutOutcomes(reg=0.0),
+            "jdot" => JointOTBetweenBasesJDOT(reg=0.0),
+            "otda-x" => JointOTDABetweenBasesCovariables(reg=0.0),
+            "otda-yz" => JointOTDABetweenBasesOutcomes(reg=0.0)
+            "otda-yz-f" => JointOTDABetweenBasesOutcomesWithPredictors(reg=0.0))
 
         for i in start:stop
 

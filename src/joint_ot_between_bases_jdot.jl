@@ -105,7 +105,7 @@ function joint_ot_between_bases_jdot(
         Gold = copy(G1)
         costold = cost
 
-        if reg > 0
+        if reg > 0.0
             G1 .= PythonOT.mm_unbalanced(wa, wb, C1, (reg_m1, reg_m2); reg = reg, div = "kl")
             G2 .= PythonOT.mm_unbalanced(wa, wb, C2, (reg_m1, reg_m2); reg = reg, div = "kl")
         else
