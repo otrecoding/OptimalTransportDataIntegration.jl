@@ -36,7 +36,7 @@ function conditional_distribution_continuous(nsimulations::Int, epsilons)
                 #OTE Balanced transport of covariates and estimated outcomes
                 result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0))
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i eps estyb estza est "be-un" scenario])
+                writedlm(io, [i eps estyb estza est "be" scenario])
 
                 #OTE Regularized unbalanced transport
                 result = otrecod(data, JointOTBetweenBasesWithPredictors())
@@ -91,7 +91,7 @@ function conditional_distribution_discrete(nsimulations::Int, epsilons)
                 #OTE Balanced transport of covariates and estimated outcomes
                 result = otrecod(data, JointOTBetweenBases(reg = 0.0))
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i eps estyb estza est "be-un" scenario])
+                writedlm(io, [i eps estyb estza est "be" scenario])
 
                 #OTE Regularized unbalanced transport
                 result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = 0.25, reg_m2 = 0.25))
