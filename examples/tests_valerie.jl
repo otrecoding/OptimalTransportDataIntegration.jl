@@ -49,16 +49,16 @@ Returns the scalar product <loss[level,],weight>
 """
 function modality_cost(loss, weight)
 
-    cost_for_each_modality = Float64[]
+    cost_for_each_modality = Float32[]
     for j in axes(loss, 2)
-        s = zero(Float64)
+        s = zero(Float32)
         for i in axes(loss, 1)
             s += loss[i, j] * weight[i]
         end
         push!(cost_for_each_modality, s)
     end
 
-    return Flux.softmax(cost_for_each_modality)
+    return cost_for_each_modality
 
 end
 params = DataParameters(

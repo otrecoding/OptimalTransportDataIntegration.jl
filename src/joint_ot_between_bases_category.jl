@@ -47,7 +47,7 @@ function joint_ot_between_bases_category(
             push!(cost_for_each_modality, s)
         end
 
-        return Flux.softmax(cost_for_each_modality)
+        return cost_for_each_modality
 
     end
 
