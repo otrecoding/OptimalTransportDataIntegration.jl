@@ -28,7 +28,8 @@ function sample_ratio_effect_continuous(nsimulations::Int, ratios)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi" scenario])
 
                 #OT-r Regularized Transport
-                result = otrecod(data, JointOTWithinBase())
+                alpha, lambda = 0.9, 0.8
+                result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi-r" scenario])
 
@@ -38,7 +39,7 @@ function sample_ratio_effect_continuous(nsimulations::Int, ratios)
                 writedlm(io, [i params.nA params.nB estyb estza est "be" scenario])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                result = otrecod(data, JointOTBetweenBasesWithPredictors())
+                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg=0.001, reg_m1=0.01, reg_m2=0.01))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "be-un-r" scenario])
 
@@ -82,7 +83,8 @@ function sample_ratio_effect_discrete(nsimulations::Int, ratios)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi" scenario])
 
                 #OT-r Regularized Transport
-                result = otrecod(data, JointOTWithinBase())
+                alpha, lambda = 0.4, 0.1
+                result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi-r" scenario])
 
