@@ -94,8 +94,8 @@ export JointOTBetweenBases
 
 @with_kw struct JointOTBetweenBases <: AbstractMethod
     reg::Float64 = 0.001
-    reg_m1::Float64 = 0.25
-    reg_m2::Float64 = 0.25
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
@@ -128,9 +128,9 @@ end
 export JointOTBetweenBasesCategory
 
 @with_kw struct JointOTBetweenBasesCategory <: AbstractMethod
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
@@ -211,9 +211,9 @@ export JointOTBetweenBasesJDOT
 
 @with_kw struct JointOTBetweenBasesJDOT <: AbstractMethod
 
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
@@ -256,9 +256,9 @@ export JointOTDABetweenBasesCovariables
 
 @with_kw struct JointOTDABetweenBasesCovariables <: AbstractMethod
 
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     distance::Distances.Metric = Hamming()
@@ -299,9 +299,9 @@ export JointOTDABetweenBasesOutcomes
 
 @with_kw struct JointOTDABetweenBasesOutcomes <: AbstractMethod
 
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
@@ -343,9 +343,9 @@ export JointOTDABetweenBasesOutcomesWithPredictors
 
 @with_kw struct JointOTDABetweenBasesOutcomesWithPredictors <: AbstractMethod
 
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
@@ -386,9 +386,9 @@ export JointOTBetweenBasesWithoutOutcomes
 
 @with_kw struct JointOTBetweenBasesWithoutOutcomes <: AbstractMethod
 
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
