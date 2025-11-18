@@ -1,3 +1,5 @@
+import Statistics: median
+
 function joint_ot_within_base_continuous(
         data;
         lambda = 0.392,
@@ -21,6 +23,16 @@ function joint_ot_within_base_continuous(
 
         X1 = digitize(XA[!, col], bins)
         X2 = digitize(XB[!, col], bins)
+
+        for i in unique(X1)
+            mdn = median( XA[X1 .== i, col] )
+            X1[ X1 .== i] .= round(Int, mdn)
+        end
+
+        for i in unique(X2)
+            mdn = median( XB[X2 .== i, col] )
+            X2[ X2 .== i] .= round(Int, mdn)
+        end
 
         push!(X, vcat(X1, X2))
 
