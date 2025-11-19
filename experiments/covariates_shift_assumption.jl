@@ -37,7 +37,7 @@ function covariates_shift_assumption_continuous(nsimulations::Int)
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i repr(mB) estyb estza est "be" scenario])
 
-                    result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.001, reg_m1=0.01, reg_m2=0.01))
+                    result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.001, reg_m1 = 0.01, reg_m2 = 0.01))
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i repr(mB) estyb estza est "be-un-r" scenario])
 

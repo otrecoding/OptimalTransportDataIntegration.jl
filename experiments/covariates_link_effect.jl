@@ -38,7 +38,7 @@ function covariates_link_effect_continuous(nsimulations::Int, r2values)
                 writedlm(io, [i r2 estyb estza est "be" scenario])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.001, reg_m1=0.01, reg_m2=0.01))
+                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.001, reg_m1 = 0.01, reg_m2 = 0.01))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i r2 estyb estza est "be-un-r" scenario])
 

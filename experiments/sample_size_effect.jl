@@ -26,7 +26,7 @@ function sample_size_effect_continuous(all_params, nsimulations)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi" scenario])
 
                 println("within regularized")
-                result = otrecod(data, JointOTWithinBase(alpha = 0.9, lambda = 0.1))       
+                result = otrecod(data, JointOTWithinBase(alpha = 0.9, lambda = 0.1))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi-r" scenario])
 
@@ -34,10 +34,14 @@ function sample_size_effect_continuous(all_params, nsimulations)
                 result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "be" scenario])
-                
+
                 println("between with predictors - unbalanced")
-                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.001, 
-                                                               reg_m1 = 0.01, reg_m2=0.01))
+                result = otrecod(
+                    data, JointOTBetweenBasesWithPredictors(
+                        reg = 0.001,
+                        reg_m1 = 0.01, reg_m2 = 0.01
+                    )
+                )
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "be-r" scenario])
 
