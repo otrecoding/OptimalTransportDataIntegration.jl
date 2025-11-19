@@ -29,8 +29,6 @@ function ot_joint(
         @info " Aggregation tolerance = $(aggregate_tol)           "
     end
 
-    tstart = time()
-
     # Local redefinitions of parameters of  the instance
     nA = inst.nA
     nB = inst.nB
@@ -324,7 +322,6 @@ function ot_joint(
     end
 
     return Solution(
-        time() - tstart,
         [sum(gammaA_val[:, y, z]) for y in Ylevels, z in Zlevels],
         [sum(gammaB_val[:, y, z]) for y in Ylevels, z in Zlevels],
         estimatorZA,
