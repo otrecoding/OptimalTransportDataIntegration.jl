@@ -69,15 +69,9 @@ function joint_ot_within_base_continuous(
     end
 
 
-    norme = Cityblock()
+    norme = Euclidean()
     aggregate_tol = 0.5
     
-
-    A = 1:nA
-    B = 1:nB
-    Ylevels = 1:4
-    Zlevels = 1:3
-
     # Create a model for the optimal transport of individuals
     modelA = Model(Clp.Optimizer)
     modelB = Model(Clp.Optimizer)
@@ -85,7 +79,6 @@ function joint_ot_within_base_continuous(
     set_optimizer_attribute(modelB, "LogLevel", 0)
 
     # Compute data for aggregation of the individuals
-    # println("... aggregating individuals")
     Xlevels = eachindex(indXA)
 
     # compute the neighbors of the covariates for regularization
@@ -130,9 +123,6 @@ function joint_ot_within_base_continuous(
         length(indXB[x][findall(Zobserv[indXB[x] .+ nA] .== z)]) / nB for
             x in Xlevels, z in Zlevels
     ]
-
-
-    # Basic part of the model
 
     # Variables
     # - gammaA[x,y,z]: joint probability of X=x, Y=y and Z=z in base A
@@ -371,16 +361,6 @@ function joint_ot_within_base_continuous(
         end
     end
 
-    sol = Solution(
-        [sum(gammaA_val[:, y, z]) for y in Ylevels, z in Zlevels],
-        [sum(gammaB_val[:, y, z]) for y in Ylevels, z in Zlevels],
-        estimatorZA,
-        estimatorYB,
-    )
-
-
-    A = 1:nA
-    B = 1:nB
     nbX = length(indXA)
 
     # Count the number of mistakes in the transport
@@ -389,40 +369,16 @@ function joint_ot_within_base_continuous(
     probaYindivB = zeros(Float64, (nB, length(Ylevels)))
     for x in 1:nbX
         for i in indXA[x]
-            probaZindivA[i, :] .= sol.estimatorZA[x, Yobserv[i], :]
+            probaZindivA[i, :] .= estimatorZA[x, Yobserv[i], :]
         end
         for i in indXB[x]
-            probaYindivB[i, :] .= sol.estimatorYB[x, :, Zobserv[i + nA]]
+            probaYindivB[i, :] .= estimatorYB[x, :, Zobserv[i + nA]]
         end
     end
 
     # Transport the modality that maximizes frequency
-    predZA = [findmax([probaZindivA[i, z] for z in Zlevels])[2] for i in A]
-    predYB = [findmax([probaYindivB[j, y] for y in Ylevels])[2] for j in B]
-
-    # Base 1
-    nbmisA = 0
-    misA = Int64[]
-    for i in A
-        if predZA[i] != Zobserv[i]
-            nbmisA += 1
-            push!(misA, i)
-        end
-    end
-
-    # Base 2
-    nbmisB = 0
-    misB = Int64[]
-    for j in B
-        if predYB[j] != Yobserv[nA + j]
-            nbmisB += 1
-            push!(misB, j)
-        end
-    end
-
-    sol.errorpredZA = nbmisA / nA
-    sol.errorpredYB = nbmisB / nB
-    sol.errorpredavg = (nA * sol.errorpredZA + nB * sol.errorpredYB) / (nA + nB)
+    predZA = [findmax([probaZindivA[i, z] for z in Zlevels])[2] for i in 1:nA]
+    predYB = [findmax([probaYindivB[j, y] for y in Ylevels])[2] for j in 1:nB]
 
     return predYB, predZA
 
