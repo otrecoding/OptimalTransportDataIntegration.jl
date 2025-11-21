@@ -19,31 +19,29 @@ function sample_size_effect_continuous(all_params, nsimulations)
 
                 data = generate(rng)
 
-                println("within non-regularized")
                 alpha, lambda = 0.0, 0.0
                 result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi" scenario])
 
-                println("within regularized")
-                result = otrecod(data, JointOTWithinBase(alpha = 0.9, lambda = 0.1))
+                alpha, lambda = best_parameters(:within, :continuous, scenario)
+                result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi-r" scenario])
 
-                println("between with predictors - emd")
                 result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "be" scenario])
 
-                println("between with predictors - unbalanced")
+                reg, reg_m = best_parameters(:between, :continuous, scenario)
                 result = otrecod(
                     data, JointOTBetweenBasesWithPredictors(
-                        reg = 0.001,
-                        reg_m1 = 0.01, reg_m2 = 0.01
+                        reg = reg,
+                        reg_m1 = reg_m, reg_m2 = reg_m
                     )
                 )
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i params.nA params.nB estyb estza est "be-r" scenario])
+                writedlm(io, [i params.nA params.nB estyb estza est "be-un-r" scenario])
 
                 println("SL Simple Learning")
                 result = otrecod(data, SimpleLearning())
@@ -83,7 +81,7 @@ function sample_size_effect_discrete(all_params, nsimulations)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi" scenario])
 
                 #within regularized
-                alpha, lambda = 0.4, 0.1
+                alpha, lambda = best_parameters(:within, :discrete, scenario)
                 result = otrecod(data, JointOTWithinBase(alpha = alpha, lambda = lambda))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i params.nA params.nB estyb estza est "wi-r" scenario])
@@ -94,9 +92,10 @@ function sample_size_effect_discrete(all_params, nsimulations)
                 writedlm(io, [i params.nA params.nB estyb estza est "be" scenario])
 
                 #between with predictors
-                result = otrecod(data, JointOTBetweenBases(reg = 0.001, reg_m1 = 0.25, reg_m2 = 0.25))
+                reg, reg_m = best_parameters(:between, :discrete, scenario)
+                result = otrecod(data, JointOTBetweenBases(reg = reg, reg_m1 = reg_m, reg_m2 = reg_m))
                 estyb, estza, est = accuracy(result)
-                writedlm(io, [i params.nA params.nB estyb estza est "be-r" scenario])
+                writedlm(io, [i params.nA params.nB estyb estza est "be-un-r" scenario])
 
                 #SL Simple Learning
                 result = otrecod(data, SimpleLearning())
