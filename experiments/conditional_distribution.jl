@@ -114,7 +114,7 @@ function conditional_distribution_discrete(nsimulations::Int, epsilons)
 end
 
 nsimulations = 100
-epsilons = (0.0, 0.1, 0.5, 1.0)
+epsilons = (0.0, 1.0, 2.0, 3.0, 5.0)
 
 @time conditional_distribution_continuous(nsimulations, epsilons)
 @time conditional_distribution_discrete(nsimulations, epsilons)
