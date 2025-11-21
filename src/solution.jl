@@ -41,6 +41,6 @@ function Base.show(io::IO, sol::Solution)
     println(io, " errorpredavg    : $(sol.errorpredavg)")
     println(io, " errordistribZA  : $(sol.errordistribZA)")
     println(io, " errordistribYB  : $(sol.errordistribYB)")
-    println(io, " errordistribavg : $(sol.errordistribavg)")
+    return println(io, " errordistribavg : $(sol.errordistribavg)")
 
 end

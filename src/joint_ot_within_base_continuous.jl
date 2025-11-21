@@ -26,13 +26,13 @@ function joint_ot_within_base_continuous(
         X2 = digitize(XB[!, col], bins)
         push!(X, vcat(X1, X2))
 
-        X1mdn = zeros(Float32, size(X1,1))
+        X1mdn = zeros(Float32, size(X1, 1))
         for i in unique(X1)
             mdn = median(XA[X1 .== i, col])
             X1mdn[X1 .== i] .= mdn
         end
 
-        X2mdn = zeros(Float32, size(X2,1))
+        X2mdn = zeros(Float32, size(X2, 1))
         for i in unique(X2)
             mdn = median(XB[X2 .== i, col])
             X2mdn[X2 .== i] .= mdn
@@ -95,7 +95,7 @@ function joint_ot_within_base_continuous(
 
     norme = Euclidean()
     aggregate_tol = 0.5
-    
+
     # Create a model for the optimal transport of individuals
     modelA = Model(Clp.Optimizer)
     modelB = Model(Clp.Optimizer)
