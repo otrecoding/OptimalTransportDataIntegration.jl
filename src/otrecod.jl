@@ -11,7 +11,7 @@ export JointOTWithinBase
     lambda::Float64 = 0.1
     alpha::Float64 = 0.1
     percent_closest::Float64 = 0.2
-    distance::Distances.Metric = Hamming()
+    distance::Distances.Metric = Euclidean()
 
 end
 
@@ -217,7 +217,7 @@ export JointOTBetweenBasesJDOT
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
-    distance::Distances.Metric = Hamming()
+    distance::Distances.Metric = Euclidean()
     hidden_layer_size::Int = 10
     learning_rate::Float64 = 0.01
     batchsize::Int = 64
@@ -261,7 +261,7 @@ export JointOTDABetweenBasesCovariables
     reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
-    distance::Distances.Metric = Hamming()
+    distance::Distances.Metric = Euclidean()
     hidden_layer_size::Int = 10
     learning_rate::Float64 = 0.01
     batchsize::Int = 64
@@ -305,7 +305,7 @@ export JointOTDABetweenBasesOutcomes
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
-    distance::Distances.Metric = Hamming()
+    distance::Distances.Metric = Euclidean()
     hidden_layer_size::Int = 10
     learning_rate::Float64 = 0.01
     batchsize::Int = 64

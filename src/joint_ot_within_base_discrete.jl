@@ -17,7 +17,7 @@ function ot_joint(
         alpha::Float64,
         lambda::Float64,
         percent_closest::Float64;
-        norme::Metric = Cityblock(),
+        norme::Metric = Euclidean(),
         aggregate_tol::Float64 = 0.5,
         verbose::Bool = false,
     )
@@ -335,7 +335,7 @@ function joint_ot_within_base_discrete(
         lambda = 0.392,
         alpha = 0.714,
         percent_closest = 0.2,
-        distance = Hamming(),
+        distance = Euclidean(),
     )
 
     database = data.database

@@ -15,7 +15,8 @@ function joint_ot_within_base_continuous(
     XA = subset(data, :database => x -> x .== 1)
     XB = subset(data, :database => x -> x .== 2)
 
-    X = Vector{Float64}[]
+    X = Vector{Int}[]
+    Xmdn = Vector{Float64}[]
     for col in names(data, r"^X")
 
         b = quantile(data[!, col], collect(0.25:0.25:0.75))
@@ -23,12 +24,26 @@ function joint_ot_within_base_continuous(
 
         X1 = digitize(XA[!, col], bins)
         X2 = digitize(XB[!, col], bins)
-
         push!(X, vcat(X1, X2))
 
-    end
+        X1mdn = zeros(Float32, size(X1,1))
+        for i in unique(X1)
+            mdn = median(XA[X1 .== i, col])
+            X1mdn[X1 .== i] .= mdn
+        end
 
+        X2mdn = zeros(Float32, size(X2,1))
+        for i in unique(X2)
+            mdn = median(XB[X2 .== i, col])
+            X2mdn[X2 .== i] .= mdn
+        end
+
+        push!(Xmdn, vcat(X1mdn, X2mdn))
+
+    end
     X = stack(X)
+    Xmdn = stack(Xmdn)
+    @show unique(Xmdn[:, 1])
     Y = Vector(data.Y)
     Z = Vector(data.Z)
 
@@ -50,24 +65,33 @@ function joint_ot_within_base_continuous(
 
     # compute the distance between pairs of individuals in different bases
     # devectorize all the computations to go about twice faster only compute norm 1 here
-    a = X[indA, :]'
-    b = X[indB, :]'
+
+    a = Xmdn[indA, :]'
+    b = Xmdn[indB, :]'
 
     D = pairwise(distance, a, b, dims = 2)
 
     # Compute the indexes of individuals with same covariates
     indXA = Vector{Int64}[]
     indXB = Vector{Int64}[]
-    Xlevels = sort(unique(eachrow(X)))
 
+    @show Xlevels = unique(eachrow(X))
     # aggregate both bases
+    a = X[indA, :]'
+    b = X[indB, :]'
     for x in Xlevels
         distA = vec(pairwise(distance, x[:, :], a, dims = 2))
-        distB = vec(pairwise(distance, x[:, :], b, dims = 2))
         push!(indXA, findall(distA .< 0.1))
+    end
+
+    @show Xlevels = unique(eachrow(X))
+    for x in Xlevels
+        distB = vec(pairwise(distance, x[:, :], b, dims = 2))
         push!(indXB, findall(distB .< 0.1))
     end
 
+    @show length(indXA)
+    @show length(indXB)
 
     norme = Euclidean()
     aggregate_tol = 0.5
