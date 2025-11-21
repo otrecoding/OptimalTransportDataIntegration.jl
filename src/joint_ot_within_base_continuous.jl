@@ -43,7 +43,6 @@ function joint_ot_within_base_continuous(
     end
     X = stack(X)
     Xmdn = stack(Xmdn)
-    @show unique(Xmdn[:, 1])
     Y = Vector(data.Y)
     Z = Vector(data.Z)
 
@@ -75,7 +74,7 @@ function joint_ot_within_base_continuous(
     indXA = Vector{Int64}[]
     indXB = Vector{Int64}[]
 
-    @show Xlevels = unique(eachrow(X))
+    Xlevels = unique(eachrow(X))
     # aggregate both bases
     a = X[indA, :]'
     b = X[indB, :]'
@@ -84,14 +83,12 @@ function joint_ot_within_base_continuous(
         push!(indXA, findall(distA .< 0.1))
     end
 
-    @show Xlevels = unique(eachrow(X))
+    Xlevels = unique(eachrow(X))
     for x in Xlevels
         distB = vec(pairwise(distance, x[:, :], b, dims = 2))
         push!(indXB, findall(distB .< 0.1))
     end
 
-    @show length(indXA)
-    @show length(indXB)
 
     norme = Euclidean()
     aggregate_tol = 0.5
