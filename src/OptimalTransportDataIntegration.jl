@@ -108,16 +108,16 @@ end
 
 export best_parameters
 
-function best_parameters( method::Symbol, variable::Symbol, scenario::Int)
+function best_parameters(method::Symbol, variable::Symbol, scenario::Int)
 
-    if method == :within
+    return if method == :within
         if variable == :continuous
             if scenario == 1
                 return 1.0, 1.0 # alpha, lambda
             else
                 return 2.0, 1.0 # alpha, lambda
             end
-        else 
+        else
             if scenario == 1
                 return 0.4, 1.0 # alpha, lambda
             else
@@ -131,7 +131,7 @@ function best_parameters( method::Symbol, variable::Symbol, scenario::Int)
             else
                 return 0.001, 0.5 # reg, reg_m
             end
-        else 
+        else
             if scenario == 1
                 return 0.01, 0.01 # reg, reg_m
             else
