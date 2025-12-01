@@ -11,8 +11,8 @@ export save_params
     mB::Vector{Float64} = [1.0, 1.0, 0.0]
     covA::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
     covB::Matrix{Float64} = [1.0 0.2 0.2; 0.2 1.0 0.2; 0.2 0.2 1.0]
-    aA::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
-    aB::Vector{Float64} = [1.0, 1.0, 1.5, 1, 1.5, 2]
+    aA::Vector{Float64} = [1.0, 1.0, 1.0]
+    aB::Vector{Float64} = [1.0, 1.0, 1.0]
     r2::Float64 = 0.6
     pA::Vector{Vector{Float64}} = [[0.5, 0.5], [1 / 3, 1 / 3, 1 / 3], [0.25, 0.25, 0.25, 0.25]]
     pB::Vector{Vector{Float64}} = [[0.8, 0.2], [1 / 3, 1 / 3, 1 / 3], [0.25, 0.25, 0.25, 0.25]]

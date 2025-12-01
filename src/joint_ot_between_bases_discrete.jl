@@ -2,7 +2,7 @@ using CSV
 using DataFrames
 import PythonOT
 import .Iterators: product
-import Distances: pairwise, Hamming
+import Distances: pairwise
 import LinearAlgebra: norm
 
 onecold(X) = map(argmax, eachrow(X))
@@ -65,7 +65,7 @@ function joint_ot_between_bases_discrete(
         Ylevels = 1:4,
         Zlevels = 1:3,
         iterations = 1,
-        distance = Hamming(),
+        distance = Euclidean(),
     )
 
     T = Int32
@@ -178,7 +178,7 @@ function joint_ot_between_bases_discrete(
 
     ## Optimal Transport
 
-    C0 = pairwise(Hamming(), XA_hot, XB_hot; dims = 1)
+    C0 = pairwise(distance, XA_hot, XB_hot; dims = 1)
 
     C0 = C0 ./ maximum(C0)
     C0 .= C0 .^ 2

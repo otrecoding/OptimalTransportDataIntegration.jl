@@ -106,4 +106,40 @@ function confusion_matrix(y_true, y_pred; classes = 1:4)
     return cm
 end
 
+export best_parameters
+
+function best_parameters(method::Symbol, variable::Symbol, scenario::Int)
+
+    return if method == :within
+        if variable == :continuous
+            if scenario == 1
+                return 1.0, 1.0 # alpha, lambda
+            else
+                return 2.0, 1.0 # alpha, lambda
+            end
+        else
+            if scenario == 1
+                return 0.4, 1.0 # alpha, lambda
+            else
+                return 0.1, 0.1 # alpha, lambda
+            end
+        end
+    else
+        if variable == :continuous
+            if scenario == 1
+                return 0.001, 0.001 # reg, reg_m
+            else
+                return 0.001, 0.5 # reg, reg_m
+            end
+        else
+            if scenario == 1
+                return 0.01, 0.01 # reg, reg_m
+            else
+                return 0.01, 0.75 # reg, reg_m
+            end
+        end
+    end
+
+end
+
 end

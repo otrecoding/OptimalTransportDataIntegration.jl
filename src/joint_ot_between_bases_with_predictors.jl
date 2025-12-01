@@ -87,8 +87,8 @@ function joint_ot_between_bases_with_predictors(
 
     end
 
-    YBpred = Flux.softmax(modelXZB(XZB))
-    ZApred = Flux.softmax(modelXYA(XYA))
+    YBpred = modelXZB(XZB)
+    ZApred = modelXYA(XYA)
 
     alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 

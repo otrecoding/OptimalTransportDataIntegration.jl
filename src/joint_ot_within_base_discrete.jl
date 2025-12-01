@@ -17,7 +17,7 @@ function ot_joint(
         alpha::Float64,
         lambda::Float64,
         percent_closest::Float64;
-        norme::Metric = Cityblock(),
+        norme::Metric = Euclidean(),
         aggregate_tol::Float64 = 0.5,
         verbose::Bool = false,
     )
@@ -28,8 +28,6 @@ function ot_joint(
         @info " Percent closest       = $(100.0 * percent_closest) % "
         @info " Aggregation tolerance = $(aggregate_tol)           "
     end
-
-    tstart = time()
 
     # Local redefinitions of parameters of  the instance
     nA = inst.nA
@@ -324,7 +322,6 @@ function ot_joint(
     end
 
     return Solution(
-        time() - tstart,
         [sum(gammaA_val[:, y, z]) for y in Ylevels, z in Zlevels],
         [sum(gammaB_val[:, y, z]) for y in Ylevels, z in Zlevels],
         estimatorZA,
@@ -338,7 +335,7 @@ function joint_ot_within_base_discrete(
         lambda = 0.392,
         alpha = 0.714,
         percent_closest = 0.2,
-        distance = Hamming(),
+        distance = Euclidean(),
     )
 
     database = data.database

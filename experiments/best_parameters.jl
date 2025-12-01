@@ -8,7 +8,6 @@ function best_parameters_continuous(start, stop)
     reg = [0.001, 0.01, 0.1, 1.0]
     reg_m = [0.01, 0.05, 0.1, 0.25, 0.5, 0.75]
     params = DataParameters()
-    scenario = 1
     discrete = false
 
     outfile = "best_parameters_continuous.csv"
@@ -22,30 +21,33 @@ function best_parameters_continuous(start, stop)
         seekstart(io)
         writedlm(io, hcat(header...))
 
-        rng = ContinuousDataGenerator(params, scenario = scenario)
+        for scenario in 1:2
 
-        for i in start:stop
+            rng = ContinuousDataGenerator(params, scenario = scenario)
 
-            data = generate(rng)
+            for i in start:stop
 
-            for m in alpha, λ in lambda
+                data = generate(rng)
 
-                result = otrecod(data, JointOTWithinBase(alpha = m, lambda = λ))
-                est_yb, est_za, est = accuracy(result)
-                writedlm(io, [i m λ est_yb est_za est "within" scenario discrete missing missing])
+                for m in alpha, λ in lambda
 
-            end
+                    result = otrecod(data, JointOTWithinBase(alpha = m, lambda = λ))
+                    est_yb, est_za, est = accuracy(result)
+                    writedlm(io, [i m λ est_yb est_za est "within" scenario discrete missing missing])
 
-            for r in reg, r_m in reg_m
+                end
 
-                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = r, reg_m1 = r_m, reg_m2 = r_m))
-                est_yb, est_za, est = accuracy(result)
-                writedlm(io, [i missing missing est_yb est_za est "between" scenario discrete r r_m])
+                for r in reg, r_m in reg_m
+
+                    result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = r, reg_m1 = r_m, reg_m2 = r_m))
+                    est_yb, est_za, est = accuracy(result)
+                    writedlm(io, [i missing missing est_yb est_za est "between" scenario discrete r r_m])
+
+                end
 
             end
 
         end
-
 
     end
 
@@ -73,30 +75,33 @@ function best_parameters_discrete(start, stop)
         seekstart(io)
         writedlm(io, hcat(header...))
 
-        rng = DiscreteDataGenerator(params, scenario = scenario)
+        for scenario in 1:2
 
-        for i in start:stop
+            rng = DiscreteDataGenerator(params, scenario = scenario)
 
-            data = generate(rng)
+            for i in start:stop
 
-            for m in alpha, λ in lambda
+                data = generate(rng)
 
-                result = otrecod(data, JointOTWithinBase(alpha = m, lambda = λ))
-                est_yb, est_za, est = accuracy(result)
-                writedlm(io, [i m λ est_yb est_za est "within" scenario discrete missing missing])
+                for m in alpha, λ in lambda
 
-            end
+                    result = otrecod(data, JointOTWithinBase(alpha = m, lambda = λ))
+                    est_yb, est_za, est = accuracy(result)
+                    writedlm(io, [i m λ est_yb est_za est "within" scenario discrete missing missing])
 
-            for r in reg, r_m in reg_m
+                end
 
-                result = otrecod(data, JointOTBetweenBases(reg = r, reg_m1 = r_m, reg_m2 = r_m))
-                est_yb, est_za, est = accuracy(result)
-                writedlm(io, [i missing missing est_yb est_za est "between" scenario discrete r r_m])
+                for r in reg, r_m in reg_m
+
+                    result = otrecod(data, JointOTBetweenBases(reg = r, reg_m1 = r_m, reg_m2 = r_m))
+                    est_yb, est_za, est = accuracy(result)
+                    writedlm(io, [i missing missing est_yb est_za est "between" scenario discrete r r_m])
+
+                end
 
             end
 
         end
-
 
     end
 

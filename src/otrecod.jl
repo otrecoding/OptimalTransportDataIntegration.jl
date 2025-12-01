@@ -11,7 +11,7 @@ export JointOTWithinBase
     lambda::Float64 = 0.1
     alpha::Float64 = 0.1
     percent_closest::Float64 = 0.2
-    distance::Distances.Metric = Hamming()
+    distance::Distances.Metric = Euclidean()
 
 end
 
@@ -94,8 +94,8 @@ export JointOTBetweenBases
 
 @with_kw struct JointOTBetweenBases <: AbstractMethod
     reg::Float64 = 0.001
-    reg_m1::Float64 = 0.25
-    reg_m2::Float64 = 0.25
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
@@ -128,9 +128,9 @@ end
 export JointOTBetweenBasesCategory
 
 @with_kw struct JointOTBetweenBasesCategory <: AbstractMethod
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
@@ -211,13 +211,13 @@ export JointOTBetweenBasesJDOT
 
 @with_kw struct JointOTBetweenBasesJDOT <: AbstractMethod
 
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
-    distance::Distances.Metric = Hamming()
+    distance::Distances.Metric = Euclidean()
     hidden_layer_size::Int = 10
     learning_rate::Float64 = 0.01
     batchsize::Int = 64
@@ -256,12 +256,12 @@ export JointOTDABetweenBasesCovariables
 
 @with_kw struct JointOTDABetweenBasesCovariables <: AbstractMethod
 
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
-    distance::Distances.Metric = Hamming()
+    distance::Distances.Metric = Euclidean()
     hidden_layer_size::Int = 10
     learning_rate::Float64 = 0.01
     batchsize::Int = 64
@@ -299,13 +299,13 @@ export JointOTDABetweenBasesOutcomes
 
 @with_kw struct JointOTDABetweenBasesOutcomes <: AbstractMethod
 
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
-    distance::Distances.Metric = Hamming()
+    distance::Distances.Metric = Euclidean()
     hidden_layer_size::Int = 10
     learning_rate::Float64 = 0.01
     batchsize::Int = 64
@@ -343,9 +343,9 @@ export JointOTDABetweenBasesOutcomesWithPredictors
 
 @with_kw struct JointOTDABetweenBasesOutcomesWithPredictors <: AbstractMethod
 
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
@@ -386,9 +386,9 @@ export JointOTBetweenBasesWithoutOutcomes
 
 @with_kw struct JointOTBetweenBasesWithoutOutcomes <: AbstractMethod
 
-    reg::Float64 = 0.01
-    reg_m1::Float64 = 0.05
-    reg_m2::Float64 = 0.05
+    reg::Float64 = 0.001
+    reg_m1::Float64 = 0.01
+    reg_m2::Float64 = 0.01
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
