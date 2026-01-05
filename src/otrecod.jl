@@ -182,7 +182,6 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesWithPredictors)
 
     xcols = names(data, r"^X")
     discrete = all(isinteger.(Matrix(data[!, xcols])))
-    @assert !discrete "Covariable data must be continuous with JointOTBetweenBasesWithPredictors"
 
     yb_pred, za_pred = joint_ot_between_bases_with_predictors(
         data;
