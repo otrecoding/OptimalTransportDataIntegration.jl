@@ -88,13 +88,13 @@ function covariates_link_effect_discrete(nsimulations::Int, r2values)
                 writedlm(io, [i r2 estyb estza est "wi-r" scenario])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                result = otrecod(data, JointOTBetweenBases(reg = 0.0))
+                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.0))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i r2 estyb estza est "be" scenario])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                reg, reg_m = best_parameters(:between, :discrete, scenario)
-                result = otrecod(data, JointOTBetweenBases(reg = reg, reg_m1 = reg_m, reg_m2 = reg_m))
+                reg, reg_m = best_parameters(:between, :continuous, scenario)
+                result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = reg, reg_m1 = reg_m, reg_m2 = reg_m))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i r2 estyb estza est "be-un-r" scenario])
 
@@ -113,5 +113,5 @@ end
 
 nsimulations = 100
 
-@time covariates_link_effect_continuous(nsimulations, (0.2, 0.4, 0.6, 0.8, 1.0))
 @time covariates_link_effect_discrete(nsimulations, (0.2, 0.4, 0.6, 0.8, 1.0))
+@time covariates_link_effect_continuous(nsimulations, (0.2, 0.4, 0.6, 0.8, 1.0))

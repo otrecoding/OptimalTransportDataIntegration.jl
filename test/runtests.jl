@@ -118,7 +118,7 @@ end
 
 
 @testset "Aqua.jl" begin
-    Aqua.test_deps_compat(OptimalTransportDataIntegration)
+    Aqua.test_all(OptimalTransportDataIntegration)
 end
 
 @testset "doctests" begin

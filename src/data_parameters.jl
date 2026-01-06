@@ -1,7 +1,7 @@
 import JSON
 export DataParameters
-export read_params
-export save_params
+export read
+export save
 
 @with_kw struct DataParameters
 
