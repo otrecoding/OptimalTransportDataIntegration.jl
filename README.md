@@ -3,6 +3,7 @@
 [![CI](https://github.com/otrecoding/OptimalTransportDataIntegration.jl/actions/workflows/ci.yml/badge.svg)](https://github.com/otrecoding/OptimalTransportDataIntegration.jl/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/otrecoding/OptimalTransportDataIntegration.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/otrecoding/OptimalTransportDataIntegration.jl)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://otrecoding.github.io/OptimalTransportDataIntegration.jl/dev)
+[![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 This package implements a statistical matching strategy based on
 optimal transport theory to integrate different data sources.
