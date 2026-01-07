@@ -4,7 +4,7 @@ export read
 export save
 
 """
-    DataParameters
+$(TYPEDEF)
 
 Scenario parameters for synthetic data generation.
 
@@ -77,7 +77,7 @@ params = DataParameters(nA=500, nB=500, r2=0.8, mB=[2.0, 2.0, 0.0])
 end
 
 """
-    read(jsonfile::AbstractString)
+$(SIGNATURES)
 
 Load data generation scenario parameters from a JSON file.
 
@@ -145,7 +145,7 @@ function read(jsonfile::AbstractString)
 end
 
 """
-    save(jsonfile::AbstractString, params::DataParameters)
+$(SIGNATURES)
 
 Persist data generation scenario parameters to a JSON file.
 
