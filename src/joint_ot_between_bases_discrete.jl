@@ -5,136 +5,6 @@ import .Iterators: product
 import Distances: pairwise
 import LinearAlgebra: norm
 
-onecold(X) = map(argmax, eachrow(X))
-
-"""
-    loss_crossentropy(Y::Matrix{Bool}, F::Matrix{Bool})
-
-Compute cross-entropy loss between one-hot encoded categorical outcomes.
-
-Computes element-wise cross-entropy loss for one-hot encoded categorical data where both Y and F
-are boolean matrices representing true and predicted class indicators. Returns loss matrix where
-entry [i,j] = -∑_k Y[k,i] * log(F[k,j]) with numerical stability.
-
-# Arguments
-- `Y::Matrix{Bool}`: One-hot encoded true labels (n_classes, n_samples)
-- `F::Matrix{Bool}`: One-hot encoded predictions (n_classes, n_samples)
-
-# Returns
-- Matrix{Float32}: Cross-entropy loss of shape (n_samples_Y, n_samples_F)
-
-# Details
-- Uses log-space computation with epsilon=1e-12 for numerical stability
-- Handles 1.0 and 0.0 specially to avoid log(0) errors
-- Output entry [i,j] represents loss when predicting F[j] against true label Y[i]
-"""
-function loss_crossentropy(Y::Matrix{Bool}, F::Matrix{Bool})
-    ϵ = 1.0e-12
-    nf, nclasses = size(F)
-    ny = size(Y, 1)
-    @assert nclasses == size(Y, 2)
-    res = zeros(Float32, ny, nf)
-    logF = zeros(Float32, size(F))
-
-    for i in eachindex(F)
-        logF[i] = F[i] ≈ 1.0 ? log(1.0 - ϵ) : log(ϵ)
-    end
-
-    for i in axes(Y, 2)
-        res .+= - view(Y, :, i) .* view(logF, :, i)'
-    end
-
-    return res
-
-end
-
-
-"""
-    modality_cost(loss::Matrix{Float32}, weight::Vector{Float32})
-
-Compute weighted outcome class cost for optimal selection.
-
-Takes outcome class loss matrix and weight vector, returns scalar product ⟨loss[:, j], weight⟩ 
-for each class j. Used in outcome prediction to select best modality (class) that minimizes 
-weighted cross-entropy cost.
-
-# Arguments
-- `loss::Matrix{Float32}`: Loss matrix (n_weights, n_modalities)
-- `weight::Vector{Float32}`: Weight vector for samples (length n_weights)
-
-# Returns
-- Vector{Float64}: Weighted cost for each modality [cost_1, cost_2, ..., cost_m]
-  - Returns argmin(cost) → best predicted outcome class
-
-# Details
-- Weights aggregate loss across samples for each outcome modality
-- Used in argmin to select predicted outcome class
-- Normalizes by weight distribution for fair comparison
-"""
-function modality_cost(loss::Matrix{Float32}, weight::Vector{Float32})
-
-    cost_for_each_modality = Float64[]
-    for j in axes(loss, 2)
-        s = zero(Float64)
-        for i in axes(loss, 1)
-            s += loss[i, j] * weight[i]
-        end
-        push!(cost_for_each_modality, s)
-    end
-
-    return cost_for_each_modality
-
-end
-
-"""
-    loss_crossentropy(Y, F)
-
-Cross entropy is typically used as a loss in multi-class classification, in which case the labels y are given in a one-hot format. dims specifies the dimension (or the dimensions) containing the class probabilities. The prediction ŷ is usually probabilities but in our case it is also one hot encoded vector.
-
-"""
-function loss_crossentropy(Y::Matrix{Bool}, F::Matrix{Bool})
-    ϵ = 1.0e-12
-    nf, nclasses = size(F)
-    ny = size(Y, 1)
-    @assert nclasses == size(Y, 2)
-    res = zeros(Float32, ny, nf)
-    logF = zeros(Float32, size(F))
-
-    for i in eachindex(F)
-        logF[i] = F[i] ≈ 1.0 ? log(1.0 - ϵ) : log(ϵ)
-    end
-
-    for i in axes(Y, 2)
-        res .+= - view(Y, :, i) .* view(logF, :, i)'
-    end
-
-    return res
-
-end
-
-
-"""
-    modality_cost(loss, weight)
-
-- loss: matrix of size len(weight) * len(levels)
-- weight: vector of weights 
-
-Returns the scalar product <loss[level,],weight> 
-"""
-function modality_cost(loss::Matrix{Float32}, weight::Vector{Float32})
-
-    cost_for_each_modality = Float64[]
-    for j in axes(loss, 2)
-        s = zero(Float64)
-        for i in axes(loss, 1)
-            s += loss[i, j] * weight[i]
-        end
-        push!(cost_for_each_modality, s)
-    end
-
-    return cost_for_each_modality
-
-end
 
 """
     joint_ot_between_bases_discrete(data, reg, reg_m1, reg_m2; Ylevels=1:4, Zlevels=1:3, iterations=1, distance=Euclidean())
@@ -317,6 +187,43 @@ function joint_ot_between_bases_discrete(
 
     dimXZB = length(XZB2[1])
     dimXYA = length(XYA2[1])
+
+    onecold(X) = map(argmax, eachrow(X))
+
+    function loss_crossentropy(Y::Matrix{Bool}, F::Matrix{Bool})
+        ϵ = 1.0e-12
+        nf, nclasses = size(F)
+        ny = size(Y, 1)
+        @assert nclasses == size(Y, 2)
+        res = zeros(Float32, ny, nf)
+        logF = zeros(Float32, size(F))
+    
+        for i in eachindex(F)
+            logF[i] = F[i] ≈ 1.0 ? log(1.0 - ϵ) : log(ϵ)
+        end
+    
+        for i in axes(Y, 2)
+            res .+= - view(Y, :, i) .* view(logF, :, i)'
+        end
+    
+        return res
+    
+    end
+    
+    function modality_cost(loss::Matrix{Float32}, weight::Vector{Float32})
+    
+        cost_for_each_modality = Float64[]
+        for j in axes(loss, 2)
+            s = zero(Float64)
+            for i in axes(loss, 1)
+                s += loss[i, j] * weight[i]
+            end
+            push!(cost_for_each_modality, s)
+        end
+    
+        return cost_for_each_modality
+    
+    end
 
     Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
     Zloss = loss_crossentropy(zB_hot, Zlevels_hot)
