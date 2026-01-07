@@ -1,3 +1,61 @@
+"""
+$(SIGNATURES)
+
+Hybrid statistical matching combining optimal transport and neural network predictors.
+
+Alternates between two operations: (1) solving optimal transport problem to match 
+base A and B samples by covariate-outcome combinations, and (2) training neural networks 
+to learn outcome prediction functions that minimize cross-entropy loss given transport plan.
+This block coordinate descent (BCD) algorithm jointly optimizes coupling and predictors.
+
+# Arguments
+- `data::DataFrame`: Input data with columns `database` (1 for base A, 2 for base B), 
+  `X*` covariates, `Y` (outcome for base B), and `Z` (outcome for base A)
+
+# Keyword Arguments
+- `iterations::Int`: Number of BCD iterations (OT + network training cycles); default: 10
+- `learning_rate::Float64`: Adam optimizer learning rate for networks; default: 0.01
+- `batchsize::Int`: Batch size for stochastic gradient descent; default: 512
+- `epochs::Int`: Training epochs per network at each BCD iteration; default: 500
+- `hidden_layer_size::Int`: Number of neurons in hidden layer; default: 10
+- `reg::Float64`: Entropy regularization for OT (0 = exact, larger = relaxed); default: 0.0
+- `reg_m1::Float64`: Marginal relaxation for base A; default: 0.0
+- `reg_m2::Float64`: Marginal relaxation for base B; default: 0.0
+- `Ylevels::AbstractRange`: Categorical levels for outcome Y; default: 1:4
+- `Zlevels::AbstractRange`: Categorical levels for outcome Z; default: 1:3
+
+# Returns
+- `Tuple{Vector{Int}, Vector{Int}}`: Predicted outcomes (YB, ZA)
+  - `YB`: Final predictions for Y in base B (argmax of network outputs)
+  - `ZA`: Final predictions for Z in base A (argmax of network outputs)
+
+# Algorithm (Block Coordinate Descent)
+1. Initialize transport plan G, cost matrix C, and weights (uniform)
+2. Concatenate covariates with outcomes: XYA = [XA; YA], XZB = [XB; ZB]
+3. For each BCD iteration:
+   - Solve OT problem to compute coupling G minimizing C
+   - Update outcome targets: YB = nB·YA·G, ZA = nA·ZB·G'
+   - Train predictor networks on updated targets
+   - Compute cross-entropy loss and update cost matrix C ← C₀ + loss_feedback
+   - Check convergence: transport plan stability (delta) or cost stability
+4. Return argmax of final network predictions
+
+# Details
+- **Transport plan**: Couples samples across bases; G[i,j] represents mass transported from A[i] to B[j]
+- **Predictors**: Neural networks learn mapping (X,outcome) → opposite_outcome with loss feedback
+- **Cost update**: Cross-entropy loss between outcomes and network predictions guides next OT iteration
+- **Unbalanced OT**: Uses KL divergence for regularization when reg > 0
+
+# See Also
+- `joint_ot_between_bases_category`: OT without neural network predictors
+- `simple_learning`: Supervised baseline without OT coupling
+- `JointOTBetweenBases`: Main method dispatcher
+
+# Notes
+- Computationally expensive: trains two networks at each of ~10 BCD iterations
+- Combines strength of OT (covariate matching) with flexibility of neural networks
+- Requires more iterations/epochs than pure OT for convergence
+"""
 function joint_ot_between_bases_with_predictors(
         data;
         iterations = 10,

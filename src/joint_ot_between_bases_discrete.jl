@@ -5,58 +5,76 @@ import .Iterators: product
 import Distances: pairwise
 import LinearAlgebra: norm
 
-onecold(X) = map(argmax, eachrow(X))
 
 """
-    loss_crossentropy(Y, F)
+$(SIGNATURES)
 
-Cross entropy is typically used as a loss in multi-class classification, in which case the labels y are given in a one-hot format. dims specifies the dimension (or the dimensions) containing the class probabilities. The prediction ŷ is usually probabilities but in our case it is also one hot encoded vector.
+Statistical matching via optimal transport for discrete (categorical) covariates.
 
+Specialized implementation for discrete covariate data. Aggregates individuals by unique covariate-outcome
+combinations to reduce computational burden. Uses one-hot encoded covariates and solves OT problems on the
+aggregated space. Iteratively minimizes cross-entropy loss between predicted and transported outcomes to
+guide cost matrix refinement.
+
+# Arguments
+- `data::DataFrame`: Input data with columns `database` (1 for base A, 2 for base B), 
+  `X*` covariates (must be categorical/integer), `Y` (outcome for base B), and `Z` (outcome for base A)
+- `reg::Float64`: Entropy regularization parameter for OT solver
+- `reg_m1::Float64`: Marginal constraint relaxation for base A
+- `reg_m2::Float64`: Marginal constraint relaxation for base B
+
+# Keyword Arguments
+- `Ylevels::AbstractRange`: Categorical levels for outcome Y; default: 1:4
+- `Zlevels::AbstractRange`: Categorical levels for outcome Z; default: 1:3
+- `iterations::Int`: Number of algorithm iterations; default: 1
+- `distance::Distances.Metric`: Distance metric for covariate space; default: Euclidean()
+
+# Returns
+- `Tuple{Vector{Int}, Vector{Int}}`: Predicted outcomes (YB, ZA)
+  - `YB`: Predictions for Y in base B
+  - `ZA`: Predictions for Z in base A
+
+# Algorithm
+1. One-hot encode discrete covariates
+2. Aggregate individuals by unique (X, outcome) combinations:
+   - Reduces individuals to "cells" (covariate × outcome modality combinations)
+   - Computes cell weights as proportions of total sample size
+   - Filters out empty cells
+3. Compute pairwise distances between covariate profiles in aggregated space
+4. Initialize outcome predictions and loss matrices
+5. For each iteration:
+   - Solve OT problem on aggregated cells with current cost matrix
+   - Predict outcomes by minimizing cross-entropy loss (argmin over modalities)
+   - Compute prediction error (cross-entropy between transported and predicted outcomes)
+   - Update cost matrix with loss feedback
+   - Check convergence
+6. Map predictions back to original individual-level data
+7. Return individual-level outcome predictions
+
+# Computational Efficiency Tricks
+- **Aggregation**: Reduces from n individuals to ~(n_covariates × n_outcomes) cells
+  - E.g., 1000 individuals with 3 covariates (2,3,4 levels) + 2 outcomes → ~200-300 cells
+- **One-hot encoding**: Discrete covariates represented as binary vectors for distance computation
+- **Filtered weights**: Only processes cells with positive weight (observed data combinations)
+- **Instance pre-computation**: Distance matrix computed once between all covariate profiles
+
+# Details
+- **Data aggregation**: Crucial for computational tractability with discrete data
+- **Distance metric**: Determines covariate similarity (Euclidean on one-hot vectors by default)
+- **Cost matrix**: Initial distance-based, updated with loss feedback
+- **Cross-entropy**: Compares one-hot encoded outcomes for alignment
+- **Convergence**: Checks transport plan stability (delta) and cost stability
+
+# See Also
+- `joint_ot_between_bases_category`: Continuous covariate version with categorical outcomes
+- `Instance`: Pre-computed distance structure used in aggregation
+
+# Notes
+- **Discrete specialization**: Exploits discrete structure via aggregation for efficiency
+- **Cell-level matching**: Matches entire cells (all individuals with same X and outcome)
+- **Cross-entropy loss**: Drives iterative cost refinement for outcome prediction accuracy
+- **Outcome aggregation**: Predictions map back from cell-level to individual-level deterministically
 """
-function loss_crossentropy(Y::Matrix{Bool}, F::Matrix{Bool})
-    ϵ = 1.0e-12
-    nf, nclasses = size(F)
-    ny = size(Y, 1)
-    @assert nclasses == size(Y, 2)
-    res = zeros(Float32, ny, nf)
-    logF = zeros(Float32, size(F))
-
-    for i in eachindex(F)
-        logF[i] = F[i] ≈ 1.0 ? log(1.0 - ϵ) : log(ϵ)
-    end
-
-    for i in axes(Y, 2)
-        res .+= - view(Y, :, i) .* view(logF, :, i)'
-    end
-
-    return res
-
-end
-
-
-"""
-    modality_cost(loss, weight)
-
-- loss: matrix of size len(weight) * len(levels)
-- weight: vector of weights 
-
-Returns the scalar product <loss[level,],weight> 
-"""
-function modality_cost(loss::Matrix{Float32}, weight::Vector{Float32})
-
-    cost_for_each_modality = Float64[]
-    for j in axes(loss, 2)
-        s = zero(Float64)
-        for i in axes(loss, 1)
-            s += loss[i, j] * weight[i]
-        end
-        push!(cost_for_each_modality, s)
-    end
-
-    return cost_for_each_modality
-
-end
-
 function joint_ot_between_bases_discrete(
         data,
         reg,
@@ -169,6 +187,43 @@ function joint_ot_between_bases_discrete(
 
     dimXZB = length(XZB2[1])
     dimXYA = length(XYA2[1])
+
+    onecold(X) = map(argmax, eachrow(X))
+
+    function loss_crossentropy(Y::Matrix{Bool}, F::Matrix{Bool})
+        ϵ = 1.0e-12
+        nf, nclasses = size(F)
+        ny = size(Y, 1)
+        @assert nclasses == size(Y, 2)
+        res = zeros(Float32, ny, nf)
+        logF = zeros(Float32, size(F))
+    
+        for i in eachindex(F)
+            logF[i] = F[i] ≈ 1.0 ? log(1.0 - ϵ) : log(ϵ)
+        end
+    
+        for i in axes(Y, 2)
+            res .+= - view(Y, :, i) .* view(logF, :, i)'
+        end
+    
+        return res
+    
+    end
+    
+    function modality_cost(loss::Matrix{Float32}, weight::Vector{Float32})
+    
+        cost_for_each_modality = Float64[]
+        for j in axes(loss, 2)
+            s = zero(Float64)
+            for i in axes(loss, 1)
+                s += loss[i, j] * weight[i]
+            end
+            push!(cost_for_each_modality, s)
+        end
+    
+        return cost_for_each_modality
+    
+    end
 
     Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
     Zloss = loss_crossentropy(zB_hot, Zlevels_hot)

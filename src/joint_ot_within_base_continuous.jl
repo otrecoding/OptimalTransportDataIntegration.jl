@@ -1,5 +1,75 @@
 import Statistics: median
 
+"""
+$(SIGNATURES)
+
+Balance within-base distributions via optimal transport for continuous covariates.
+
+Specialized within-base method for continuous covariate data. Solves linear programming 
+problem to transport and reweight individuals within each base (A and B) independently,
+balancing covariate and outcome distributions. Does NOT match across bases—solves two 
+separate OT problems (one per base) to improve within-base alignment of outcomes to 
+marginal covariate distributions.
+
+# Arguments
+- `data::DataFrame`: Input data with columns `database` (1 for base A, 2 for base B), 
+  `X*` continuous covariates, `Y` (outcome for base B), and `Z` (outcome for base A)
+
+# Keyword Arguments
+- `lambda::Float64`: Regularization weight for covariate smoothness; default: 0.392
+- `alpha::Float64`: Outcome alignment weight; default: 0.714
+- `percent_closest::Float64`: Fraction of closest neighbors for cost averaging; default: 0.2
+- `distance::Distances.Metric`: Distance metric for covariate space; default: Euclidean()
+- `Ylevels::AbstractRange`: Categorical levels for outcome Y; default: 1:4
+- `Zlevels::AbstractRange`: Categorical levels for outcome Z; default: 1:3
+
+# Returns
+- `Tuple{Vector{Int}, Vector{Int}}`: Predicted outcomes (YB, ZA)
+  - `YB`: Balanced outcome predictions for base B
+  - `ZA`: Balanced outcome predictions for base A
+
+# Algorithm
+1. Digitize continuous covariates into categorical bins using quartiles
+2. Compute median covariate values per bin for distance computation
+3. Build distance matrix D between individuals (base A vs base B)
+4. Aggregate individuals by covariate-outcome combinations
+5. Compute cost matrix C[y,z] by averaging distances between:
+   - Y=y individuals and closest Z=z individuals
+   - Z=z individuals and closest Y=y individuals
+6. Build linear program for each base (A, B) independently:
+   - Decision variables: joint probabilities γ[x,y,z] for (covariate, Y, Z)
+   - Constraints: marginal consistency with observed distributions
+   - Objective: minimize transportation cost with covariate and outcome regularization
+7. Solve LP using Clp solver
+8. Extract and return predicted outcomes
+
+# Key Design Choices
+- **Within-base**: Solves independent LP for base A and base B (no cross-base matching)
+- **Continuous specialization**: Digitizes continuous covariates; uses median bin values
+- **Regularization**: lambda controls smoothness of covariate reweighting
+- **Neighborhood-based cost**: Averages distances to percent_closest neighbors (robust)
+- **Linear programming**: Exact solution via Clp (not approximate like unbalanced OT)
+
+# Details
+- **Covariate binning**: Uses quantiles [0.25, 0.5, 0.75] to create 4 bins
+- **Distance computation**: Euclidean on median bin values within each base
+- **Cost matrix**: Symmetric averaging (YZ + ZY) prevents asymmetric bias
+- **Marginal constraints**: Maintains observed covariate and outcome distributions
+- **Outcome prediction**: Extracted from optimal coupling as argmax probability
+
+# See Also
+- `joint_ot_within_base_discrete`: Discrete covariate version with aggregation
+- `JointOTWithinBase`: Main dispatcher for within-base methods
+- `JointOTBetweenBases`: Between-bases matching (different approach)
+
+# Notes
+- **Reference implementation**: Demonstrates balanced LP approach vs OT methods
+- **Within-base only**: Does not integrate across bases (limited integration benefit)
+- **Continuous focus**: Leverages continuous structure via median binning
+- **No cross-base info**: Cannot use cross-base information for matching
+- **Moderate scalability**: LP solver may be slower than OT for large n
+- **Exact solution**: Linear program guarantees optimality (vs approximate methods)
+"""
 function joint_ot_within_base_continuous(
         data;
         lambda = 0.392,
