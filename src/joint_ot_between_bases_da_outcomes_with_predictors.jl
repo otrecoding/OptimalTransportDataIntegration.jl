@@ -1,3 +1,76 @@
+"""
+    joint_ot_between_bases_da_outcomes_with_predictors(data; iterations=10, learning_rate=0.01, 
+                                                        batchsize=512, epochs=500, hidden_layer_size=10, 
+                                                        reg=0.0, reg_m1=0.0, reg_m2=0.0, 
+                                                        Ylevels=1:4, Zlevels=1:3)
+
+Advanced discriminant analysis: OT on covariate space with outcome-based predictor refinement.
+
+Solves a single optimal transport problem on covariate-only distance, then trains neural networks
+to predict outcomes from transported samples. This "DA with predictors" variant uses the OT coupling
+to transport outcome distributions and trains networks on transported outcome targets (not iterative).
+Combines covariate-based matching with outcome prediction flexibility.
+
+# Arguments
+- `data::DataFrame`: Input data with columns `database` (1 for base A, 2 for base B), 
+  `X*` covariates, `Y` (outcome for base B), and `Z` (outcome for base A)
+
+# Keyword Arguments
+- `iterations::Int`: Unused parameter (kept for API compatibility); default: 10
+- `learning_rate::Float64`: Adam optimizer learning rate for networks; default: 0.01
+- `batchsize::Int`: Batch size for stochastic gradient descent; default: 512
+- `epochs::Int`: Training epochs per network; default: 500
+- `hidden_layer_size::Int`: Number of neurons in hidden layer; default: 10
+- `reg::Float64`: Entropy regularization for OT (0 = exact, larger = relaxed); default: 0.0
+- `reg_m1::Float64`: Marginal relaxation for base A; default: 0.0
+- `reg_m2::Float64`: Marginal relaxation for base B; default: 0.0
+- `Ylevels::AbstractRange`: Categorical levels for outcome Y; default: 1:4
+- `Zlevels::AbstractRange`: Categorical levels for outcome Z; default: 1:3
+
+# Returns
+- `Tuple{Vector{Int}, Vector{Int}}`: Predicted outcomes (YB, ZA)
+  - `YB`: Final predictions for Y in base B (argmax of network outputs)
+  - `ZA`: Final predictions for Z in base A (argmax of network outputs)
+
+# Algorithm
+1. Initialize outcome prediction networks: modelXYA (X → Y), modelXZB (X → Z)
+2. Compute cost matrix C based on Euclidean distance in **covariate space only**
+3. Solve OT problem once: G = argmin ⟨G, C⟩ subject to marginal constraints
+4. Transport outcome distributions (not covariates):
+   - YBt = nB·YA·G (transported Y probabilities for base B samples)
+   - ZAt = nA·ZB·G' (transported Z probabilities for base A samples)
+5. Train networks on transported outcome targets:
+   - Train modelXYA on (XB, YBt) - predict transported Y from base B covariates
+   - Train modelXZB on (XA, ZAt) - predict transported Z from base A covariates
+6. Return final predictions on original covariates
+
+# Key Differences from Other DA Variants
+- **da_covariables**: OT on X only; networks train on transported covariates (not outcomes)
+- **da_outcomes**: OT on joint (X,Y) and (X,Z); iterative refinement (not implemented here)
+- **da_outcomes_with_predictors** (this): OT on X only; networks train on transported **outcomes**
+- **joint_ot_between_bases_with_predictors**: Iterative BCD with loss-driven cost updates
+
+# Details
+- **Cost matrix**: Based purely on covariate distances (SqEuclidean), normalized
+- **Single OT solve**: Unlike BCD methods, OT problem solved once with static cost
+- **Outcome transport**: Coupling G transports outcome probability distributions across bases
+- **Network targets**: Soft probabilities (one-hot encoded) from transported distributions
+- **Unbalanced OT**: Uses KL divergence for regularization when reg > 0
+- **Prediction**: Uses softmax probabilities, then argmax for final discrete predictions
+
+# See Also
+- `joint_ot_between_bases_da_outcomes`: Similar approach (outcomes) without explicit predictors
+- `joint_ot_between_bases_da_covariables`: OT on covariates with covariate-based DA
+- `joint_ot_between_bases_with_predictors`: Iterative BCD variant with cost refinement
+- `joint_ot_between_bases_category`: OT without discriminant analysis component
+
+# Notes
+- More computationally efficient than iterative BCD methods (single OT solve)
+- Blends OT matching (for covariate alignment) with neural network flexibility (outcome prediction)
+- Network training targets are transported outcome distributions, not standard supervised learning
+- Outcome transport via coupling ensures covariate-aligned outcome distributions
+- Useful when outcome prediction needs flexibility beyond linear transport assumptions
+"""
 function joint_ot_between_bases_da_outcomes_with_predictors(
         data;
         iterations = 10,

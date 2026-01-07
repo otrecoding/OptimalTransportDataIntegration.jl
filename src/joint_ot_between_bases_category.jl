@@ -4,6 +4,51 @@ import PythonOT
 import .Iterators: product
 import LinearAlgebra: norm
 
+"""
+    joint_ot_between_bases_category(data, reg, reg_m1, reg_m2; Ylevels=1:4, Zlevels=1:3, iterations=1)
+
+Statistical matching via optimal transport between two bases with categorical outcomes.
+
+This function integrates two data sources (base A and base B) using optimal transport theory
+to match and predict missing categorical outcomes (Y and Z). It transports joint distributions
+of covariates and outcomes across bases while iteratively minimizing cross-entropy loss for
+outcome predictions.
+
+# Arguments
+- `data::DataFrame`: Input data with columns `database` (1 for base A, 2 for base B), 
+  `X*` covariates, `Y` (outcome for base B), and `Z` (outcome for base A)
+- `reg::Float64`: Entropy regularization parameter for OT solver (0 = exact OT, larger = more relaxed)
+- `reg_m1::Float64`: Marginal constraint relaxation for base A (set to 0 for balanced problem)
+- `reg_m2::Float64`: Marginal constraint relaxation for base B (set to 0 for balanced problem)
+
+# Keyword Arguments
+- `Ylevels::AbstractRange`: Categorical levels for outcome Y; default: 1:4
+- `Zlevels::AbstractRange`: Categorical levels for outcome Z; default: 1:3
+- `iterations::Int`: Number of algorithm iterations for cost matrix refinement; default: 1
+
+# Returns
+- `Tuple{Vector{Int32}, Vector{Int32}}`: Predicted outcomes (YB_pred, ZA_pred)
+  - `YB_pred`: Predictions for Y in base A (same length as base A observations)
+  - `ZA_pred`: Predictions for Z in base B (same length as base B observations)
+
+# Algorithm
+1. Aggregate individuals by covariate and outcome combinations
+2. Initialize transport plan G and cost matrix C based on Euclidean distance
+3. Iterate:
+   - Solve OT problem (unbalanced or exact) via PythonOT
+   - Predict outcomes by minimizing cross-entropy loss per transport cost
+   - Update cost matrix with prediction error feedback
+4. Return predicted outcomes mapped back to original base structure
+
+# Details
+- One-hot encodes categorical outcomes for cross-entropy loss computation
+- Uses unbalanced OT (KL divergence) when reg_m1 > 0 and reg_m2 > 0, else exact EMD
+- Convergence: detects transport plan convergence (delta < 1e-16) or cost stability (< 1e-7)
+
+# See Also
+- `joint_ot_between_bases_discrete`: Discrete covariates version
+- `one_hot_encoder`: Converts categorical data to one-hot matrix form
+"""
 function joint_ot_between_bases_category(
         data,
         reg,
