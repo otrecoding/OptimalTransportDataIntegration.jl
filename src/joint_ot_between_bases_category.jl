@@ -5,7 +5,7 @@ import .Iterators: product
 import LinearAlgebra: norm
 
 """
-    joint_ot_between_bases_category(data, reg, reg_m1, reg_m2; Ylevels=1:4, Zlevels=1:3, iterations=1)
+$(SIGNATURES)
 
 Statistical matching via optimal transport between two bases with categorical outcomes.
 

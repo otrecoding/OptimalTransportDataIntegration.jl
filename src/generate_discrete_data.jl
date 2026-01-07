@@ -14,7 +14,7 @@ export DiscreteDataGenerator
 export generate
 
 """
-    DiscreteDataGenerator
+$(TYPEDEF)
 
 Factory for generating synthetic datasets with discrete (categorical) covariates and categorical outcomes.
 
@@ -41,8 +41,8 @@ DiscreteDataGenerator(params; scenario=1, n=10000)
 - `params::DataParameters`: Data scenario parameters including:
   - `nA`, `nB`: Sample sizes for bases A and B
   - `pA`, `pB`: Outcome category probabilities as vectors of vectors
-    - `pA[1]`: Probabilities for 1st covariate categories
-    - `pA[2]`: Probabilities for 2nd covariate categories, etc.
+  - `pA[1]`: Probabilities for 1st covariate categories
+  - `pA[2]`: Probabilities for 2nd covariate categories, etc.
   - `aA`, `aB`: Effect size vectors (regression coefficients for covariate indicators)
   - `r2`: Coefficient of determination (controls noise level)
 
@@ -58,7 +58,7 @@ DiscreteDataGenerator(params; scenario=1, n=10000)
 3. Compute error variance from r² and effect sizes: σ²_error = (1/r² - 1) × ∑(aᵢ aⱼ Cov[i,j])
 4. Generate latent outcomes: Y = X'a + ε with ε ~ N(0, σ²_error) (when σ² > 0)
 5. Compute quantiles at [0.25, 0.5, 0.75] for Y and [1/3, 2/3] for Z
-6. Create bins: [-∞, q₁, q₂, q₃, ∞] (4 categories) and [-∞, q₁, q₂, ∞] (3 categories)
+6. Create bins: ``[-∞, q₁, q₂, q₃, ∞]`` (4 categories) and ``[-∞, q₁, q₂, ∞]`` (3 categories)
 
 # See Also
 - `ContinuousDataGenerator`: For continuous (multivariate normal) covariates
@@ -152,7 +152,7 @@ end
 
 
 """
-    generate(generator::DiscreteDataGenerator; eps=0.0)
+$(SIGNATURES)
 
 Generate a synthetic dataset with discrete (categorical) covariates and categorical outcomes.
 

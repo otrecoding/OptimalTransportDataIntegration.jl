@@ -1,7 +1,7 @@
 export ContinuousDataGenerator
 
 """
-    ContinuousDataGenerator
+$(TYPEDEF)
 
 Factory for generating synthetic datasets with continuous covariates and categorical outcomes.
 
@@ -42,7 +42,7 @@ ContinuousDataGenerator(params; scenario=1, n=10000)
 2. Compute error variance from r² and effect sizes: σ²_error = (1/r² - 1) × ∑(aᵢ aⱼ Cov[i,j])
 3. Generate latent outcomes: Y = X'a + ε with ε ~ N(0, σ²_error)
 4. Compute quantiles at [0.25, 0.5, 0.75] for Y and [1/3, 2/3] for Z
-5. Create bins: [-∞, q₁, q₂, q₃, ∞] (4 categories) and [-∞, q₁, q₂, ∞] (3 categories)
+5. Create bins: ``[-∞, q₁, q₂, q₃, ∞]`` (4 categories) and ``[-∞, q₁, q₂, ∞]`` (3 categories)
 
 # See Also
 - `DiscreteDataGenerator`: For categorical covariates
@@ -132,7 +132,7 @@ end
 
 
 """
-    generate(generator::ContinuousDataGenerator; eps=0.0)
+$(SIGNATURES)
 
 Generate a synthetic dataset with continuous covariates and categorical outcomes.
 

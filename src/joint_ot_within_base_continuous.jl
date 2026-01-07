@@ -1,8 +1,7 @@
 import Statistics: median
 
 """
-    joint_ot_within_base_continuous(data; lambda=0.392, alpha=0.714, percent_closest=0.2, 
-                                    distance=Euclidean(), Ylevels=1:4, Zlevels=1:3)
+$(SIGNATURES)
 
 Balance within-base distributions via optimal transport for continuous covariates.
 

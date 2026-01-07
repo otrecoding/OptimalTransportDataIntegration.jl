@@ -1,7 +1,5 @@
 """
-    joint_ot_between_bases_without_outcomes(data; iterations=10, learning_rate=0.01, batchsize=512, 
-                                            epochs=1000, hidden_layer_size=10, reg=0.0, reg_m1=0.0, 
-                                            reg_m2=0.0, Ylevels=1:4, Zlevels=1:3)
+$(SIGNATURES)
 
 Optimal transport matching with outcome prediction from covariates only.
 

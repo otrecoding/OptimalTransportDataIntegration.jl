@@ -29,7 +29,7 @@ function onehot(x::AbstractMatrix)
 end
 
 """
-    simple_learning(data; hidden_layer_size=10, learning_rate=0.01, batchsize=512, epochs=1000, Ylevels=1:4, Zlevels=1:3)
+$(SIGNATURES)
 
 Statistical matching baseline via supervised neural networks.
 

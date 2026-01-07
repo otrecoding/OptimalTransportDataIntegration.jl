@@ -1,8 +1,7 @@
 using JuMP, Clp
 
 """
-    ot_joint(inst::Instance, alpha::Float64, lambda::Float64, percent_closest::Float64; 
-             norme::Metric=Euclidean(), aggregate_tol::Float64=0.5, verbose::Bool=false)
+$(SIGNATURES)
 
 Solve linear program for within-base outcome balancing via optimal transport.
 

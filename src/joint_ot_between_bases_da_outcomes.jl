@@ -1,7 +1,5 @@
 """
-    joint_ot_between_bases_da_outcomes(data; iterations=10, learning_rate=0.01, batchsize=512, 
-                                       epochs=500, hidden_layer_size=10, reg=0.0, reg_m1=0.0, 
-                                       reg_m2=0.0, Ylevels=1:4, Zlevels=1:3)
+$(SIGNATURES)
 
 Discriminant analysis via optimal transport on covariate-outcome space.
 

@@ -1,7 +1,5 @@
 """
-    joint_ot_between_bases_jdot(data; iterations=10, learning_rate=0.01, batchsize=512, 
-                                epochs=500, hidden_layer_size=10, reg=0.0, reg_m1=0.0, 
-                                reg_m2=0.0, Ylevels=1:4, Zlevels=1:3)
+$(SIGNATURES)
 
 Joint Distribution Optimal Transport (JDOT) with neural network predictors.
 

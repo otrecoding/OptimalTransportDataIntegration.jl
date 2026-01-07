@@ -1,7 +1,7 @@
 import Flux: Chain, Dense
 
 """
-    learning_with_continuous_data(data; hidden_layer_size=10, learning_rate=0.01, batchsize=128, epochs=1000)
+$(SIGNATURES)
 
 Statistical matching baseline via supervised neural networks on continuous covariates.
 

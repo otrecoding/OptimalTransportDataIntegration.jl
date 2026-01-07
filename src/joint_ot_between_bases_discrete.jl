@@ -7,7 +7,7 @@ import LinearAlgebra: norm
 
 
 """
-    joint_ot_between_bases_discrete(data, reg, reg_m1, reg_m2; Ylevels=1:4, Zlevels=1:3, iterations=1, distance=Euclidean())
+$(SIGNATURES)
 
 Statistical matching via optimal transport for discrete (categorical) covariates.
 
