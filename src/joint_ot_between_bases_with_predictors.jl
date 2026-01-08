@@ -113,7 +113,12 @@ function joint_ot_between_bases_with_predictors(
 
         YB .= nB .* YA * G
         ZA .= nA .* ZB * G'
-
+        #row_sumsB = vec(sum(G, dims=2))
+        #col_sumsA = vec(sum(G, dims=1))
+        #YB .=  (YA * G).* (1 ./col_sumsA)'
+        #ZA .=  (ZB * G').* (1 ./row_sumsB)'
+        #YB .= exp.(log.(YA) * G) ./ col_sumsA'
+        #ZA .= exp.(log.(ZB) * G') ./ row_sumsB'
         train!(modelXYA, XYA, ZA)
         train!(modelXZB, XZB, YB)
 
@@ -137,7 +142,15 @@ function joint_ot_between_bases_with_predictors(
         C .= C0 .+ fcost
 
     end
+    #row_sumsB = vec(sum(G, dims=2))
+    #col_sumsA = vec(sum(G, dims=1))
+    #YB .= exp.(log.(YA) * G) ./ col_sumsA'
+    #ZA .= exp.(log.(ZB) * G') ./ row_sumsB'
+    #train!(modelXYA, XYA, ZA)
+    #train!(modelXZB, XZB, YB)
 
+    #YBpred .= modelXZB(XZB)
+    #ZApred .= modelXYA(XYA)
     return Flux.onecold(YBpred), Flux.onecold(ZApred)
 
 end

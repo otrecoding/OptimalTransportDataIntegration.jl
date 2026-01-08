@@ -39,9 +39,11 @@ function joint_ot_between_bases_da_outcomes(
     else
         G .= PythonOT.emd(wa, wb, C)
     end
+    row_sumsB = vec(sum(G, dims=2))
+    col_sumsA = vec(sum(G, dims=1))
+    ZApred = Flux.softmax( vec(ZB * G').* (1 ./row_sumsB)')
+    YBpred = Flux.softmax( vec(YA * G).* (1 ./col_sumsA)')
 
-    ZApred = Flux.softmax(nA .* ZB * G')
-    YBpred = Flux.softmax(nB .* YA * G)
 
     return Flux.onecold(YBpred), Flux.onecold(ZApred)
 
