@@ -218,6 +218,8 @@ function joint_ot_between_bases_category(
     Gold = copy(G)
     cost = Inf
 
+    onecold(X) = map(argmax, eachrow(X))
+
     for iter in 1:iterations
 
         costold = cost
