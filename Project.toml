@@ -5,6 +5,7 @@ authors = ["Jeremy Omer <jeremy.omer@insa-rennes.fr>", "Valérie Garès <valerie
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 Clp = "e2554f3b-3117-50c0-817c-e040a3ddf72d"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
@@ -30,6 +31,7 @@ PythonOT = {rev = "main", url = "https://github.com/pnavaro/PythonOT.jl"}
 [compat]
 Aqua = "0.8"
 CSV = "0.10"
+CategoricalArrays = "1.0.2"
 Clp = "1"
 DataFrames = "1.6"
 DelimitedFiles = "1.9"

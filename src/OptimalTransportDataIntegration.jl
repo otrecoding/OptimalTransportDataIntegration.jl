@@ -8,8 +8,9 @@ using Printf
 include("data_parameters.jl")
 include("generate_discrete_data.jl")
 include("generate_continuous_data.jl")
+include("generate_mixed_data.jl")
 include("one_hot_encoder.jl")
-
+include("gower_distance.jl")
 include("instance.jl")
 include("solution.jl")
 include("average_distance_closest.jl")
