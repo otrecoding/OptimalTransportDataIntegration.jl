@@ -4,7 +4,7 @@ using OptimalTransportDataIntegration
 function main(nsimulations::Int)
 
     outfile = "best_reg_m_values_with_different_mb.csv"
-    reg_m_values = [0.01 0.05 0.1 0.25 0.5 0.75 1]
+    reg_m_values = [0.0001, 0.00025, 0.0005, 0.00075, 0.001, 0.0025, 0.005, 0.0075, 0.01, 0.025, 0.05]
     header = ["id", "mB", "reg_m", "estyb", "estza", "accuracy", "scenario"]
     shift = ([0, 0, 0], [1, 0, 0], [1, 1, 0], [1, 1, 1])
     nA = 500
