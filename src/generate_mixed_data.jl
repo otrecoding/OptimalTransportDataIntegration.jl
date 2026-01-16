@@ -38,9 +38,11 @@ function generate_mixed_data(params)
 
     df = DataFrame(hcat(XA, XB)', colnames)
 
-    df.Y = vcat(YA, YB)
-    df.Z = vcat(ZA, ZB)
-    df.database = vcat(fill(1, params.nA), fill(2, params.nB))
+    df.Y = categorical(vcat(YA, fill(missing, length(YB))))
+    df.Z = categorical(vcat(fill(missing, length(ZA)), ZB))
+    df.Ytrue = categorical(vcat(YA, YB))
+    df.Ztrue = categorical(vcat(ZA, ZB))
+    df.database = categorical(vcat(fill(1, params.nA), fill(2, params.nB)))
 
     @info "Categories in YA $(sort!(OrderedDict(countmap(YA))))" #
     @info "Categories in ZA $(sort!(OrderedDict(countmap(ZA))))"
