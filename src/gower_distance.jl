@@ -1,3 +1,5 @@
+import Distances: PreMetric
+
 export Gower
 
 struct Gower <: PreMetric

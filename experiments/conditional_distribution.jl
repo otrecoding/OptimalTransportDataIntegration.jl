@@ -92,13 +92,13 @@ function conditional_distribution_discrete(nsimulations::Int, epsilons)
                 writedlm(io, [i eps estyb estza est "wi-r" scenario])
 
                 #OTE Balanced transport of covariates and estimated outcomes
-                result = otrecod(data, JointOTBetweenBases(reg = 0.0))
+                result = otrecod(data, JointOTBetweenBasesDiscreteOrdered(reg = 0.0))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i eps estyb estza est "be" scenario])
 
                 #OTE Regularized unbalanced transport
                 reg, reg_m = best_parameters(:between, :discrete, scenario)
-                result = otrecod(data, JointOTBetweenBases(reg = reg, reg_m1 = reg_m, reg_m2 = reg_m))
+                result = otrecod(data, JointOTBetweenBasesDiscreteOrdered(reg = reg, reg_m1 = reg_m, reg_m2 = reg_m))
                 estyb, estza, est = accuracy(result)
                 writedlm(io, [i eps estyb estza est "be-un-r" scenario])
 
@@ -118,5 +118,5 @@ end
 nsimulations = 100
 epsilons = (0.0, 1.0, 2.0, 3.0, 5.0)
 
-@time conditional_distribution_continuous(nsimulations, epsilons)
+# @time conditional_distribution_continuous(nsimulations, epsilons)
 @time conditional_distribution_discrete(nsimulations, epsilons)

@@ -12,9 +12,9 @@ rng = DiscreteDataGenerator(params, n = 1000, scenario = 1)
 data = generate(rng)
 
 
-@testset "discrete covariables JointOTBetweenBasesCategory" begin
+@testset "discrete covariables JointOTBetweenBasesDiscreteOrdered" begin
 
-    @test all(accuracy(otrecod(data, JointOTBetweenBasesCategory())) .> 0.5)
+    @test all(accuracy(otrecod(data, JointOTBetweenBasesDiscreteOrdered())) .> 0.5)
 
 end
 

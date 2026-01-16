@@ -93,12 +93,12 @@ function covariates_shift_assumption_discrete(nsimulations::Int)
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i repr(shift) estyb estza est "wi-r" scenario])
 
-                    result = otrecod(data, JointOTBetweenBases(reg = 0.0))
+                    result = otrecod(data, JointOTBetweenBasesDiscreteOrdered(reg = 0.0))
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i repr(shift) estyb estza est "be" scenario])
 
                     reg, reg_m = best_parameters(:between, :discrete, scenario)
-                    result = otrecod(data, JointOTBetweenBases(reg = reg, reg_m1 = reg_m, reg_m2 = reg_m))
+                    result = otrecod(data, JointOTBetweenBasesDiscreteOrdered(reg = reg, reg_m1 = reg_m, reg_m2 = reg_m))
                     estyb, estza, est = accuracy(result)
                     writedlm(io, [i repr(shift) estyb estza est "be-un-r" scenario])
 
@@ -117,5 +117,5 @@ function covariates_shift_assumption_discrete(nsimulations::Int)
 end
 
 nsimulations = 100
-@time covariates_shift_assumption_continuous(nsimulations)
+# @time covariates_shift_assumption_continuous(nsimulations)
 @time covariates_shift_assumption_discrete(nsimulations)

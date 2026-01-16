@@ -42,14 +42,14 @@ outcome predictions.
 
 # Details
 - One-hot encodes categorical outcomes for cross-entropy loss computation
-- Uses unbalanced OT (KL divergence) when reg_m1 > 0 and reg_m2 > 0, else exact EMD
+- Uses unbalanced OT (KL divergence) when `reg_m1` > 0 and `reg_m2` > 0, else exact EMD
 - Convergence: detects transport plan convergence (delta < 1e-16) or cost stability (< 1e-7)
 
 # See Also
 - `joint_ot_between_bases_discrete`: Discrete covariates version
 - `one_hot_encoder`: Converts categorical data to one-hot matrix form
 """
-function joint_ot_between_bases_category(
+function joint_ot_between_bases_discrete_ordered(
         data,
         reg,
         reg_m1,

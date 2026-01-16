@@ -235,10 +235,10 @@ function otrecod(data::DataFrame, method::JointOTBetweenBases)
 
 end
 
-export JointOTBetweenBasesCategory
+export JointOTBetweenBasesDiscreteOrdered
 
 """
-    JointOTBetweenBasesCategory <: AbstractMethod
+$(TYPEDEF)
 
 Joint optimal transport between data sources with categorical outcomes.
 
@@ -253,7 +253,7 @@ Enables better handling of discrete outcome distributions via explicit category 
 - `Zlevels::Vector{Int} = 1:3`: Categories of outcome Z
 - `iterations::Int = 10`: Sinkhorn iterations
 """
-@with_kw struct JointOTBetweenBasesCategory <: AbstractMethod
+@with_kw struct JointOTBetweenBasesDiscreteOrdered <: AbstractMethod
     reg::Float64 = 0.001
     reg_m1::Float64 = 0.01
     reg_m2::Float64 = 0.01
@@ -263,7 +263,7 @@ Enables better handling of discrete outcome distributions via explicit category 
 end
 
 """
-    otrecod(data::DataFrame, method::JointOTBetweenBasesCategory)
+    otrecod(data::DataFrame, method::JointOTBetweenBasesDiscreteOrdered)
 
 Apply joint OT with categorical outcome encoding.
 
@@ -272,7 +272,7 @@ which can improve numerical stability and interpretability.
 
 # Arguments
 - `data::DataFrame`: Input data with discrete covariates
-- `method::JointOTBetweenBasesCategory`: Configuration
+- `method::JointOTBetweenBasesDiscreteOrdered`: Configuration
 
 # Returns
 - `JointOTResult`: Predictions and ground truth
@@ -280,14 +280,14 @@ which can improve numerical stability and interpretability.
 # Throws
 - `AssertionError`: If covariates are not categorical
 """
-function otrecod(data::DataFrame, method::JointOTBetweenBasesCategory)
+function otrecod(data::DataFrame, method::JointOTBetweenBasesDiscreteOrdered)
 
     xcols = names(data, r"^X")
     discrete = all(isinteger.(Matrix(data[!, xcols])))
 
-    @assert discrete "JointOTBetweenBasesCategory: covariables must be categorical"
+    @assert discrete "JointOTBetweenBasesDiscreteOrdered: covariables must be categorical"
 
-    yb_pred, za_pred = joint_ot_between_bases_category(
+    yb_pred, za_pred = joint_ot_between_bases_discrete_ordered(
         data,
         method.reg,
         method.reg_m1,

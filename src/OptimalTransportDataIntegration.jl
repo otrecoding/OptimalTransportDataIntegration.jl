@@ -1,5 +1,7 @@
 module OptimalTransportDataIntegration
 
+using CategoricalArrays
+using Distances
 using Distributions
 using DocStringExtensions
 using Parameters
@@ -23,7 +25,7 @@ include("simple_learning.jl")
 include("simple_learning_with_continuous_data.jl")
 
 include("joint_ot_between_bases_discrete.jl")
-include("joint_ot_between_bases_category.jl")
+include("joint_ot_between_bases_discrete_ordered.jl")
 include("joint_ot_between_bases_with_predictors.jl")
 include("joint_ot_between_bases_without_outcomes.jl")
 include("joint_ot_between_bases_jdot.jl")
