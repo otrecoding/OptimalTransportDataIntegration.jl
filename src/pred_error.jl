@@ -55,51 +55,6 @@ function compute_pred_error!(
     predZA = [findmax([probaZindivA[i, z] for z in Z])[2] for i in A]
     predYB = [findmax([probaYindivB[j, y] for y in Y])[2] for j in B]
 
-    # Base 1
-    nbmisA = 0
-    misA = Int64[]
-    for i in A
-        if predZA[i] != inst.Zobserv[i]
-            nbmisA += 1
-            push!(misA, i)
-        end
-    end
-
-    # Base 2
-    nbmisB = 0
-    misB = Int64[]
-    for j in B
-        if predYB[j] != inst.Yobserv[inst.nA + j]
-            nbmisB += 1
-            push!(misB, j)
-        end
-    end
-
-    if proba_disp
-        if nbmisA == 0
-            println("No mistake in the transport of base A")
-        else
-            @printf("Probability of error in base A: %.1f %%\n", 100.0 * nbmisA / inst.nA)
-            if mis_disp
-                println("Indices with mistakes in base A:", misA)
-            end
-        end
-
-        if nbmisB == 0
-            println("No mistake in the transport of base B")
-        else
-            @printf("Probability of error in base B: %.1f %%\n", 100.0 * nbmisB / inst.nB)
-            if mis_disp
-                println("Indices with mistakes in base 2:", misB)
-            end
-        end
-    end
-
-    sol.errorpredZA = nbmisA / inst.nA
-    sol.errorpredYB = nbmisB / inst.nB
-    sol.errorpredavg =
-        (inst.nA * sol.errorpredZA + inst.nB * sol.errorpredYB) / (inst.nA + inst.nB)
-
     return predYB, predZA
 
 end

@@ -65,7 +65,12 @@ algorithm. Returns predictions for missing outcomes (Y in base A, Z in base B).
 function otrecod(data::DataFrame, method::JointOTWithinBase)
 
     xcols = names(data, r"^X")
-    discrete = all(isinteger.(Matrix(data[!, xcols])))
+
+    if typeof(data.X1) <: CategoricalArray
+        discrete = true
+    else
+        discrete = all(isinteger.(Matrix(data[!, xcols])))
+    end
 
     if discrete
 

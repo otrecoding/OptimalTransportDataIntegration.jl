@@ -21,8 +21,8 @@ struct Instance
     nB::Int
     D::Matrix{Float64}
     Xobserv::Matrix{Int}
-    Yobserv::Vector{Int}
-    Zobserv::Vector{Int}
+    Yobserv::Vector{Union{Int, Missing}}
+    Zobserv::Vector{Union{Int, Missing}}
     Xlevels::Vector{Vector{Int}}
     Ylevels::Vector{Int}
     Zlevels::Vector{Int}
@@ -58,8 +58,8 @@ struct Instance
 
         # compute the distance between pairs of individuals in different bases
         # devectorize all the computations to go about twice faster only compute norm 1 here
-        a = X[indA, :]'
-        b = X[indB, :]'
+        a = Matrix{Int}(X[indA, :])'
+        b = Matrix{Int}(X[indB, :])'
 
         D = pairwise(distance, a, b, dims = 2)
 
