@@ -19,7 +19,7 @@ params = DataParameters(
     r2 = 0.6
 )
 
-rng = ContinuousDataGenerator(params; scenario = 2)
+rng = ContinuousDataGenerator(params; scenario = 1)
 data = generate(rng)
 
 @timeit to "SimpleLearning" est = accuracy(otrecod(data, SimpleLearning()))
