@@ -197,21 +197,21 @@ function joint_ot_between_bases_discrete(
         @assert nclasses == size(Y, 2)
         res = zeros(Float32, ny, nf)
         logF = zeros(Float32, size(F))
-    
+
         for i in eachindex(F)
             logF[i] = F[i] ≈ 1.0 ? log(1.0 - ϵ) : log(ϵ)
         end
-    
+
         for i in axes(Y, 2)
             res .+= - view(Y, :, i) .* view(logF, :, i)'
         end
-    
+
         return res
-    
+
     end
-    
+
     function modality_cost(loss::Matrix{Float32}, weight::Vector{Float32})
-    
+
         cost_for_each_modality = Float64[]
         for j in axes(loss, 2)
             s = zero(Float64)
@@ -220,9 +220,9 @@ function joint_ot_between_bases_discrete(
             end
             push!(cost_for_each_modality, s)
         end
-    
+
         return cost_for_each_modality
-    
+
     end
 
     Yloss = loss_crossentropy(yA_hot, Ylevels_hot)

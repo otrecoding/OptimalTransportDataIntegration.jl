@@ -5,9 +5,8 @@ using DelimitedFiles
 function reference_methods_continuous(start, stop)
 
     params = DataParameters()
-    scenario = 2
 
-    outfile = "reference_methods_continuous_scenario2.csv"
+    outfile = "reference_methods_continuous.csv"
     header = ["id", "est_yb", "est_za", "est", "method", "scenario"]
 
     return open(outfile, "w") do io
@@ -15,31 +14,35 @@ function reference_methods_continuous(start, stop)
         seekstart(io)
         writedlm(io, hcat(header...))
 
-        rng = ContinuousDataGenerator(params, scenario = scenario)
+        for scenario in 1:2
 
-        methods = Dict{String, AbstractMethod}(
-            "sl" => SimpleLearning(),
-            "wi-r" => JointOTWithinBase(),
-            "be" => JointOTBetweenBasesWithPredictors(reg = 0.0),
-            "be-x" => JointOTBetweenBasesWithoutOutcomes(reg = 0.0),
-            "jdot" => JointOTBetweenBasesJDOT(reg = 0.0),
-            "otda-x" => JointOTDABetweenBasesCovariables(reg = 0.0),
-            "otda-yz" => JointOTDABetweenBasesOutcomes(reg = 0.0),
-            "otda-yz-f" => JointOTDABetweenBasesOutcomesWithPredictors(reg = 0.0)
-        )
+            rng = ContinuousDataGenerator(params, scenario = scenario)
 
-        for i in start:stop
+            methods = Dict{String, AbstractMethod}(
+                "sl" => SimpleLearning(),
+                "wi-r" => JointOTWithinBase(),
+                "be" => JointOTBetweenBasesWithPredictors(reg = 0.0),
+                "be-x" => JointOTBetweenBasesWithoutOutcomes(reg = 0.0),
+                "jdot" => JointOTBetweenBasesJDOT(reg = 0.0),
+                "otda-x" => JointOTDABetweenBasesCovariables(reg = 0.0),
+                "otda-yz" => JointOTDABetweenBasesOutcomes(reg = 0.0),
+                "otda-yz-f" => JointOTDABetweenBasesOutcomesWithPredictors(reg = 0.0)
+            )
 
-            data = generate(rng)
+            for i in start:stop
 
-            for (name, method) in methods
-                result = otrecod(data, method)
-                est_yb, est_za, est = accuracy(result)
-                writedlm(io, [i est_yb est_za est name scenario])
+                data = generate(rng)
+
+                for (name, method) in methods
+                    result = otrecod(data, method)
+                    est_yb, est_za, est = accuracy(result)
+                    writedlm(io, [i est_yb est_za est name scenario])
+                end
+
             end
 
-        end
 
+        end
 
     end
 

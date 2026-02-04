@@ -1,5 +1,7 @@
 module OptimalTransportDataIntegration
 
+using CategoricalArrays
+using Distances
 using Distributions
 using DocStringExtensions
 using Parameters
@@ -8,8 +10,9 @@ using Printf
 include("data_parameters.jl")
 include("generate_discrete_data.jl")
 include("generate_continuous_data.jl")
+include("generate_mixed_data.jl")
 include("one_hot_encoder.jl")
-
+include("gower_distance.jl")
 include("instance.jl")
 include("solution.jl")
 include("average_distance_closest.jl")
@@ -22,7 +25,7 @@ include("simple_learning.jl")
 include("simple_learning_with_continuous_data.jl")
 
 include("joint_ot_between_bases_discrete.jl")
-include("joint_ot_between_bases_category.jl")
+include("joint_ot_between_bases_discrete_ordered.jl")
 include("joint_ot_between_bases_with_predictors.jl")
 include("joint_ot_between_bases_without_outcomes.jl")
 include("joint_ot_between_bases_jdot.jl")
