@@ -4,8 +4,8 @@ using FreqTables
 using LinearAlgebra
 import PythonOT
 
-include(joinpath(@__DIR__, "read_data.jl"))
-include(joinpath(@__DIR__, "gower_distance.jl"))
+include(joinpath(@__DIR__, "read_real_data.jl"))
+#include(joinpath(@__DIR__, "gower_distance.jl"))
 
 function main_between_with_gower_distance()
 
