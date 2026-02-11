@@ -3,10 +3,9 @@ using FreqTables
 using JuMP
 using MultivariateStats
 using StatsBase
+using OptimalTransportDataIntegration
 
-include("read_data.jl")
-include("discretize.jl")
-include("gower_distance.jl")
+include("read_real_data.jl")
 
 function ot_within(data, X)
 
@@ -50,14 +49,9 @@ function ot_within(data, X)
     A = dba[:, cols]
     B = dbb[:, cols]
     C = vcat(A, B)
-    dist = GowerDF2([:X1, :X4], [:X2, :X3, :X5], C)
+    dist = Gower([:X1, :X4], [:X2, :X3, :X5], C)
     # version pour DataFrameRow
     D = pairwise_gower(dist, A, B)
-
-    # %% [markdown]
-    # Format coordonnées continues après FADM
-
-    # %%
 
     # --- Exemple : DataFrames A et B déjà définis ---
     df_all = vcat(A, B)
@@ -451,9 +445,13 @@ end
 function main()
 
     data = read_data()
-    X, Xmdn = discretize(data)
     dba = subset(data, :database => ByRow(==(1)))
     dbb = subset(data, :database => ByRow(==(2)))
+    cols = names(dba, r"^X")
+    XA = transpose(Matrix(dba[:, cols])) |> collect
+    XB = transpose(Matrix(dbb[:, cols])) |> collect
+    X = digitize_int(XA, XB, :X1)
+    X4 = digitize_int(XA, XB, :X4)
     nA = size(dba, 1)
     nB = size(dbb, 1)
     Ylevels = 1:4

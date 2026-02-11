@@ -3,9 +3,9 @@ import Flux: Chain, Dense
 using FreqTables
 using LinearAlgebra
 import PythonOT
+using OptimalTransportDataIntegration
 
 include(joinpath(@__DIR__, "read_real_data.jl"))
-#include(joinpath(@__DIR__, "gower_distance.jl"))
 
 function main_between_with_gower_distance()
 
@@ -33,7 +33,7 @@ function main_between_with_gower_distance()
     wb = ones(Float32, nB) ./ nB
     iterations = 10
     learning_rate = 0.01
-    batchsize = 512
+    batchsize = 128
     epochs = 1000
     hidden_layer_size = 10
 
@@ -56,7 +56,7 @@ function main_between_with_gower_distance()
     A = dba[:, cols]
     B = dbb[:, cols]
     C = vcat(A, B)
-    dist = GowerDF2([:X1, :X4], [:X2, :X3, :X5], C)
+    dist = Gower([:X1, :X4], [:X2, :X3, :X5], C)
 
     C0 = Float32.(pairwise_gower(dist, dba, dbb))
     C = C0 .^ 2 ./ maximum(C0 .^ 2)
@@ -236,7 +236,7 @@ function main_between_with_gower_distance()
     A = dba[:, cols]
     B = dbb[:, cols]
     C = vcat(A, B)
-    dist = GowerDF2([:X1, :X4], [:X2, :X3, :X5], C)
+    dist = Gower([:X1, :X4], [:X2, :X3, :X5], C)
 
     C0 = Float32.(pairwise_gower(dist, A, B))
 
