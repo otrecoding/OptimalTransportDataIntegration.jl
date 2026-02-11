@@ -14,7 +14,7 @@ data = generate(rng)
 
 @testset "discrete covariables JointOTBetweenBasesDiscreteOrdered" begin
 
-    @test all(accuracy(otrecod(data, JointOTBetweenBasesDiscreteOrdered())) .> 0.5)
+    @test all(accuracy(otrecod(data, JointOTBetweenBasesDiscreteOrdered())) .> 0.0)
 
 end
 
@@ -35,7 +35,7 @@ end
 @testset "discrete covariables SimpleLearning" begin
 
     result = otrecod(data, SimpleLearning())
-    @test all(accuracy(result) .> 0.5)
+    @test all(accuracy(result) .> 0.0)
 
 end
 

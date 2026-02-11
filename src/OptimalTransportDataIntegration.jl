@@ -20,7 +20,7 @@ include("pred_error.jl")
 include("joint_ot_within_base_discrete.jl")
 include("joint_ot_within_base_continuous.jl")
 
-include("entropic_partial_wasserstein.jl")
+#include("entropic_partial_wasserstein.jl")
 include("simple_learning.jl")
 include("simple_learning_with_continuous_data.jl")
 
