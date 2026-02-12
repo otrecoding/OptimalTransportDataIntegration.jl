@@ -58,9 +58,9 @@ marginal covariate distributions.
 - **Outcome prediction**: Extracted from optimal coupling as argmax probability
 
 # See Also
-- `joint_ot_within_base_discrete`: Discrete covariate version with aggregation
-- `JointOTWithinBase`: Main dispatcher for within-base methods
-- `JointOTBetweenBases`: Between-bases matching (different approach)
+- [`joint_ot_within_base_discrete`](@ref): Discrete covariate version with aggregation
+- [`JointOTWithinBase`](@ref): Main dispatcher for within-base methods
+- [`JointOTBetweenBases`](@ref): Between-bases matching (different approach)
 
 # Notes
 - **Reference implementation**: Demonstrates balanced LP approach vs OT methods

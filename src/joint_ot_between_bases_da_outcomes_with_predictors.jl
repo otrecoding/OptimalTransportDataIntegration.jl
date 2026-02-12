@@ -42,10 +42,10 @@ Combines covariate-based matching with outcome prediction flexibility.
 6. Return final predictions on original covariates
 
 # Key Differences from Other DA Variants
-- **da_covariables**: OT on X only; networks train on transported covariates (not outcomes)
-- **da_outcomes**: OT on joint (X,Y) and (X,Z); iterative refinement (not implemented here)
-- **da_outcomes_with_predictors** (this): OT on X only; networks train on transported **outcomes**
-- **joint_ot_between_bases_with_predictors**: Iterative BCD with loss-driven cost updates
+- [`joint_ot_between_bases_da_covariables`](@ref): OT on X only; networks train on transported covariates (not outcomes)
+- [`joint_ot_between_bases_da_outcomes`](@ref): OT on joint (X,Y) and (X,Z); iterative refinement (not implemented here)
+- [`joint_ot_between_bases_da_outcomes_with_predictors`](@ref) (this): OT on X only; networks train on transported **outcomes**
+- [`joint_ot_between_bases_with_predictors`](@ref): Iterative BCD with loss-driven cost updates
 
 # Details
 - **Cost matrix**: Based purely on covariate distances (SqEuclidean), normalized
@@ -56,10 +56,10 @@ Combines covariate-based matching with outcome prediction flexibility.
 - **Prediction**: Uses softmax probabilities, then argmax for final discrete predictions
 
 # See Also
-- `joint_ot_between_bases_da_outcomes`: Similar approach (outcomes) without explicit predictors
-- `joint_ot_between_bases_da_covariables`: OT on covariates with covariate-based DA
-- `joint_ot_between_bases_with_predictors`: Iterative BCD variant with cost refinement
-- `joint_ot_between_bases_category`: OT without discriminant analysis component
+- [`joint_ot_between_bases_da_outcomes`](@ref): Similar approach (outcomes) without explicit predictors
+- [`joint_ot_between_bases_da_covariables`](@ref): OT on covariates with covariate-based DA
+- [`joint_ot_between_bases_with_predictors`](@ref): Iterative BCD variant with cost refinement
+- [`joint_ot_between_bases_discrete_ordered`](@ref): OT without discriminant analysis component
 
 # Notes
 - More computationally efficient than iterative BCD methods (single OT solve)

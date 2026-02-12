@@ -34,14 +34,14 @@ prediction uses only covariates (X), not the joint (X,outcome) space like other 
 3. Solve OT problem: find coupling G that minimizes ⟨G, C⟩
 4. Transport covariates: XA_transported = nB·XA·G, XB_transported = nA·XB·G'
 5. Train networks on transported covariates:
-   - Train modelXYA on (XB_transported, YA)
-   - Train modelXZB on (XA_transported, ZB)
+   - Train modelXYA on (`XB_transported`, `YA`)
+   - Train modelXZB on (`XA_transported`, `ZB`)
 6. Return final predictions on original covariates
 
 # Key Differences from Other DA Variants
-- **da_covariables** (this): OT on X only; predict Y,Z from X (covariate-only discriminant analysis)
-- **da_outcomes**: OT on joint (X,Y) and (X,Z); may refine based on outcome prediction errors
-- **da_outcomes_with_predictors**: Similar to da_outcomes but with explicit predictor networks
+- [`joint_ot_between_bases_da_covariables`](@ref) (this): OT on X only; predict Y,Z from X (covariate-only discriminant analysis)
+- [`joint_ot_between_bases_da_outcomes`](@ref): OT on joint (X,Y) and (X,Z); may refine based on outcome prediction errors
+- [`joint_ot_between_bases_da_outcomes_with_predictors`](@ref): Similar to da_outcomes but with explicit predictor networks
 
 # Details
 - **Cost matrix**: Based purely on covariate distances (SqEuclidean)
@@ -50,10 +50,10 @@ prediction uses only covariates (X), not the joint (X,outcome) space like other 
 - **Unbalanced OT**: Uses KL divergence for regularization when reg > 0
 
 # See Also
-- `joint_ot_between_bases_da_outcomes`: OT on outcomes with discriminant prediction
-- `joint_ot_between_bases_da_outcomes_with_predictors`: Hybrid with explicit predictor networks
-- `joint_ot_between_bases_category`: OT without discriminant analysis
-- `joint_ot_between_bases_with_predictors`: OT with flexible predictor networks
+- [`joint_ot_between_bases_da_outcomes`](@ref): OT on outcomes with discriminant prediction
+- [`joint_ot_between_bases_da_outcomes_with_predictors`](@ref): Hybrid with explicit predictor networks
+- [`joint_ot_between_bases_discrete_ordered`](@ref): OT without discriminant analysis
+- [`joint_ot_between_bases_with_predictors`](@ref): OT with flexible predictor networks
 
 # Notes
 - Computationally less expensive than outcome-based DA variants

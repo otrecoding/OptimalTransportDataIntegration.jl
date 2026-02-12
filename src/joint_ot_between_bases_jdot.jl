@@ -62,10 +62,11 @@ transport plans per outcome.
 - **Iterative refinement**: Feedback loop where prediction errors guide next OT solve
 
 # Differences from Related Methods
-- **joint_ot_between_bases_with_predictors**: Single transport plan G; symmetric outcome treatment
-- **joint_ot_between_bases_jdot** (this): Two transport plans G1, G2; outcome-specific matching
-- **da_outcomes_with_predictors**: Single static OT solve; no cost refinement
-- **joint_ot_between_bases_category**: No discriminant networks; pure OT on outcomes
+#
+- [`joint_ot_between_bases_with_predictors`](@ref): Single transport plan G; symmetric outcome treatment
+- [`joint_ot_between_bases_jdot`](@ref) (this): Two transport plans G1, G2; outcome-specific matching
+- [`joint_ot_between_bases_da_outcomes_with_predictors`](@ref): Single static OT solve; no cost refinement
+- [`joint_ot_between_bases_discrete_ordered`](@ref): No discriminant networks; pure OT on outcomes
 
 # Details
 - **Separate OT problems**: Each outcome solved independently, capturing outcome-specific distributions
@@ -76,10 +77,10 @@ transport plans per outcome.
 - **Unbalanced OT**: Uses KL divergence for regularization when reg > 0
 
 # See Also
-- `joint_ot_between_bases_with_predictors`: Single coupling variant
-- `joint_ot_between_bases_da_outcomes_with_predictors`: DA variant (single static OT)
-- `joint_ot_between_bases_category`: OT without discriminant networks
-- `JointOTBetweenBases`: Main method dispatcher
+- [`joint_ot_between_bases_with_predictors`](@ref): Single coupling variant
+- [`joint_ot_between_bases_da_outcomes_with_predictors`](@ref): DA variant (single static OT)
+- [`joint_ot_between_bases_discrete_ordered`](@ref): OT without discriminant networks
+- [`JointOTBetweenBases`](@ref): Main method dispatcher
 
 # Notes
 - Most sophisticated iterative approach: two independent transport problems per iteration

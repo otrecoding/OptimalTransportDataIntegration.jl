@@ -22,7 +22,7 @@ outcome distributions while minimizing transportation cost.
 - `verbose::Bool`: Enable detailed logging of results; default: false
 
 # Returns
-- `Solution`: Object containing optimal transport plan and outcome predictions
+- `estimatorZA, estimatorYB`: Optimal transport plan
 
 # Algorithm Details
 1. Pre-aggregate individuals by similar covariate values (using Instance)
@@ -48,9 +48,8 @@ s.t. marginal constraints ensuring statistical consistency
 - **Stability**: Neighborhood averaging and regularization prevent overfitting
 
 # See Also
-- `Instance`: Pre-computation structure
-- `average_distance_to_closest`: Cost matrix computation
-- `Solution`: Output structure
+- [`Instance`](@ref): Pre-computation structure
+- [`average_distance_to_closest`](@ref): Cost matrix computation
 
 # Notes
 - Requires pre-computed Instance for efficiency
@@ -370,6 +369,67 @@ function ot_joint(
 
 end
 
+
+"""
+$(SIGNATURES)
+
+Balance within-base distributions via optimal transport for discrete covariates.
+
+Wrapper function for within-base OT on discrete covariate data. Builds Instance structure
+with pre-computed distances and aggregation, then solves linear programs independently for
+each base (A and B) to balance covariate and outcome distributions. Does NOT match across
+bases—focuses on internal distribution alignment within each data source.
+
+# Arguments
+- `data::DataFrame`: Input data with columns `database` (1 for base A, 2 for base B), 
+  `X*` discrete covariates, `Y` (outcome for base B), and `Z` (outcome for base A)
+
+# Keyword Arguments
+- `lambda::Float64`: Regularization weight for covariate smoothness; default: 0.392
+- `alpha::Float64`: Balance weight between covariate and outcome terms; default: 0.714
+- `percent_closest::Float64`: Fraction of closest neighbors for cost robustness; default: 0.2
+- `distance::Distances.Metric`: Distance metric for covariate aggregation; default: Euclidean()
+
+# Returns
+- `Tuple{Vector{Int}, Vector{Int}}`: Predicted outcomes (YB, ZA)
+  - `YB`: Balanced outcome predictions for base B
+  - `ZA`: Balanced outcome predictions for base A
+
+# Algorithm
+1. Extract database, covariates, and outcomes from DataFrame
+2. Build Instance: pre-compute distances and individual aggregation by covariates
+3. Solve ot_joint LP solver:
+   - Formulate linear program per base (A, B)
+   - Optimize joint distribution γ[x,y,z] for (covariate, outcome pairs)
+   - Minimize: transportation cost + regularization
+4. Extract outcome predictions from solution
+5. Return predicted outcomes
+
+# Key Differences from Between-Bases Methods
+- **Within-base**: Solves independent LP for A and B (no cross-base information)
+- **No integration**: Cannot leverage relationships between bases
+- **Within-base only**: Useful as reference baseline or when bases should stay separate
+- **Faster**: Independent problems smaller than joint optimization
+
+# Details
+- **Discrete specialization**: Aggregates individuals by identical covariate patterns
+- **Instance pre-computation**: Caches distances and aggregation for efficiency
+- **Regularization**: Controls balance between covariate alignment and outcome improvement
+- **LP exactness**: Clp solver guarantees optimal solution (not approximate)
+- **Default parameters**: Calibrated for typical statistical matching scenarios
+
+# See Also
+- [`ot_joint`](@ref): Core LP solver
+- [`Instance`](@ref): Pre-computation structure
+- [`joint_ot_within_base_continuous`](@ref): Continuous covariate version
+- [`JointOTBetweenBases`](@ref): Between-bases integration approach
+
+# Notes
+- Reference implementation: demonstrates within-base balancing capability
+- Limited matching: does not use cross-base information for outcome prediction
+- Aggregation efficiency: works well when covariates have discrete structure
+- Outcome levels: fixed to Y ∈ {1,2,3,4}, Z ∈ {1,2,3}
+"""
 function joint_ot_within_base_discrete(
         data;
         lambda = 0.392,
@@ -377,67 +437,6 @@ function joint_ot_within_base_discrete(
         percent_closest = 0.2,
         distance = Euclidean(),
     )
-
-    """
-        joint_ot_within_base_discrete(data; lambda=0.392, alpha=0.714, percent_closest=0.2, distance=Euclidean())
-
-    Balance within-base distributions via optimal transport for discrete covariates.
-
-    Wrapper function for within-base OT on discrete covariate data. Builds Instance structure
-    with pre-computed distances and aggregation, then solves linear programs independently for
-    each base (A and B) to balance covariate and outcome distributions. Does NOT match across
-    bases—focuses on internal distribution alignment within each data source.
-
-    # Arguments
-    - `data::DataFrame`: Input data with columns `database` (1 for base A, 2 for base B), 
-      `X*` discrete covariates, `Y` (outcome for base B), and `Z` (outcome for base A)
-
-    # Keyword Arguments
-    - `lambda::Float64`: Regularization weight for covariate smoothness; default: 0.392
-    - `alpha::Float64`: Balance weight between covariate and outcome terms; default: 0.714
-    - `percent_closest::Float64`: Fraction of closest neighbors for cost robustness; default: 0.2
-    - `distance::Distances.Metric`: Distance metric for covariate aggregation; default: Euclidean()
-
-    # Returns
-    - `Tuple{Vector{Int}, Vector{Int}}`: Predicted outcomes (YB, ZA)
-      - `YB`: Balanced outcome predictions for base B
-      - `ZA`: Balanced outcome predictions for base A
-
-    # Algorithm
-    1. Extract database, covariates, and outcomes from DataFrame
-    2. Build Instance: pre-compute distances and individual aggregation by covariates
-    3. Solve ot_joint LP solver:
-       - Formulate linear program per base (A, B)
-       - Optimize joint distribution γ[x,y,z] for (covariate, outcome pairs)
-       - Minimize: transportation cost + regularization
-    4. Extract outcome predictions from solution
-    5. Return predicted outcomes
-
-    # Key Differences from Between-Bases Methods
-    - **Within-base**: Solves independent LP for A and B (no cross-base information)
-    - **No integration**: Cannot leverage relationships between bases
-    - **Within-base only**: Useful as reference baseline or when bases should stay separate
-    - **Faster**: Independent problems smaller than joint optimization
-
-    # Details
-    - **Discrete specialization**: Aggregates individuals by identical covariate patterns
-    - **Instance pre-computation**: Caches distances and aggregation for efficiency
-    - **Regularization**: Controls balance between covariate alignment and outcome improvement
-    - **LP exactness**: Clp solver guarantees optimal solution (not approximate)
-    - **Default parameters**: Calibrated for typical statistical matching scenarios
-
-    # See Also
-    - `ot_joint`: Core LP solver
-    - `Instance`: Pre-computation structure
-    - `joint_ot_within_base_continuous`: Continuous covariate version
-    - `JointOTBetweenBases`: Between-bases integration approach
-
-    # Notes
-    - Reference implementation: demonstrates within-base balancing capability
-    - Limited matching: does not use cross-base information for outcome prediction
-    - Aggregation efficiency: works well when covariates have discrete structure
-    - Outcome levels: fixed to Y ∈ {1,2,3,4}, Z ∈ {1,2,3}
-    """
 
     database = data.database
 

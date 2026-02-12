@@ -88,9 +88,67 @@ c\big((x,y,z),(x',y',z')\big) = d(x,x') + \alpha_1 \mathcal{L}_Y(y,y') + \alpha_
 
 ## First example
 
+### Installation
+
+Pkg comes with a REPL.
+Enter the Pkg REPL by pressing `]` from the Julia REPL.
+To get back to the Julia REPL, press `Ctrl+C` or backspace (when the REPL cursor is at the beginning of the input).
+
+Upon entering the Pkg REPL, you should see the following prompt:
+
+```julia-repl
+(@v1.12) pkg>
+```
+
+To add the package, use `add`:
+
+```julia-repl
+(@v1.12) pkg> add https://github.com/otrecoding/OptimalTransportDataIntegration.jl.git
+     Cloning git-repo `https://github.com/otrecoding/OptimalTransportDataIntegration.jl.git`
+    Updating git-repo `https://github.com/otrecoding/OptimalTransportDataIntegration.jl.git`
+   Resolving package versions...
+   Installed PythonOT ─ v0.1.6
+    Updating `~/tmp/Project.toml`
+```
+
+After the package is installed, you need install POT the Python Otimal Transport library
+
+```julia-repl
+julia> using Conda
+ │ Package Conda not found, but a package named Conda is available from a registry.
+ │ Install package?
+ │   (tmp) pkg> add Conda
+ └ (y/n/o) [y]:
+   Resolving package versions...
+    Updating `~/tmp/Project.toml`
+  [8f4d0f93] + Conda v1.10.3
+    Manifest No packages added to or removed from `~/tmp/Manifest.toml`
+
+julia> Conda.add("pot")
+[ Info: Running `conda install -y pot` in root environment
+Retrieving notices: done
+Channels:
+ - conda-forge
+Platform: osx-64
+Collecting package metadata (repodata.json): \
+```
+
+Now the package can be loaded into the Julia session:
+
+```julia-repl
+julia> using OptimalTransportDataIntegration
+
+julia>
+```
+
 ### Parameters
 
 Create some defaults paramaters with [`DataParameters`](@ref).
+
+
+```julia-repl
+julia> params = DataParameters()
+```
 
 ### Generators
 
@@ -101,14 +159,8 @@ discrete covariables ``X`` with [`DiscreteDataGenerator`](@ref).
   - **`scenario = 1`**: ``\mathbb{P}_{Z^A|X^A=x} = \mathbb{P}_{Z^B|X^B=x}`` (identical conditional distributions).
   - **`scenario = 2`**: ``\mathbb{P}_{Z^A|X^A=x} = \mathbb{P}_{Z^B|X^B=T(x)}`` (transformation ``T`` between domains).
 
-With the first scenario `JDOT-wi` outperforms other methods (assumption holds).  With the second scenario `JDOT-be` and its variants are more robust to covariate shifts. Unbalanced transport (`JDOT-be-un`) improves performance in case of imbalance.
-
-
 ```julia
 
-using OptimalTransportDataIntegration
-
-params = DataParameters()
 rng = ContinuousDataGenerator(params)
 data = generate(rng)
 

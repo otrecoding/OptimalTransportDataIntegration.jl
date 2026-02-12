@@ -41,10 +41,10 @@ aligned with covariate matching.
 5. Return argmax of transported probabilities as final predictions
 
 # Key Differences from Other DA Variants
-- **da_covariables**: OT on X only; predicts outcomes from transported covariates via networks
-- **da_outcomes** (this): OT on X; predicts outcomes directly from transported outcome distributions
-- **da_outcomes_with_predictors**: OT on X; trains networks on transported outcome targets
-- **joint_ot_between_bases_with_predictors**: Iterative BCD with loss-driven cost updates
+- [`joint_ot_between_bases_da_covariables`](@ref): OT on X only; predicts outcomes from transported covariates via networks
+- [`joint_ot_between_bases_da_outcomes`](@ref) (this): OT on X; predicts outcomes directly from transported outcome distributions
+- [`joint_ot_between_bases_da_outcomes_with_predictors`](@ref): OT on X; trains networks on transported outcome targets
+- [`joint_ot_between_bases_with_predictors`](@ref): Iterative BCD with loss-driven cost updates
 
 # Details
 - **Cost matrix**: Based purely on covariate distances (SqEuclidean), not normalized
@@ -56,10 +56,10 @@ aligned with covariate matching.
 - **Scaling factor**: Transportation weighted by sample count (nB, nA) for proper probability aggregation
 
 # See Also
-- `joint_ot_between_bases_da_outcomes_with_predictors`: DA outcomes with explicit predictor networks
-- `joint_ot_between_bases_da_covariables`: DA on covariates with covariate-based prediction
-- `joint_ot_between_bases_category`: OT without discriminant analysis
-- `joint_ot_between_bases_with_predictors`: Iterative BCD variant with cost refinement
+- [`joint_ot_between_bases_da_outcomes_with_predictors`](@ref): DA outcomes with explicit predictor networks
+- [`joint_ot_between_bases_da_covariables`](@ref): DA on covariates with covariate-based prediction
+- [`joint_ot_between_bases_discrete_ordered`](@ref): OT without discriminant analysis
+- [`joint_ot_between_bases_with_predictors`](@ref): Iterative BCD variant with cost refinement
 
 # Notes
 - Simplest DA variant: combines OT matching with direct outcome transport
