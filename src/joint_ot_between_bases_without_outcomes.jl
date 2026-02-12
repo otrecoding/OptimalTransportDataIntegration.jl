@@ -49,10 +49,11 @@ outcomes" variant focuses on covariate-outcome mapping rather than joint distrib
 3. Return argmax of final network predictions
 
 # Key Differences from Similar Methods
-- **without_outcomes** (this): OT on X only; networks predict X → Y, X → Z
-- **with_predictors**: OT on X; networks train on transported (X,outcome) pairs
-- **jdot**: Two separate OT problems (one per outcome); outcome-specific matching
-- **da_outcomes**: OT on X; direct outcome distribution transport (no networks)
+
+- [`joint_ot_between_bases_without_outcomes`](@ref) (this): OT on X only; networks predict X → Y, X → Z
+- [`joint_ot_between_bases_with_predictors`](@ref): OT on X; networks train on transported (X,outcome) pairs
+- [`joint_ot_between_bases_jdot`](@ref): Two separate OT problems (one per outcome); outcome-specific matching
+- [`joint_ot_between_bases_da_outcomes`](@ref): OT on X; direct outcome distribution transport (no networks)
 
 # Details
 - **Covariate-only OT**: Cost matrix depends only on X distance, ignoring outcomes
@@ -64,10 +65,10 @@ outcomes" variant focuses on covariate-outcome mapping rather than joint distrib
 - **Single coupling**: Unlike JDOT (2 couplings), uses one G for both outcomes
 
 # See Also
-- `joint_ot_between_bases_with_predictors`: Joint (X,outcome) OT with predictors
-- `joint_ot_between_bases_jdot`: Two separate OT problems (outcome-specific)
-- `joint_ot_between_bases_da_covariables`: DA on covariates (no outcome info)
-- `JointOTBetweenBases`: Main method dispatcher
+- [`joint_ot_between_bases_with_predictors`](@ref): Joint (X,outcome) OT with predictors
+- [`joint_ot_between_bases_jdot`](@ref): Two separate OT problems (outcome-specific)
+- [`joint_ot_between_bases_da_covariables`](@ref): DA on covariates (no outcome info)
+- [`JointOTBetweenBases`](@ref): Main method dispatcher
 
 # Notes
 - Simplest BCD variant: matches on covariates, learns outcome relationships via networks

@@ -8,7 +8,8 @@ $(TYPEDEF)
 
 $(TYPEDSIGNATURES)
 
-Definition and initialization of an Instance structure
+Definition and initialization of an Instance structure. This
+structure is made to pre-compute and store some values.
 
 - datafile : file name
 - distance : ∈ ( Cityblock, Euclidean, Hamming )

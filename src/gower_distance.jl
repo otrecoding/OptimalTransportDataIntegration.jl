@@ -65,6 +65,8 @@ function pairwise_gower(d::Gower, A::DataFrame, B::DataFrame)
     return D
 end
 
+export digitize_int
+
 function digitize_int(XA, XB, column::Symbol)
     b = quantile(data[!, col], collect(0.25:0.25:0.75))
     bins = vcat(-Inf, b, +Inf)
@@ -72,6 +74,8 @@ function digitize_int(XA, XB, column::Symbol)
     X2 = digitize(XB[!, col], bins)
     return vact(X1, X2)
 end
+
+export digitize_median
 
 function digitize_median(XA, XB, column::Symbol)
 

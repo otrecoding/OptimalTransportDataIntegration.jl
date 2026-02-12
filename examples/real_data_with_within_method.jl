@@ -1,90 +1,137 @@
-using JuMP, Clp
+using Clp
+using FreqTables
+using JuMP
+using MultivariateStats
+using StatsBase
+using OptimalTransportDataIntegration
 
-"""
-$(SIGNATURES)
+include("read_real_data.jl")
 
-Solve linear program for within-base outcome balancing via optimal transport.
+function ot_within(data, X)
 
-Core solver for within-base OT matching on discrete covariates. Takes pre-computed Instance
-with distance matrices and individual aggregation, then formulates and solves linear programs
-(one per base A, B) to find joint distributions of (X, Y, Z) that balance covariate and 
-outcome distributions while minimizing transportation cost.
+    dba = subset(data, :database => ByRow(==(1)))
+    dbb = subset(data, :database => ByRow(==(2)))
+    cols = names(dba, r"^X")
+    Y = Vector(data.Y)
+    Z = Vector(data.Z)
+    Ylevels = 1:4
+    Zlevels = 1:6
+    XA = transpose(Matrix(dba[:, cols]))
+    XB = transpose(Matrix(dbb[:, cols]))
+    base = data.database
 
-# Arguments
-- `inst::Instance`: Pre-computed instance with distance matrices and aggregation indices
-- `alpha::Float64`: Weight balancing covariate regularization (higher = prioritize covariates)
-- `lambda::Float64`: Coefficient controlling overall regularization strength
-- `percent_closest::Float64`: Fraction of closest neighbors for cost computation (robustness)
+    indA = findall(base .== 1)
+    indB = findall(base .== 2)
 
-# Keyword Arguments
-- `norme::Metric`: Distance metric for covariate neighbors; default: Euclidean()
-- `aggregate_tol::Float64`: Tolerance for covariate aggregation (unused in main algorithm); default: 0.5
-- `verbose::Bool`: Enable detailed logging of results; default: false
+    Xobserv = vcat(X[indA, :], X[indB, :])
+    Yobserv = vcat(Y[indA], Y[indB])
+    Zobserv = vcat(Z[indA], Z[indB])
 
-# Returns
-- `estimatorZA, estimatorYB`: Optimal transport plan
+    nA = length(indA)
+    nB = length(indB)
 
-# Algorithm Details
-1. Pre-aggregate individuals by similar covariate values (using Instance)
-2. Compute cost matrix C[y,z] from instance pre-computed distances
-3. Build linear program per base with:
-   - Variables: γ[x,y,z] joint probabilities of (covariate, Y, Z)
-   - Constraints: marginals match observed distributions
-   - Objective: minimize transport cost + regularization
-4. Solve LP using Clp (simplex algorithm)
-5. Extract solution and compute outcome predictions
+    # list the distinct modalities in A and B
+    indY = [findall(Y[indA] .== m) for m in Ylevels]
+    indZ = [findall(Z[indB] .== m) for m in Zlevels]
 
-# Model Structure
-The LP formulates the problem:
-```
-min  ⟨C, γ⟩ + λ·(regularization on covariate matching)
-s.t. marginal constraints ensuring statistical consistency
-     γ ≥ 0 (probabilities non-negative)
-```
-
-# Optimization Targets
-- **Covariate alignment**: Regularization ensures covariate marginals stay close to observed
-- **Outcome prediction**: Cost matrix drives outcome rebalancing via OT
-- **Stability**: Neighborhood averaging and regularization prevent overfitting
-
-# See Also
-- [`Instance`](@ref): Pre-computation structure
-- [`average_distance_to_closest`](@ref): Cost matrix computation
-
-# Notes
-- Requires pre-computed Instance for efficiency
-- Two independent LP solves (base A and base B)
-- Uses Clp solver for exactness (not approximate)
-"""
-function ot_joint(
-        inst::Instance,
-        alpha::Float64,
-        lambda::Float64,
-        percent_closest::Float64;
-        norme::Metric = Euclidean(),
-        aggregate_tol::Float64 = 0.5,
-        verbose::Bool = false,
-    )
-
-    if verbose
-        @info " AGGREGATE INDIVIDUALS WRT COVARIATES               "
-        @info " Reg. weight           = $(lambda)              "
-        @info " Percent closest       = $(100.0 * percent_closest) % "
-        @info " Aggregation tolerance = $(aggregate_tol)           "
+    cols = names(dba, r"^X")
+    for name in ["X2", "X3", "X5"]
+        lev = union(unique(dba[!, name]), unique(dbb[!, name]))
+        dba[!, name] = categorical(dba[!, name], levels = lev)
+        dbb[!, name] = categorical(dbb[!, name], levels = lev)
     end
 
-    # Local redefinitions of parameters of  the instance
-    nA = inst.nA
-    nB = inst.nB
-    A = 1:nA
-    B = 1:nB
-    Ylevels = 1:4
-    Zlevels = 1:3
-    indY = inst.indY
-    indZ = inst.indZ
-    Xobserv = inst.Xobserv
-    Yobserv = inst.Yobserv
-    Zobserv = inst.Zobserv
+    # convertir les continues en Float64
+    for name in ["X1", "X4"]
+        dba[!, name] = Float64.(dba[!, name])
+        dbb[!, name] = Float64.(dbb[!, name])
+    end
+    A = dba[:, cols]
+    B = dbb[:, cols]
+    C = vcat(A, B)
+    dist = Gower([:X1, :X4], [:X2, :X3, :X5], C)
+    # version pour DataFrameRow
+    D = pairwise_gower(dist, A, B)
+
+    # --- Exemple : DataFrames A et B déjà définis ---
+    df_all = vcat(A, B)
+
+    # --- Colonnes continues et catégorielles ---
+    continuous_cols = [:X1, :X4]
+    categorical_cols = [:X2, :X3, :X5]
+
+    # 1. Standardisation des variables continues
+    df_cont_std = DataFrame()
+    for c in continuous_cols
+        x = skipmissing(df_all[!, c])
+        μ = mean(x)
+        σ = std(x)
+        df_cont_std[!, c] = (df_all[!, c] .- μ) ./ σ
+    end
+
+    # 2. One-hot encoding des variables catégorielles
+    df_dummy = DataFrame()
+    for c in categorical_cols
+        df_cat = categorical(df_all[!, c])
+        for lvl in levels(df_cat)
+            col_name = Symbol(string(c) * "_" * string(lvl))
+            df_dummy[!, col_name] = df_cat .== lvl
+        end
+    end
+
+    # 3. Pondération FAMD
+    df_dummy_famd = DataFrame()
+    for c in names(df_dummy)
+        p = mean(df_dummy[!, c])
+        df_dummy_famd[!, c] = df_dummy[!, c] ./ sqrt(p)
+    end
+
+    # 4. Construction de la matrice finale
+    Xn = hcat(Matrix(df_cont_std), Matrix(df_dummy_famd))
+
+    # 5. ACP (PCA)
+    ncomp = 13
+    model = fit(PCA, Xn'; maxoutdim = ncomp)
+
+    # 6. Coordonnées factorielles
+    coords_all = MultivariateStats.transform(model, Xn')  #
+    # --- coords_all contient les coordonnées FAMD de df_all ---
+    coords_all2 = coords_all'
+
+    # %%
+    nA = nrow(A)
+    a = coords_all2[1:nA, :]'
+    b = coords_all2[(nA + 1):end, :]'
+    distance = Euclidean()
+    D = pairwise(distance, a, b, dims = 2)
+
+    # %%
+
+    lambda = 0.1
+    alpha = 0.4
+    percent_closest = 1
+    distance = Euclidean()
+
+    # Compute the indexes of individuals with same covariates
+    indXA = Vector{Int64}[]
+    indXB = Vector{Int64}[]
+
+    Xlevels = unique(eachrow(X))
+    # aggregate both bases
+    a = X[indA, :]'
+    b = X[indB, :]'
+    for x in Xlevels
+        distA = vec(pairwise(distance, x[:, :], a, dims = 2))
+        push!(indXA, findall(distA .< 0.1))
+    end
+    Xlevels = unique(eachrow(X))
+    for x in Xlevels
+        distB = vec(pairwise(distance, x[:, :], b, dims = 2))
+        push!(indXB, findall(distB .< 0.1))
+    end
+
+    norme = Euclidean()
+    aggregate_tol = 0.5
 
     # Create a model for the optimal transport of individuals
     modelA = Model(Clp.Optimizer)
@@ -93,9 +140,6 @@ function ot_joint(
     set_optimizer_attribute(modelB, "LogLevel", 0)
 
     # Compute data for aggregation of the individuals
-    # println("... aggregating individuals")
-    indXA = inst.indXA
-    indXB = inst.indXB
     Xlevels = eachindex(indXA)
 
     # compute the neighbors of the covariates for regularization
@@ -103,9 +147,29 @@ function ot_joint(
     dist_X = pairwise(norme, Xvalues, Xvalues)
     voisins = findall.(eachrow(dist_X .<= 1))
     nvoisins = length(Xvalues)
+    C = zeros(Float64, (length(Ylevels), length(Zlevels)))
 
-    # println("... computing costs")
-    C = average_distance_to_closest(inst, percent_closest)
+    for y in Ylevels, i in indY[y], z in Zlevels
+
+        nbclose = round(Int, percent_closest * length(indZ[z]))
+        if nbclose > 0
+            distance = [D[i, j] for j in indZ[z]]
+            p = partialsortperm(distance, 1:nbclose)
+            C[y, z] += sum(distance[p]) / nbclose / length(indY[y]) / 2.0
+        end
+
+    end
+
+    for z in Zlevels, j in indZ[z], y in Ylevels
+
+        nbclose = round(Int, percent_closest * length(indY[y]))
+        if nbclose > 0
+            distance = [D[i, j] for i in indY[y]]
+            p = partialsortperm(distance, 1:nbclose)
+            C[y, z] += sum(distance[p]) / nbclose / length(indZ[z]) / 2.0
+        end
+
+    end
 
     # Compute the estimators that appear in the model
 
@@ -119,9 +183,6 @@ function ot_joint(
         length(indXB[x][findall(Zobserv[indXB[x] .+ nA] .== z)]) / nB for
             x in Xlevels, z in Zlevels
     ]
-
-
-    # Basic part of the model
 
     # Variables
     # - gammaA[x,y,z]: joint probability of X=x, Y=y and Z=z in base A
@@ -347,7 +408,7 @@ function ot_joint(
     for x in Xlevels, y in Ylevels
         proba_c_mA = sum(gammaA_val[x, y, Zlevels])
         if proba_c_mA > 1.0e-6
-            estimatorZA[x, y, :] = gammaA_val[x, y, :] ./ proba_c_mA
+            estimatorZA[x, y, :] .= gammaA_val[x, y, :] ./ proba_c_mA
         end
     end
 
@@ -356,104 +417,80 @@ function ot_joint(
     for x in Xlevels, z in Zlevels
         proba_c_mB = sum(view(gammaB_val, x, Ylevels, z))
         if proba_c_mB > 1.0e-6
-            estimatorYB[x, :, z] = view(gammaB_val, x, :, z) ./ proba_c_mB
+            estimatorYB[x, :, z] .= gammaB_val[x, :, z] ./ proba_c_mB
         end
     end
 
-    if verbose
-        solution_summary(modelA; verbose = verbose)
-        solution_summary(modelB; verbose = verbose)
+    nbX = length(indXA)
+
+    # Count the number of mistakes in the transport
+    #deduce the individual distributions of probability for each individual from the distributions
+    probaZindivA = zeros(Float64, (nA, length(Zlevels)))
+    probaYindivB = zeros(Float64, (nB, length(Ylevels)))
+    for x in 1:nbX
+        for i in indXA[x]
+            probaZindivA[i, :] .= estimatorZA[x, Yobserv[i], :]
+        end
+        for i in indXB[x]
+            probaYindivB[i, :] .= estimatorYB[x, :, Zobserv[i + nA]]
+        end
     end
 
-    return estimatorZA, estimatorYB
+    # Transport the modality that maximizes frequency
+
+    return probaZindivA, probaYindivB
 
 end
 
+function main()
 
-"""
-$(SIGNATURES)
+    data = read_data()
+    dba = subset(data, :database => ByRow(==(1)))
+    dbb = subset(data, :database => ByRow(==(2)))
+    cols = names(dba, r"^X")
+    XA = transpose(Matrix(dba[:, cols])) |> collect
+    XB = transpose(Matrix(dbb[:, cols])) |> collect
+    X = digitize_int(XA, XB, :X1)
+    X4 = digitize_int(XA, XB, :X4)
+    nA = size(dba, 1)
+    nB = size(dbb, 1)
+    Ylevels = 1:4
+    Zlevels = 1:6
 
-Balance within-base distributions via optimal transport for discrete covariates.
+    probaZindivA, probaYindivB = ot_within(data, X)
 
-Wrapper function for within-base OT on discrete covariate data. Builds Instance structure
-with pre-computed distances and aggregation, then solves linear programs independently for
-each base (A and B) to balance covariate and outcome distributions. Does NOT match across
-bases—focuses on internal distribution alignment within each data source.
+    predZA = [findmax([probaZindivA[i, z] for z in Zlevels])[2] for i in 1:nA]
+    predYB = [findmax([probaYindivB[j, y] for y in Ylevels])[2] for j in 1:nB]
 
-# Arguments
-- `data::DataFrame`: Input data with columns `database` (1 for base A, 2 for base B), 
-  `X*` discrete covariates, `Y` (outcome for base B), and `Z` (outcome for base A)
+    tab1 = FreqTables.freqtable(dba.Y, predZA)
+    tab2 = FreqTables.freqtable(dbb.Z, predYB)
+    @show round.(tab1 ./ sum(tab1) .* 100, digits = 2)
 
-# Keyword Arguments
-- `lambda::Float64`: Regularization weight for covariate smoothness; default: 0.392
-- `alpha::Float64`: Balance weight between covariate and outcome terms; default: 0.714
-- `percent_closest::Float64`: Fraction of closest neighbors for cost robustness; default: 0.2
-- `distance::Distances.Metric`: Distance metric for covariate aggregation; default: Euclidean()
+    predZAm = [findmax([probaZindivA[i, z] for z in Zlevels])[1] for i in 1:nA]
+    predYBm = [findmax([probaYindivB[j, y] for y in Ylevels])[1] for j in 1:nB]
 
-# Returns
-- `Tuple{Vector{Int}, Vector{Int}}`: Predicted outcomes (YB, ZA)
-  - `YB`: Balanced outcome predictions for base B
-  - `ZA`: Balanced outcome predictions for base A
+    df1 = DataFrame(Y = dba.Y, pred = predZA, prob = predZAm)
 
-# Algorithm
-1. Extract database, covariates, and outcomes from DataFrame
-2. Build Instance: pre-compute distances and individual aggregation by covariates
-3. Solve ot_joint LP solver:
-   - Formulate linear program per base (A, B)
-   - Optimize joint distribution γ[x,y,z] for (covariate, outcome pairs)
-   - Minimize: transportation cost + regularization
-4. Extract outcome predictions from solution
-5. Return predicted outcomes
-
-# Key Differences from Between-Bases Methods
-- **Within-base**: Solves independent LP for A and B (no cross-base information)
-- **No integration**: Cannot leverage relationships between bases
-- **Within-base only**: Useful as reference baseline or when bases should stay separate
-- **Faster**: Independent problems smaller than joint optimization
-
-# Details
-- **Discrete specialization**: Aggregates individuals by identical covariate patterns
-- **Instance pre-computation**: Caches distances and aggregation for efficiency
-- **Regularization**: Controls balance between covariate alignment and outcome improvement
-- **LP exactness**: Clp solver guarantees optimal solution (not approximate)
-- **Default parameters**: Calibrated for typical statistical matching scenarios
-
-# See Also
-- [`ot_joint`](@ref): Core LP solver
-- [`Instance`](@ref): Pre-computation structure
-- [`joint_ot_within_base_continuous`](@ref): Continuous covariate version
-- [`JointOTBetweenBases`](@ref): Between-bases integration approach
-
-# Notes
-- Reference implementation: demonstrates within-base balancing capability
-- Limited matching: does not use cross-base information for outcome prediction
-- Aggregation efficiency: works well when covariates have discrete structure
-- Outcome levels: fixed to Y ∈ {1,2,3,4}, Z ∈ {1,2,3}
-"""
-function joint_ot_within_base_discrete(
-        data;
-        lambda = 0.392,
-        alpha = 0.714,
-        percent_closest = 0.2,
-        distance = Euclidean(),
+    # Groupement par combinaison (Y, pred)
+    stats1 = combine(
+        groupby(df1, [:Y, :pred]),
+        :prob => (x -> round(mean(x), digits = 2)) => :mean_prob,
+        :prob => (x -> round(std(x), digits = 2)) => :std_prob
     )
 
-    database = data.database
+    println(stats1)
+    # %%
+    df1 = DataFrame(Y = dbb.Z, pred = predYB, prob = predYBm)
 
-    Xnames = names(data, r"^X")
+    # Groupement par combinaison (Y, pred)
+    stats1 = combine(
+        groupby(df1, [:Y, :pred]),
+        :prob => (x -> round(mean(x), digits = 2)) => :mean_prob,
+        :prob => (x -> round(std(x), digits = 2)) => :std_prob
+    )
 
-    X = Matrix(data[!, Xnames])
-    Y = Vector(data.Y)
-    Z = Vector(data.Z)
-
-    Ylevels = 1:4
-    Zlevels = 1:3
-
-    instance = Instance(database, X, Y, Ylevels, Z, Zlevels, distance)
-
-    estimatorZA, estimatorYB = ot_joint(instance, alpha, lambda, percent_closest)
-    YB, ZA = compute_pred_error!(estimatorYB, estimatorZA, instance, false)
-
-    return YB, ZA
+    return println(stats1)
 
 end
+
+@time main()

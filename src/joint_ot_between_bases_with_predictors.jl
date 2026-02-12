@@ -47,9 +47,9 @@ This block coordinate descent (BCD) algorithm jointly optimizes coupling and pre
 - **Unbalanced OT**: Uses KL divergence for regularization when reg > 0
 
 # See Also
-- `joint_ot_between_bases_category`: OT without neural network predictors
-- `simple_learning`: Supervised baseline without OT coupling
-- `JointOTBetweenBases`: Main method dispatcher
+- [`joint_ot_between_bases_discrete_ordered`](@ref): OT without neural network predictors
+- [`simple_learning`](@ref): Supervised baseline without OT coupling
+- [`JointOTBetweenBases`](@ref): Main method dispatcher
 
 # Notes
 - Computationally expensive: trains two networks at each of ~10 BCD iterations

@@ -13,6 +13,7 @@
 #     name: julia-1.12
 # ---
 
+using CategoricalArrays
 using DataFrames
 using OptimalTransportDataIntegration
 using StatsBase
@@ -48,7 +49,6 @@ XB = transpose(Matrix{Float32}(dbb[:, cols]))
 
 
 # +
-using CategoricalArrays
 cols = names(data, r"^X")
 for name in ["X2", "X3", "X5"]
     lev = union(unique(dba[!, name]), unique(dbb[!, name]))
@@ -64,7 +64,7 @@ dba.X4
 A = dba[:, cols]
 B = dbb[:, cols]
 C = vcat(A, B)
-dist = GowerDF2([:X1, :X4], [:X2, :X3, :X5], C)
+dist = Gower([:X1, :X4], [:X2, :X3, :X5], C)
 
 
 D = pairwise_gower(dist, A, B)
