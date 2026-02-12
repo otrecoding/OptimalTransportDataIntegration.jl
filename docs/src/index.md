@@ -90,9 +90,7 @@ c\big((x,y,z),(x',y',z')\big) = d(x,x') + \alpha_1 \mathcal{L}_Y(y,y') + \alpha_
 
 ### Installation
 
-Pkg comes with a REPL.
-Enter the Pkg REPL by pressing `]` from the Julia REPL.
-To get back to the Julia REPL, press `Ctrl+C` or backspace (when the REPL cursor is at the beginning of the input).
+Launch the Julia REPL and enter the Pkg REPL by pressing `]`. To get back to the Julia REPL, press the backspace.
 
 Upon entering the Pkg REPL, you should see the following prompt:
 
@@ -100,7 +98,7 @@ Upon entering the Pkg REPL, you should see the following prompt:
 (@v1.12) pkg>
 ```
 
-To add the package, use `add`:
+To install the package from GitHub, use `add`:
 
 ```julia-repl
 (@v1.12) pkg> add https://github.com/otrecoding/OptimalTransportDataIntegration.jl.git
@@ -111,7 +109,7 @@ To add the package, use `add`:
     Updating `~/tmp/Project.toml`
 ```
 
-After the package is installed, you need install POT the Python Otimal Transport library
+After the package is installed, you need install POT the Python Optimal Transport library
 
 ```julia-repl
 julia> using Conda
@@ -180,6 +178,19 @@ database ``A`` and ``Z`` from database ``B``. The [`otrecod`](@ref) function can
 to obtain a recoded version of variable ``Y`` for database ``B`` and ``Z`` for
 database ``A``. The [`accuracy`](@ref) function can be used to verify the quality
 of the method. It gives you the error on ``Y``, ``Z`` and both outcomes.
+
+Methods available as `otrecod` second argument are:
+
+- [`JointOTWithinBase`](@ref)
+- [`SimpleLearning`](@ref)
+- [`JointOTBetweenBases`](@ref)
+- [`JointOTBetweenBasesDiscreteOrdered`](@ref)
+- [`JointOTBetweenBasesWithPredictors`](@ref)
+- [`JointOTBetweenBasesJDOT`](@ref)
+- [`JointOTDABetweenBasesCovariables`](@ref)
+- [`JointOTDABetweenBasesOutcomes`](@ref)
+- [`JointOTDABetweenBasesOutcomesWithPredictors`](@ref)
+- [`JointOTBetweenBasesWithoutOutcomes`](@ref)
 
 ## Simulation data generation
 
