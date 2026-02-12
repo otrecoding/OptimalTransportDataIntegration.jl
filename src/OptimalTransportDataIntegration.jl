@@ -14,7 +14,6 @@ include("generate_mixed_data.jl")
 include("one_hot_encoder.jl")
 include("gower_distance.jl")
 include("instance.jl")
-include("solution.jl")
 include("average_distance_closest.jl")
 include("pred_error.jl")
 include("joint_ot_within_base_discrete.jl")
@@ -89,8 +88,6 @@ export confusion_matrix
 
 """
 $(SIGNATURES)
-
-made by claude.ai
 """
 function confusion_matrix(y_true, y_pred; classes = 1:4)
 

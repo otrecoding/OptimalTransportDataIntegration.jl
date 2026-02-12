@@ -366,12 +366,7 @@ function ot_joint(
         solution_summary(modelB; verbose = verbose)
     end
 
-    return Solution(
-        [sum(gammaA_val[:, y, z]) for y in Ylevels, z in Zlevels],
-        [sum(gammaB_val[:, y, z]) for y in Ylevels, z in Zlevels],
-        estimatorZA,
-        estimatorYB,
-    )
+    return estimatorZA, estimatorYB
 
 end
 
@@ -457,8 +452,8 @@ function joint_ot_within_base_discrete(
 
     instance = Instance(database, X, Y, Ylevels, Z, Zlevels, distance)
 
-    sol = ot_joint(instance, alpha, lambda, percent_closest)
-    YB, ZA = compute_pred_error!(sol, instance, false)
+    estimatorZA, estimatorYB = ot_joint(instance, alpha, lambda, percent_closest)
+    YB, ZA = compute_pred_error!(estimatorYB, estimatorZA, instance, false)
 
     return YB, ZA
 
