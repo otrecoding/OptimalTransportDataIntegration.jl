@@ -78,7 +78,7 @@ s.t. marginal constraints ensuring statistical consistency
 - Limited matching: does not use cross-base information for outcome prediction
 - Two independent LP solves (base A and base B)
 - Aggregation efficiency: works well when covariates have discrete structure
-- Outcome levels: fixed to Y ∈ {1,2,3,4}, Z ∈ {1,2,3}
+- Outcome levels: fixed by default to Y ∈ {1,2,3,4}, Z ∈ {1,2,3}
 """
 function joint_ot_within_base_discrete(
     data;
@@ -86,25 +86,23 @@ function joint_ot_within_base_discrete(
     alpha = 0.714,
     percent_closest = 0.2,
     distance = Euclidean(),
+    Ylevels = 1:4,
+    Zlevels = 1:3
 )
 
     base = data.database
 
     Xnames = names(data, r"^X")
 
-    X = Matrix(data[!, Xnames])
-    Y = Vector(data.Y)
-    Z = Vector(data.Z)
-
-    Ylevels = 1:4
-    Zlevels = 1:3
+    X = Matrix{Int}(data[!, Xnames])
+    Y = Vector{Int}(data.Y)
+    Z = Vector{Int}(data.Z)
 
     indA = findall(base .== 1)
     indB = findall(base .== 2)
 
-    Xobserv = vcat(X[indA, :], X[indB, :])
-    Yobserv = vcat(Y[indA], Y[indB])
-    Zobserv = vcat(Z[indA], Z[indB])
+    Yobserv = view(Y, vcat(indA, indB))
+    Zobserv = view(Z, vcat(indA, indB))
 
     nA = length(indA)
     nB = length(indB)
@@ -123,18 +121,15 @@ function joint_ot_within_base_discrete(
     # Compute the indexes of individuals with same covariates
     indXA = Vector{Int64}[]
     indXB = Vector{Int64}[]
-    Xlevels = sort(unique(eachrow(X)))
 
+    Xvalues = unique(eachrow(X))
     # aggregate both bases
-    for x in Xlevels
+    for x in Xvalues
         distA = vec(pairwise(distance, x[:, :], a, dims = 2))
         distB = vec(pairwise(distance, x[:, :], b, dims = 2))
-        push!(indXA, findall(distA .< 0.1))
-        push!(indXB, findall(distB .< 0.1))
+        push!(indXA, findall(distA .≈ 0.0))
+        push!(indXB, findall(distB .≈ 0.0))
     end
-
-    A = 1:nA
-    B = 1:nB
 
     # Create a model for the optimal transport of individuals
     modelA = Model(Clp.Optimizer)
@@ -147,7 +142,6 @@ function joint_ot_within_base_discrete(
     Xlevels = eachindex(indXA)
 
     # compute the neighbors of the covariates for regularization
-    Xvalues = unique(eachrow(Xobserv))
     dist_X = pairwise(distance, Xvalues, Xvalues)
     voisins = findall.(eachrow(dist_X .<= 1))
     nvoisins = length(Xvalues)
@@ -429,28 +423,22 @@ function joint_ot_within_base_discrete(
         end
     end
 
-    A = 1:nA
-    B = 1:nB
-    nbX = length(indXA)
-
     # Count the number of mistakes in the transport
     # deduce the individual distributions of probability 
     # for each individual from the distributions
 
     probaZindivA = zeros(Float64, (nA, length(Zlevels)))
     probaYindivB = zeros(Float64, (nB, length(Ylevels)))
-    for x = 1:nbX
-        for i in indXA[x]
-            probaZindivA[i, :] .= estimatorZA[x, Yobserv[i], :]
-        end
-        for i in indXB[x]
-            probaYindivB[i, :] .= estimatorYB[x, :, Zobserv[i+nA]]
-        end
+    for x = eachindex(indXA), i in indXA[x]
+        probaZindivA[i, :] .= estimatorZA[x, Yobserv[i], :]
+    end
+    for x = eachindex(indXB), i in indXB[x]
+        probaYindivB[i, :] .= estimatorYB[x, :, Zobserv[i+nA]]
     end
 
     # Transport the modality that maximizes frequency
-    predZA = [findmax([probaZindivA[i, z] for z in Zlevels])[2] for i in A]
-    predYB = [findmax([probaYindivB[j, y] for y in Ylevels])[2] for j in B]
+    predZA = [findmax([probaZindivA[i, z] for z in Zlevels])[2] for i in 1:nA]
+    predYB = [findmax([probaYindivB[j, y] for y in Ylevels])[2] for j in 1:nB]
 
     return predYB, predZA
 

@@ -22,7 +22,7 @@ using OptimalTransportDataIntegration
 @show mB = [1, 0, 0] 
 
 params = DataParameters(mB = mB)
-rng = ContinuousDataGenerator(params)
+rng = DiscreteDataGenerator(params)
 data = generate(rng)
 
 result = otrecod(data, JointOTWithinBase())
