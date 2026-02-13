@@ -71,19 +71,14 @@ end
 train!(model1, XA, YA)
 train!(model2, XB, ZB)
 
-# -
+# Compare with package methods
 
 # Looking at the accuracy
 
 @show mean(Flux.onecold(model1(XB)) .== dbb.Y)
 @show mean(Flux.onecold(model2(XA)) .== dba.Z)
 
-method = SimpleLearning()
 
-@show accuracy(otrecod(data, method))
+@show accuracy(otrecod(data, SimpleLearning()))
 
-rng = ContinuousDataGenerator(params)
-data = generate(rng)
-
-@show accuracy(otrecod(data, method))
 @show accuracy(otrecod(data, JointOTBetweenBases()))

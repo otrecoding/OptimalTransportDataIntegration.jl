@@ -14,6 +14,11 @@
 #     name: julia-1.11
 # ---
 
+
+# Code to generate a collection of sample datasets
+# Parameters are stored in the json file
+# Data are stored in the csv file
+
 import CSV
 import JSON
 using DataFrames
@@ -33,10 +38,10 @@ function write_datasets(nsimulations, all_params, outdir)
 
             df = generate(rng)
 
-            json_file = @sprintf "tab_otjoint_%02i_%02i.json" j i
+            json_file = @sprintf "dataset_%02i_%02i.json" j i
             save_params(joinpath(outdir, json_file), params)
 
-            csv_file = @sprintf "tab_otjoint_%02i_%02i.csv" j i
+            csv_file = @sprintf "dataset_%02i_%02i.csv" j i
 
             CSV.write(joinpath(outdir, csv_file), df)
 

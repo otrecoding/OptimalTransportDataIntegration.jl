@@ -19,23 +19,20 @@ using CSV
 using DataFrames
 using OptimalTransportDataIntegration
 
-for mB in [[1, 0, 0]] #, [5, 5, 5], [10, 10, 10]]
+@show mB = [1, 0, 0] 
 
-    println("mB = $mB .......")
-    params = DataParameters(mB = mB)
-    rng = ContinuousDataGenerator(params)
-    data = generate(rng)
+params = DataParameters(mB = mB)
+rng = ContinuousDataGenerator(params)
+data = generate(rng)
 
-    result = otrecod(data, JointOTWithinBase())
-    println(" within-r : $(accuracy(result)) ")
+result = otrecod(data, JointOTWithinBase())
+println(" within-r : $(accuracy(result)) ")
 
-    result = otrecod(data, JointOTBetweenBases(reg = 0.1, reg_m1 = 0.0, reg_m2 = 0.0))
-    println(" between : $(accuracy(result))")
+result = otrecod(data, JointOTBetweenBasesWithPredictors(reg = 0.1, reg_m1 = 0.0, reg_m2 = 0.0))
+println(" between : $(accuracy(result))")
 
-    result = otrecod(data, JointOTBetweenBases())
-    println(" between-r : $(accuracy(result))")
+result = otrecod(data, JointOTBetweenBasesWithPredictors())
+println(" between-r : $(accuracy(result))")
 
-    result = otrecod(data, SimpleLearning())
-    println(" sl : $(accuracy(result))")
-
-end
+result = otrecod(data, SimpleLearning())
+println(" sl : $(accuracy(result))")

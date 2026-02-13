@@ -5,7 +5,6 @@ using StatsBase
 
 include(joinpath(@__DIR__, "read_data.jl"))
 include(joinpath(@__DIR__, "discretize.jl"))
-include(joinpath(@__DIR__, "gower_distance.jl"))
 
 function main_between()
 
