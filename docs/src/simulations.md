@@ -10,6 +10,8 @@
 To evaluate the performance of the methods, we compute the  accuracy of prediction of $Z$ in $A$ and $Y$ in $B$.
 The impact of the elements characterizing the simulations will be studied through the following scenarios.
 
+In both continuous and discrete data generators, scenario 1 uses the same outcome-category bin thresholds for databases A and B, while scenario 2 computes the thresholds separately from each database's outcomes. Thus, scenario 1 keeps the outcome categorization aligned across databases; scenario 2 allows it to differ with their outcome distributions.
+
 ## Effect of the sample size.
 
 Keeping the covariate distributions and outcome effect sizes fixed, we investigate the impact of the sample size, with $n^A=n^B=n\in\left\{100,1000,5000\right\}$.

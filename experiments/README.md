@@ -2,6 +2,8 @@
 
 ## Scenarios 1 and 2
 
+Scenario 1 uses the same outcome-category bin thresholds for both databases, while scenario 2 computes thresholds separately from each database's outcomes.
+
 - **Sample ratio** (`sample_ratio_effect.jl`): `nA=1000`, with `nB=nA/r` and `r=1,2,5,10`.
 - **Sample size** (`sample_size_effect.jl`): `nA=nB=100,1000,5000`.
 - **Covariate link** (`covariates_link_effect.jl`): `R2=0.2,0.4,0.6,0.8,1.0`.
@@ -25,6 +27,8 @@
 ## Discrete data
 
 ### Scenarios 1 and 2
+
+Scenario 1 uses the same outcome-category bin thresholds for both databases, while scenario 2 computes thresholds separately from each database's outcomes.
 
 - **Sample ratio** (`sample_ratio_effect.jl`): `nA=1000`, with `nB=nA/r` and `r=1,2,5,10`.
 - **Sample size** (`sample_size_effect.jl`): `nA=nB=100,1000,5000`.
