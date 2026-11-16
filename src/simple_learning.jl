@@ -6,26 +6,38 @@ import Flux: Chain, Dense
 
 Convert categorical covariates to one-hot encoded matrix format.
 
-For each column in input matrix, creates binary vectors for each level (1:4),
+For each column in input matrix, creates binary vectors for each level (1:nlevels),
 where `col .== level` produces a binary vector. Stacks all one-hot vectors
 into rows of output matrix for use in neural network input.
 
 # Arguments
 - `x::AbstractMatrix`: Categorical data matrix (n_samples, n_covariates)
+- `nlevels`: Number of levels to encode for each covariate; defaults to the
+  maximum observed value in each column.
 
 # Returns
-- `Matrix{Float32}`: One-hot encoded matrix (n_samples * n_levels, n_covariates)
-  where n_levels = 4 (hardcoded for discrete covariates)
+- `Matrix{Float32}`: One-hot encoded matrix (total_levels, n_samples)
 """
-function onehot(x::AbstractMatrix)
+function onehot(x::AbstractMatrix; nlevels = maximum.(eachcol(x)))
+    length(nlevels) == size(x, 2) ||
+        throw(ArgumentError("nlevels must contain one entry per covariate"))
+
     res = Vector{Float32}[]
-    for col in eachcol(x)
-        levels = 1:4 #filter(x -> x != 0, sort(unique(col)))
-        for level in levels
+    for (col, count) in zip(eachcol(x), nlevels)
+        all(level -> 1 <= level <= count, col) ||
+            throw(ArgumentError("covariate values must be between 1 and nlevels"))
+        for level in 1:count
             push!(res, col .== level)
         end
     end
     return stack(res, dims = 1)
+end
+
+function _simple_learning_model(input_size, hidden_layer_size, output_size)
+    return Chain(
+        Dense(input_size, hidden_layer_size, Flux.relu),
+        Dense(hidden_layer_size, output_size),
+    )
 end
 
 """
@@ -57,9 +69,8 @@ point to validate optimal transport improvements.
 
 # Model Architecture
 Two identical networks:
-```
-input (one-hot encoded X) → Dense(hidden_layer_size) → Dense(n_levels) → softmax → argmax
-```
+The hidden layer uses ReLU activation; the output layer produces logits for
+logit cross-entropy training.
 
 # Algorithm
 1. Split data by database indicator (base A, base B)
@@ -91,8 +102,9 @@ function simple_learning(
     dbb = subset(data, :database => ByRow(==(2)))
 
     colnames = names(data, r"^X")
-    XA = onehot(Matrix(dba[!, colnames]))
-    XB = onehot(Matrix(dbb[!, colnames]))
+    nlevels = Int.(maximum.(eachcol(Matrix(data[!, colnames]))))
+    XA = onehot(Matrix(dba[!, colnames]); nlevels)
+    XB = onehot(Matrix(dbb[!, colnames]); nlevels)
 
     YA = Flux.onehotbatch(dba.Y, Ylevels)
     ZB = Flux.onehotbatch(dbb.Z, Zlevels)
@@ -102,8 +114,8 @@ function simple_learning(
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
 
-    modelA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
-    modelB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
+    modelA = _simple_learning_model(dimXA, hidden_layer_size, dimYA)
+    modelB = _simple_learning_model(dimXB, hidden_layer_size, dimZB)
 
     function train!(model, x, y)
 
