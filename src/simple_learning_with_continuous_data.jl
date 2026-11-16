@@ -1,5 +1,3 @@
-import Flux: Chain, Dense
-
 """
 $(SIGNATURES)
 
@@ -27,9 +25,8 @@ comparison point to validate optimal transport improvements for continuous data.
 
 # Model Architecture
 Two identical networks with continuous input:
-```
-input (continuous X) → Dense(input_dim → hidden_layer_size) → Dense(hidden_layer_size → n_levels) → softmax → argmax
-```
+The hidden layer uses ReLU activation; the output layer produces logits for
+logit cross-entropy training.
 
 # Algorithm
 1. Split data by database indicator (base A, base B)
@@ -82,8 +79,8 @@ function learning_with_continuous_data(
     nA = size(XA, 2)
     nB = size(XB, 2)
 
-    modelA = Chain(Dense(dimXA, hidden_layer_size), Dense(hidden_layer_size, dimYA))
-    modelB = Chain(Dense(dimXB, hidden_layer_size), Dense(hidden_layer_size, dimZB))
+    modelA = _simple_learning_model(dimXA, hidden_layer_size, dimYA)
+    modelB = _simple_learning_model(dimXB, hidden_layer_size, dimZB)
 
     function train!(model, x, y)
 
