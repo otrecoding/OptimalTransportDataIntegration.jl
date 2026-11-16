@@ -1,4 +1,3 @@
-Methods
 # Continuous data
 
 ## Scenarios 1 and 2
