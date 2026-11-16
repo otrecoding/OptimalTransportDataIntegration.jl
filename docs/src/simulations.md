@@ -2,40 +2,50 @@
 
 
 - `JDOT-wi`  Transport of the joint distribution of explanatory variables and outcomes within a data source (``\widehat{\mathcal{P}}_{1,n}`` and ``\widehat{\mathcal{P}}'_{1,n}``). The parameter of  relaxation is chosen ``\alpha=0``, and regularization ``\lambda=0`` 
-- `JDOT-wi-r`  Regularized transport of the joint distribution of explanatory variables and outcomes within a data source ($\widehat{\mathcal{P}}_{1,n}$ and $\widehat{\mathcal{P}}_{2,n}$). We added a relaxation on the constraints and a regularization term. The parameter of  relaxation is chosen $\alpha=0.4$, and regularization $\lambda=0.7$ 
-- `JDOT-be` Balanced transport of explanatory variables and estimated outcomes between data sources ($\widehat{\mathcal{P}}_{2,n}$).  We used 10 iterations for the BCD algorithm. The parameters are chosen $\alpha_1=1/\max(\mathcal{L}_1)$, and $\alpha_2=1/\max(\mathcal{L}_2)$. 
+- `JDOT-wi-r` Regularized transport of the joint distribution of explanatory variables and outcomes within a data source ($\widehat{\mathcal{P}}_{1,n}$ and $\widehat{\mathcal{P}}_{2,n}$). The relaxation and regularization parameters are selected by `best_parameters(:within, variable, scenario)`: for continuous data, $(\alpha,\lambda)=(1,1)$ in scenario 1 and $(2,1)$ in scenario 2; for discrete data, $(0.4,1)$ and $(0.1,0.1)$, respectively.
+- `JDOT-be` Balanced transport of explanatory variables and estimated outcomes between data sources ($\widehat{\mathcal{P}}_{2,n}$). The implementation uses up to 10 iterations for the BCD algorithm. Its loss weights are $\alpha_1=1/|Ylevels|$ and $\alpha_2=1/|Zlevels|$ (four and three outcome levels, respectively).
 
-- `JDOT-be-r-un` Regularized unbalanced transport of explanatory variables and estimated outcomes between data sources ($\widehat{\mathcal{P}}_{2,n}$). For classifiers $f$ and $g$, we used nearest neighbor method with one neighbor.  We used 10 iterations for the BCD algorithm. We added an entropic regularization.  The parameter of regularization is chosen  $\lambda = 0.01$ and the parameter of relaxation is $m = 0.01$.
+- `JDOT-be-r-un` Regularized unbalanced transport of explanatory variables and estimated outcomes between data sources ($\widehat{\mathcal{P}}_{2,n}$). Predictors $f$ and $g$ are neural networks, not nearest-neighbor classifiers, and the BCD algorithm runs for up to 10 iterations. The entropic regularization and marginal-relaxation parameters are selected by `best_parameters(:between, variable, scenario)` and applied as `reg_m1=reg_m2=reg_m`: for continuous data, $(reg,reg_m)=(0.001,0.001)$ in scenario 1 and $(0.001,0.5)$ in scenario 2; for discrete data, $(0.01,0.01)$ and $(0.01,0.75)$, respectively.
 
 To evaluate the performance of the methods, we compute the  accuracy of prediction of $Z$ in $A$ and $Y$ in $B$.
 The impact of the elements characterizing the simulations will be studied through the following scenarios.
 
 ## Effect of the sample size.
 
-Keeping $p$, $m^A$, $m^B$ and $a$, we investigate the impact of the $n$ choosing $n\in\left\{100,1000,10000\right\}$.
+Keeping the covariate distributions and outcome effect sizes fixed, we investigate the impact of the sample size, with $n^A=n^B=n\in\left\{100,1000,5000\right\}$.
 
 ## Effect of the ratio of data sources sizes.
 
-Database `A` and `B` have different sample size $n^A$ and $n^B$ respectively.  Keeping $m^A$, $m^B$ and $a$ and $n_A=1000$ we investigate the impact of the $n^A/n^B$ choosing $n^A/n^B\in\left\{1,2,10\right\}$.
+Database `A` and `B` have sample sizes $n^A$ and $n^B$, respectively. Keeping the covariate distributions and outcome effect sizes fixed, with $n^A=1000$, we investigate the impact of the ratio $n^A/n^B\in\left\{1,2,5,10\right\}$.
 
 ## Effect of the link between the covariates and Y and Z.
 
-Keeping $n$, $m^A$, $m^B$ and $a$, we investigate the impact of the $p$ choosing $p\in\left\{0.2,0.4,0.6,0.8\right\}$.
+Keeping the sample sizes, covariate distributions, and outcome effect sizes fixed, we investigate the impact of the coefficient of determination $r^2\in\left\{0.2,0.4,0.6,0.8,1.0\right\}$.
 
 ## Covariate shift assumption
 
-Keeping $p$ and $a$, we investigate the impact of differences in the distributions of $X^A$ and $X^B$ by considering the following four scenarios: 
+For continuous covariates, keeping $r^2$ and the outcome effect sizes fixed, we investigate differences in the distributions of $X^A$ and $X^B$ with the following four mean settings:
 
   1. ``m^A=(0,0,0)``, ``m^B=(0,0,0)``, 
   2. ``m^A=(0,0,0)``, ``m^B=(1,0,0)``,
   3. ``m^A=(0,0,0)``, ``m^B=(1,1,0)``,
-  4. ``m^A=(0,0,0)``, ``m^B=(1,2,0)``.
+  4. ``m^A=(0,0,0)``, ``m^B=(1,1,1)``.
+
+For discrete covariates, $p^A$ is fixed at $((0.5,0.5),(1/3,1/3,1/3),(0.25,0.25,0.25,0.25))$. The four $p^B$ settings are:
+
+  1. $p^B=p^A$.
+  2. $p^B_1=(0.8,0.2)$, $p^B_2=p^A_2$, and $p^B_3=p^A_3$.
+  3. $p^B_1=(0.8,0.2)$, $p^B_2=(0.6,0.2,0.2)$, and $p^B_3=p^A_3$.
+  4. $p^B_1=(0.8,0.2)$, $p^B_2=(0.6,0.2,0.2)$, and $p^B_3=(0.6,0.2,0.1,0.1)$.
 
 ## Changes in Conditional distribution $Y|X$ and $Z|X$.
 
 Finally, we wish to evaluate the importance of satisfying the
 assumption that the distributions of $Y$ and $Z$ given $X$ are the
-same in the two databases. For this, we replace the quartile $t^Z$
-and tertile $t^Y$ by $t^Z+ \epsilon$ and $t^Y+ \epsilon$ in database
-B. Keeping $p$, $m^A$ and $m^B=(0,0,0)$, $a^A= (1,1,1,1,1,1)$, we
-consider the following four scenarios: ``\epsilon = (0, 0.1, 0.5, 1)``.
+same in the two databases. The generator shifts the quartile thresholds
+for $Y$ and the tertile thresholds for $Z$ in database B by adding
+$\epsilon$. With the other parameters at their `DataParameters()`
+defaults ($m^A=(0,0,0)$, $m^B=(1,1,0)$, and $a^A=a^B=(1,1,1)$), we
+consider $\epsilon\in\{0,1,2,3,5\}$ in scenario 1. The discrete
+experiment is run by default; the continuous invocation is commented
+out in `conditional_distribution.jl`.
