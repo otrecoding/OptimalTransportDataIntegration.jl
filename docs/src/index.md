@@ -179,18 +179,19 @@ to obtain a recoded version of variable ``Y`` for database ``B`` and ``Z`` for
 database ``A``. The [`accuracy`](@ref) function can be used to verify the quality
 of the method. It gives you the error on ``Y``, ``Z`` and both outcomes.
 
-Methods available as `otrecod` second argument are:
+Methods available as `otrecod` second argument are listed below with their paper names from
+[*Optimal transport for statistical matching*](https://hal.science/hal-05517603):
 
-- [`JointOTWithinBase`](@ref)
-- [`SimpleLearning`](@ref)
-- [`JointOTBetweenBases`](@ref)
-- [`JointOTBetweenBasesDiscreteOrdered`](@ref)
-- [`JointOTBetweenBasesWithPredictors`](@ref)
-- [`JointOTBetweenBasesJDOT`](@ref)
-- [`JointOTDABetweenBasesCovariables`](@ref)
-- [`JointOTDABetweenBasesOutcomes`](@ref)
-- [`JointOTDABetweenBasesOutcomesWithPredictors`](@ref)
-- [`JointOTBetweenBasesWithoutOutcomes`](@ref)
+- [`JointOTWithinBase`](@ref): Regularized OT matching of covariate-outcome distributions within each dataset. **Paper:** JDOT-wi-r.
+- [`SimpleLearning`](@ref): Two supervised neural networks predict each missing outcome from the observed covariates. **Paper:** Simple learning.
+- [`JointOTBetweenBases`](@ref): Regularized unbalanced OT matching of covariate-outcome distributions between datasets. **Paper:** JDOT-be-r-un.
+- [`JointOTBetweenBasesDiscreteOrdered`](@ref): Categorical-outcome variant of between-bases OT, using one-hot outcomes and prediction-loss refinement. **Paper:** no separate name; an implementation variant of JDOT-be-r-un.
+- [`JointOTBetweenBasesWithPredictors`](@ref): Alternates between transport and neural-network prediction using covariates and observed outcomes. **Paper:** JDOT-be-xyz.
+- [`JointOTBetweenBasesJDOT`](@ref): Jointly learns outcome predictors and two outcome-specific transport plans between datasets. **Paper:** JDOT-base.
+- [`JointOTDABetweenBasesCovariables`](@ref): Matches covariate distributions with OT, then trains predictors on transported covariates. **Paper:** OTDA baryFit.
+- [`JointOTDABetweenBasesOutcomes`](@ref): Transports outcome class proportions with a covariate-based OT plan. **Paper:** OTDA labelProp.
+- [`JointOTDABetweenBasesOutcomesWithPredictors`](@ref): Transports outcome labels with OT, then fits neural-network predictors. **Paper:** OTDA labelFit.
+- [`JointOTBetweenBasesWithoutOutcomes`](@ref): Matches covariates and learns outcome predictors from covariates alone. **Paper:** JDOT-be with ``Y=f(X)`` and ``Z=g(X)``.
 
 ## Simulation data generation
 
