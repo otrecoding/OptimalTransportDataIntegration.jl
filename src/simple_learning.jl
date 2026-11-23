@@ -35,7 +35,7 @@ end
 
 function _simple_learning_model(input_size, hidden_layer_size, output_size)
     return Chain(
-        Dense(input_size, hidden_layer_size, Flux.relu),
+        Dense(input_size, hidden_layer_size),
         Dense(hidden_layer_size, output_size),
     )
 end
@@ -69,7 +69,7 @@ point to validate optimal transport improvements.
 
 # Model Architecture
 Two identical networks:
-The hidden layer uses ReLU activation; the output layer produces logits for
+Both dense layers use linear activation; the output layer produces logits for
 logit cross-entropy training.
 
 # Algorithm
