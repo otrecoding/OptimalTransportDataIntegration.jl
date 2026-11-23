@@ -25,6 +25,7 @@ outcome predictions.
 - `Ylevels::AbstractRange`: Categorical levels for outcome Y; default: 1:4
 - `Zlevels::AbstractRange`: Categorical levels for outcome Z; default: 1:3
 - `iterations::Int`: Number of algorithm iterations for cost matrix refinement; default: 1
+- `alpha1`, `alpha2`: Optional nonnegative Y and Z loss weights.
 
 # Returns
 - `Tuple{Vector{Int32}, Vector{Int32}}`: Predicted outcomes (YB_pred, ZA_pred)
@@ -56,7 +57,9 @@ function joint_ot_between_bases_discrete_ordered(
         reg_m2;
         Ylevels = 1:4,
         Zlevels = 1:3,
-        iterations = 1
+        iterations = 1,
+        alpha1 = nothing,
+        alpha2 = nothing,
     )
 
     T = Int32
@@ -198,8 +201,16 @@ function joint_ot_between_bases_discrete_ordered(
     Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
     Zloss = loss_crossentropy(zB_hot, Zlevels_hot)
 
-    alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
-    alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
+    if alpha1 === nothing
+        alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
+    end
+    if alpha2 === nothing
+        alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
+    end
+    for weight in (alpha1, alpha2)
+        isfinite(weight) && weight >= 0 ||
+            throw(ArgumentError("cross-entropy weights must be finite and nonnegative"))
+    end
 
     ## Optimal Transport
     C0 = Float32.(pairwise(SqEuclidean(), XA_hot, XB_hot, dims = 1))

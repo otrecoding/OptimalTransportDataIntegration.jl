@@ -214,7 +214,24 @@ function joint_ot_within_base_continuous(
         length(indXB[x][findall(Zobserv[indXB[x] .+ nA] .== z)]) / nB for
             x in Xlevels, z in Zlevels
     ]
-
+    estim_ZB = length.(indZ) ./ nB
+    estim_YA = length.(indY) ./ nA
+    estim_XA_ZA = zeros(length(Xlevels), length(Zlevels))
+    for x in Xlevels, z in Zlevels
+        if iszero(estim_XB[x])
+            estim_XA_ZA[x, z] = estim_XA[x] * estim_ZB[z]
+        else
+            estim_XA_ZA[x, z] = estim_XB_ZB[x, z] * estim_XA[x] / estim_XB[x]
+        end
+    end
+    estim_XB_YB = zeros(length(Xlevels), length(Ylevels))
+    for x in Xlevels, y in Ylevels
+        if iszero(estim_XA[x])
+            estim_XB_YB[x, y] = estim_XB[x] * estim_YA[y]
+        else
+            estim_XB_YB[x, y] = estim_XA_YA[x, y] * estim_XB[x] / estim_XA[x]
+        end
+    end
     # Variables
     # - gammaA[x,y,z]: joint probability of X=x, Y=y and Z=z in base A
     @variable(
@@ -274,15 +291,13 @@ function joint_ot_within_base_continuous(
     @constraint(
         modelA,
         ctZandXinA[x in Xlevels, z in Zlevels],
-        estim_XB[x] * sum(gammaA[x, y, z] for y in Ylevels) ==
-            estim_XB_ZB[x, z] * estim_XA[x] + estim_XB[x] * errorA_XZ[x, z]
+        sum(gammaA[x, y, z] for y in Ylevels) == estim_XA_ZA[x, z] + errorA_XZ[x, z]
     )
 
     @constraint(
         modelB,
         ctYandXinB[x in Xlevels, y in Ylevels],
-        estim_XA[x] * sum(gammaB[x, y, z] for z in Zlevels) ==
-            estim_XA_YA[x, y] * estim_XB[x] + estim_XA[x] * errorB_XY[x, y]
+        sum(gammaB[x, y, z] for z in Zlevels) == estim_XB_YB[x, y] + errorB_XY[x, y]
     )
 
     # - recover the norm 1 of the error
@@ -426,6 +441,12 @@ function joint_ot_within_base_continuous(
     # Solve the problem
     optimize!(modelA)
     optimize!(modelB)
+    for (name, model) in (("A", modelA), ("B", modelB))
+        is_solved_and_feasible(model) || error(
+            "Within-base model $name failed: $(termination_status(model)). " *
+                "Check the input marginals and relaxation parameters."
+        )
+    end
 
     # Extract the values of the solution
     gammaA_val = [value(gammaA[x, y, z]) for x in Xlevels, y in Ylevels, z in Zlevels]
@@ -434,21 +455,19 @@ function joint_ot_within_base_continuous(
     # compute the resulting estimators for the distributions of Z
     # conditional to X and Y in base A and of Y conditional to X and Z in base B
 
-    estimatorZA = ones(length(Xlevels), length(Ylevels), length(Zlevels)) ./ length(Zlevels)
-
+    estimatorZA = zeros(length(Xlevels), length(Ylevels), length(Zlevels))
     for x in Xlevels, y in Ylevels
-        proba_c_mA = sum(gammaA_val[x, y, Zlevels])
-        if proba_c_mA > 1.0e-6
-            estimatorZA[x, y, :] = gammaA_val[x, y, :] ./ proba_c_mA
+        if !iszero(estim_XA_YA[x, y])
+            estimatorZA[x, y, :] .= gammaA_val[x, y, :] ./ estim_XA_YA[x, y]
+        else
+            estimatorZA[x, y, :] .= estim_ZB
         end
     end
 
-    estimatorYB = ones(length(Xlevels), length(Ylevels), length(Zlevels)) ./ length(Ylevels)
-
+    estimatorYB = zeros(length(Xlevels), length(Ylevels), length(Zlevels))
     for x in Xlevels, z in Zlevels
-        proba_c_mB = sum(view(gammaB_val, x, Ylevels, z))
-        if proba_c_mB > 1.0e-6
-            estimatorYB[x, :, z] = view(gammaB_val, x, :, z) ./ proba_c_mB
+        if !iszero(estim_XB_ZB[x, z])
+            estimatorYB[x, :, z] .= gammaB_val[x, :, z] ./ estim_XB_ZB[x, z]
         end
     end
 

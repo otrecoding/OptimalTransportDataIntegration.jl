@@ -50,3 +50,8 @@ Scenario 1 uses the same outcome-category bin thresholds for both databases, whi
 ### Additional experiments
 
 - `conditional_distribution.jl` varies `epsilon=0,1,2,3,5` in scenario 1. The discrete experiment is run by default; the continuous invocation is commented out.
+- `tune_alpha_weights.jl` selects `alpha1` and `alpha2` separately for scenarios 1 and 2, using mean overall prediction accuracy across simulated **discrete** validation datasets. It evaluates all pairs in `[0.001, 0.01, 0.1, 1, 10]`, using the same datasets and predictor-training random seeds for each pair. The method is `JointOTBetweenBasesWithPredictors(reg = 0.0)`, with 10 iterations and its default network parameters, including 1000 training epochs. Ties select the first pair in grid order. The full search is computationally expensive.
+
+  Run `julia --project experiments/tune_alpha_weights.jl [nsimulations] [validation_seed] [sample_size]`; defaults are 100, 20261123, and 1000 per base. All candidate scores and the chosen pair are printed for each scenario. The validation seeds are `validation_seed` and `validation_seed + 1`; generator construction and dataset generation both use those seeds.
+
+  These scores are **not final test results**. For final evaluation, construct new generators and generate new datasets with separate seeds that differ from both validation seeds; never reuse validation datasets. Retain the selected pair for its scenario and the same method configuration. The script does not perform final evaluation.

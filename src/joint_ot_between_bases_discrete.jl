@@ -28,6 +28,7 @@ guide cost matrix refinement.
 - `Zlevels::AbstractRange`: Categorical levels for outcome Z; default: 1:3
 - `iterations::Int`: Number of algorithm iterations; default: 1
 - `distance::Distances.Metric`: Distance metric for covariate space; default: Euclidean()
+- `alpha1`, `alpha2`: Optional nonnegative Y and Z loss weights.
 
 # Returns
 - `Tuple{Vector{Int}, Vector{Int}}`: Predicted outcomes (YB, ZA)
@@ -84,6 +85,8 @@ function joint_ot_between_bases_discrete(
         Zlevels = 1:3,
         iterations = 1,
         distance = Euclidean(),
+        alpha1 = nothing,
+        alpha2 = nothing,
     )
 
     T = Int32
@@ -224,8 +227,16 @@ function joint_ot_between_bases_discrete(
     Yloss = loss_crossentropy(yA_hot, Ylevels_hot)
     Zloss = loss_crossentropy(zB_hot, Zlevels_hot)
 
-    alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
-    alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
+    if alpha1 === nothing
+        alpha1 = 1 / maximum(loss_crossentropy(Ylevels_hot, Ylevels_hot))
+    end
+    if alpha2 === nothing
+        alpha2 = 1 / maximum(loss_crossentropy(Zlevels_hot, Zlevels_hot))
+    end
+    for weight in (alpha1, alpha2)
+        isfinite(weight) && weight >= 0 ||
+            throw(ArgumentError("cross-entropy weights must be finite and nonnegative"))
+    end
 
     ## Optimal Transport
 

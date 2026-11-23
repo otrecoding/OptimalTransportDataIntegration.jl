@@ -188,6 +188,8 @@ from base B to base A. Requires discrete (categorical) covariates.
 - `Ylevels::Vector{Int} = 1:4`: Discrete levels of outcome Y
 - `Zlevels::Vector{Int} = 1:3`: Discrete levels of outcome Z
 - `iterations::Int = 10`: Number of Sinkhorn iterations
+- `alpha1`, `alpha2`: Nonnegative weights for the Y and Z cross-entropy terms.
+  `nothing` uses normalization based on clipped one-hot losses.
 """
 @with_kw struct JointOTBetweenBases <: AbstractMethod
     reg::Float64 = 0.001
@@ -196,6 +198,8 @@ from base B to base A. Requires discrete (categorical) covariates.
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
+    alpha1::Union{Nothing, Float64} = nothing
+    alpha2::Union{Nothing, Float64} = nothing
 end
 
 """
@@ -230,7 +234,9 @@ function otrecod(data::DataFrame, method::JointOTBetweenBases)
         method.reg_m2;
         Ylevels = method.Ylevels,
         Zlevels = method.Zlevels,
-        iterations = method.iterations
+        iterations = method.iterations,
+        alpha1 = method.alpha1,
+        alpha2 = method.alpha2
     )
 
     yb_true = data.Y[data.database .== 2]
@@ -257,6 +263,8 @@ Enables better handling of discrete outcome distributions via explicit category 
 - `Ylevels::Vector{Int} = 1:4`: Categories of outcome Y
 - `Zlevels::Vector{Int} = 1:3`: Categories of outcome Z
 - `iterations::Int = 10`: Sinkhorn iterations
+- `alpha1`, `alpha2`: Nonnegative weights for the Y and Z cross-entropy terms.
+  `nothing` uses normalization based on clipped one-hot losses.
 """
 @with_kw struct JointOTBetweenBasesDiscreteOrdered <: AbstractMethod
     reg::Float64 = 0.001
@@ -265,6 +273,8 @@ Enables better handling of discrete outcome distributions via explicit category 
     Ylevels::Vector{Int} = 1:4
     Zlevels::Vector{Int} = 1:3
     iterations::Int = 10
+    alpha1::Union{Nothing, Float64} = nothing
+    alpha2::Union{Nothing, Float64} = nothing
 end
 
 """
@@ -299,7 +309,9 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesDiscreteOrdered)
         method.reg_m2;
         Ylevels = method.Ylevels,
         Zlevels = method.Zlevels,
-        iterations = method.iterations
+        iterations = method.iterations,
+        alpha1 = method.alpha1,
+        alpha2 = method.alpha2
     )
 
     yb_true = data.Y[data.database .== 2]
@@ -330,6 +342,8 @@ Enables handling of both discrete and continuous covariates.
 - `learning_rate::Float64 = 0.01`: Learning rate for network training
 - `batchsize::Int = 64`: Mini-batch size
 - `epochs::Int = 1000`: Training epochs
+- `alpha1`, `alpha2`: Nonnegative Y and Z cross-entropy weights; defaults are
+  the inverse numbers of outcome categories.
 """
 @with_kw struct JointOTBetweenBasesWithPredictors <: AbstractMethod
 
@@ -343,6 +357,8 @@ Enables handling of both discrete and continuous covariates.
     learning_rate::Float64 = 0.01
     batchsize::Int = 64
     epochs::Int = 1000
+    alpha1::Union{Nothing, Float64} = nothing
+    alpha2::Union{Nothing, Float64} = nothing
 
 end
 
@@ -378,7 +394,9 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesWithPredictors)
         Zlevels = method.Zlevels,
         reg = method.reg,
         reg_m1 = method.reg_m1,
-        reg_m2 = method.reg_m2
+        reg_m2 = method.reg_m2,
+        alpha1 = method.alpha1,
+        alpha2 = method.alpha2
     )
 
 
@@ -740,6 +758,8 @@ variables are not fully observed. Uses domain adaptation to learn implicit outco
 - `learning_rate::Float64 = 0.01`: Training rate
 - `batchsize::Int = 64`: Batch size
 - `epochs::Int = 1000`: Training epochs
+- `alpha1`, `alpha2`: Nonnegative Y and Z cross-entropy weights; defaults are
+  the inverse numbers of outcome categories.
 """
 @with_kw struct JointOTBetweenBasesWithoutOutcomes <: AbstractMethod
 
@@ -753,6 +773,8 @@ variables are not fully observed. Uses domain adaptation to learn implicit outco
     learning_rate::Float64 = 0.01
     batchsize::Int = 64
     epochs::Int = 1000
+    alpha1::Union{Nothing, Float64} = nothing
+    alpha2::Union{Nothing, Float64} = nothing
 
 end
 
@@ -790,7 +812,11 @@ function otrecod(data::DataFrame, method::JointOTBetweenBasesWithoutOutcomes)
         epochs = method.epochs,
         reg = method.reg,
         reg_m1 = method.reg_m1,
-        reg_m2 = method.reg_m2
+        reg_m2 = method.reg_m2,
+        alpha1 = method.alpha1,
+        alpha2 = method.alpha2,
+        Ylevels = method.Ylevels,
+        Zlevels = method.Zlevels
     )
 
     yb_true = data.Y[data.database .== 2]
