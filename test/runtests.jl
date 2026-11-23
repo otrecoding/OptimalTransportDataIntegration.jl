@@ -51,7 +51,7 @@ end
 
 end
 
-@testset "SimpleLearning nonlinear hidden layer" begin
+@testset "SimpleLearning linear hidden layer" begin
 
     model = OptimalTransportDataIntegration._simple_learning_model(1, 1, 1)
     hidden, output = model.layers
@@ -60,7 +60,7 @@ end
     output.weight .= 1
     output.bias .= 0
 
-    @test model(reshape(Float32[-1, 1], 1, :)) == reshape(Float32[0, 1], 1, :)
+    @test model(reshape(Float32[-1, 1], 1, :)) == reshape(Float32[-1, 1], 1, :)
 
 end
 
