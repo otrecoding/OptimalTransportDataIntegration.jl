@@ -88,9 +88,17 @@ function joint_ot_between_bases_without_outcomes(
         reg_m1 = 0.0,
         reg_m2 = 0.0,
         Ylevels = 1:4,
-        Zlevels = 1:3
+        Zlevels = 1:3,
+        alpha1 = nothing,
+        alpha2 = nothing
     )
 
+    alpha1 = something(alpha1, 1 / length(Ylevels))
+    alpha2 = something(alpha2, 1 / length(Zlevels))
+    for weight in (alpha1, alpha2)
+        isfinite(weight) && weight >= 0 ||
+            throw(ArgumentError("cross-entropy weights must be finite and nonnegative"))
+    end
     T = Int32
 
     dba = subset(data, :database => ByRow(==(1)))
@@ -169,7 +177,6 @@ function joint_ot_between_bases_without_outcomes(
     YBpred = Flux.softmax(modelXB(XB))
     ZApred = Flux.softmax(modelXA(XA))
 
-    alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
     G = ones(Float32, nA, nB)
     Gold = copy(G)

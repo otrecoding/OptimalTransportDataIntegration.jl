@@ -23,6 +23,7 @@ This block coordinate descent (BCD) algorithm jointly optimizes coupling and pre
 - `reg_m2::Float64`: Marginal relaxation for base B; default: 0.0
 - `Ylevels::AbstractRange`: Categorical levels for outcome Y; default: 1:4
 - `Zlevels::AbstractRange`: Categorical levels for outcome Z; default: 1:3
+- `alpha1`, `alpha2`: Nonnegative weights for the Y and Z cross-entropy terms
 
 # Returns
 - `Tuple{Vector{Int}, Vector{Int}}`: Predicted outcomes (YB, ZA)
@@ -42,7 +43,7 @@ This block coordinate descent (BCD) algorithm jointly optimizes coupling and pre
 
 # Details
 - **Transport plan**: Couples samples across bases; G[i,j] represents mass transported from A[i] to B[j]
-- **Predictors**: Neural networks learn mapping (X,outcome) → opposite_outcome with loss feedback
+- **Predictors**: Neural networks output softmax probabilities for the opposite outcome
 - **Cost update**: Cross-entropy loss between outcomes and network predictions guides next OT iteration
 - **Unbalanced OT**: Uses KL divergence for regularization when reg > 0
 
@@ -67,9 +68,17 @@ function joint_ot_between_bases_with_predictors(
         reg_m1 = 0.0,
         reg_m2 = 0.0,
         Ylevels = 1:4,
-        Zlevels = 1:3
+        Zlevels = 1:3,
+        alpha1 = nothing,
+        alpha2 = nothing
     )
 
+    alpha1 = something(alpha1, 1 / length(Ylevels))
+    alpha2 = something(alpha2, 1 / length(Zlevels))
+    for weight in (alpha1, alpha2)
+        isfinite(weight) && weight >= 0 ||
+            throw(ArgumentError("cross-entropy weights must be finite and nonnegative"))
+    end
     T = Int32
 
 
@@ -102,8 +111,8 @@ function joint_ot_between_bases_with_predictors(
     dimYA = size(YA, 1)
     dimZB = size(ZB, 1)
 
-    modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB))
-    modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA))
+    modelXYA = Chain(Dense(dimXYA, hidden_layer_size), Dense(hidden_layer_size, dimZB), Flux.softmax)
+    modelXZB = Chain(Dense(dimXZB, hidden_layer_size), Dense(hidden_layer_size, dimYA), Flux.softmax)
 
     function train!(model, x, y)
 
@@ -114,7 +123,7 @@ function joint_ot_between_bases_with_predictors(
             for (x, y) in loader
                 grads = Flux.gradient(model) do m
                     y_hat = m(x)
-                    Flux.logitcrossentropy(y_hat, y)
+                    Flux.crossentropy(y_hat, y)
                 end
                 Flux.update!(optim, model, grads[1])
             end
@@ -125,16 +134,11 @@ function joint_ot_between_bases_with_predictors(
 
     function loss_crossentropy(Y, F)
 
-        ϵ = 1.0e-12
         res = zeros(Float32, size(Y, 2), size(F, 2))
         logF = zeros(Float32, size(F))
 
         for i in eachindex(F)
-            if F[i] ≈ 1.0
-                logF[i] = log(1.0 - ϵ)
-            else
-                logF[i] = log(ϵ)
-            end
+            logF[i] = log(max(F[i], eps(eltype(F))))
         end
 
         for i in axes(Y, 1)
@@ -148,7 +152,6 @@ function joint_ot_between_bases_with_predictors(
     YBpred = modelXZB(XZB)
     ZApred = modelXYA(XYA)
 
-    alpha1, alpha2 = 1 / length(Ylevels), 1 / length(Zlevels)
 
     G = ones(Float32, nA, nB)
     cost = Inf
@@ -180,7 +183,6 @@ function joint_ot_between_bases_with_predictors(
 
         loss_y = alpha1 * loss_crossentropy(YA, YBpred)
         loss_z = alpha2 * loss_crossentropy(ZB, ZApred)
-
         fcost = loss_y .^ 2 .+ loss_z' .^ 2
 
         cost = sum(G .* fcost)

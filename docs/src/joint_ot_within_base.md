@@ -57,8 +57,22 @@ JDOT-wi begins by estimating the joint distributions of the observed variables w
    \hat{\mu}_{n, x, z}^{(X^A, Z^A)} =
    \begin{cases}
    \frac{\hat{\mu}_{n, x, z}^{(X^B, Z^B)} \cdot \hat{\mu}_{n, x}^{X^A}}{\hat{\mu}_{n, x}^{X^B}}, & \text{if } \hat{\mu}_{n, x}^{X^B} \neq 0, \\
-   0, & \text{otherwise.}
+   \hat{\mu}_{n, x}^{X^A} \hat{\mu}_{n, z}^{Z^B}, & \text{otherwise,}
    \end{cases}
+```
+
+When a pattern is absent in B, this fallback uses B's empirical marginal
+distribution of Z instead of a conditional distribution. It preserves the
+empirical X marginal in A. Conversely, when a pattern is absent in A, the
+proxy for B uses the empirical Y marginal in A:
+
+```math
+\hat{\mu}_{n,x,y}^{(X^B,Y^B)} =
+\begin{cases}
+\frac{\hat{\mu}_{n,x,y}^{(X^A,Y^A)} \hat{\mu}_{n,x}^{X^B}}
+{\hat{\mu}_{n,x}^{X^A}}, & \text{if } \hat{\mu}_{n,x}^{X^A} \neq 0, \\
+\hat{\mu}_{n,x}^{X^B} \hat{\mu}_{n,y}^{Y^A}, & \text{otherwise.}
+\end{cases}
 ```
 
 ---
@@ -94,6 +108,9 @@ The cost ``\hat{c}_{x, y, z}`` is estimated as the expected distance between exp
 ```
 
 where ``\kappa_{n, y, z} = \sum_{i \in A} \sum_{j \in B} \mathbf{1}_{\{Y_i = y, Z_j = z\}}``.
+The cost is zero if either outcome class is absent. The implementation uses
+closest-neighbor averaging; with `percent_closest = 1`, it gives the empirical
+average above.
 
 ---
 
@@ -105,9 +122,14 @@ Once the optimal transport plan ``\gamma`` is obtained, JDOT-wi uses it to estim
 \hat{\mu}_{n, z}^{(Z^A \mid X^A = x, Y^A = y)} =
 \begin{cases}
 \frac{\hat{\gamma}_{n, x, y, z}}{\hat{\mu}_{n, x, y}^{(X^A, Y^A)}}, & \text{if } \hat{\mu}_{n, x, y}^{(X^A, Y^A)} \neq 0, \\
-0, & \text{otherwise.}
+\hat{\mu}_{n,z}^{Z^B}, & \text{otherwise.}
 \end{cases}
 ```
+
+The zero-denominator fallback is the empirical marginal distribution of ``Z``
+in base ``B``. With relaxed constraints, the coupling marginal can differ from the empirical
+denominator, so these estimates need not sum to one. The decision rule below
+is unchanged by a positive rescaling.
 
 A predictive function ``f: \mathcal{X} \times \mathcal{Y} \to \mathcal{Z}`` is then defined to predict ``Z^A``:
 
@@ -115,7 +137,8 @@ A predictive function ``f: \mathcal{X} \times \mathcal{Y} \to \mathcal{Z}`` is t
 f(x, y) \in \arg \min_{z' \in \mathcal{Z}} \sum_{z \in \mathcal{Z}} \mathcal{L}_Z(z, z') \hat{\gamma}_{n, x, y, z}.
 ```
 
-The same process is applied to dataset ``B`` to predict ``Y^B`` using a function ``g: \mathcal{X} \times \mathcal{Z} \to \mathcal{Y}``.
+The same process is applied to dataset ``B`` to predict ``Y^B`` using
+a function ``g: \mathcal{X} \times \mathcal{Z} \to \mathcal{Y}``.
 
 ---
 

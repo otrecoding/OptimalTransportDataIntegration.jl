@@ -54,6 +54,19 @@ where the **cost function** ``c`` combines:
  
 ``\alpha_1`` and ``\alpha_2`` are hyperparameters balancing the alignment of explanatory variables and outcomes.
 
+For the discrete and discrete-ordered methods, set `alpha1` and `alpha2` on
+`JointOTBetweenBases` or `JointOTBetweenBasesDiscreteOrdered` to use explicit
+nonnegative finite weights. Their default uses normalization based on clipped
+one-hot losses; this is not the supremum of cross-entropy, which
+is unbounded. Choose weights on separate validation data, not the final test
+set. No optimized weights are supplied.
+The continuous predictor variants `JointOTBetweenBasesWithPredictors` and
+`JointOTBetweenBasesWithoutOutcomes` also accept these weights; their
+defaults are the inverse numbers of outcome categories.
+`JointOTBetweenBasesWithPredictors` outputs softmax probabilities and uses them
+directly for predictor training and cross-entropy transport costs. Probabilities
+are bounded away from zero when computing transport costs to keep logarithms finite.
+
 ---
 
 ### Step 2: Handle Unobserved Variables
@@ -71,11 +84,11 @@ The empirical version of the problem becomes:
 subject to:
 
 ```math
-\sum_{i \in A} \gamma_{i,j} = \frac{1}{n}, \quad \forall j \in B,
+\sum_{i \in A} \gamma_{i,j} = \frac{1}{n_B}, \quad \forall j \in B,
 ```
 
 ```math
-\sum_{j \in B} \gamma_{i,j} = \frac{1}{n}, \quad \forall i \in A,
+\sum_{j \in B} \gamma_{i,j} = \frac{1}{n_A}, \quad \forall i \in A,
 ```
 
 ```math
