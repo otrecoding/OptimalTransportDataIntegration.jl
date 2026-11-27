@@ -8,7 +8,8 @@ function tune_alpha_weights(;
         params = DataParameters(),
         nsimulations = 100,
         validation_seed = 20261123,
-        alpha_grid = [0.001, 0.01, 0.1, 1.0, 10.0],
+        alpha1_grid = [0.25, 0.5, 1.0, 2.0, 4.0],
+        alpha2_grid = [0.0, 0.00001, 0.0001, 0.001, 0.01],
         iterations = 10,
         epochs = 1000,
         batchsize = 64,
@@ -18,8 +19,10 @@ function tune_alpha_weights(;
     nsimulations > 0 || throw(ArgumentError("nsimulations must be positive"))
     iterations >= 2 || throw(ArgumentError("iterations must be at least 2 for weights to affect predictions"))
     epochs > 0 || throw(ArgumentError("epochs must be positive"))
-    !isempty(alpha_grid) && all(x -> isfinite(x) && x >= 0, alpha_grid) ||
-        throw(ArgumentError("alpha_grid must contain finite nonnegative weights"))
+    !isempty(alpha1_grid) && all(x -> isfinite(x) && x >= 0, alpha1_grid) ||
+        throw(ArgumentError("alpha1_grid must contain finite nonnegative weights"))
+    !isempty(alpha2_grid) && all(x -> isfinite(x) && x >= 0, alpha2_grid) ||
+        throw(ArgumentError("alpha2_grid must contain finite nonnegative weights"))
 
     scores = DataFrame(
         scenario = Int[], alpha1 = Float64[], alpha2 = Float64[],
@@ -32,7 +35,7 @@ function tune_alpha_weights(;
         validation_data = [generate(generator) for _ in 1:nsimulations]
         training_seeds = rand(MersenneTwister(validation_seed + scenario - 1), UInt64, nsimulations)
 
-        for alpha1 in alpha_grid, alpha2 in alpha_grid
+        for alpha1 in alpha1_grid, alpha2 in alpha2_grid
             method = JointOTBetweenBasesWithPredictors(;
                 alpha1 = alpha1, alpha2 = alpha2, reg = 0.0, iterations = iterations,
                 epochs = epochs, batchsize = batchsize, hidden_layer_size = hidden_layer_size,
