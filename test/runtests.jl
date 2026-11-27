@@ -107,35 +107,35 @@ include(joinpath(@__DIR__, "..", "experiments", "tune_alpha_weights.jl"))
     params = DataParameters(nA = 40, nB = 40)
     options = (
         params = params, nsimulations = 1, validation_seed = 314159,
-        alpha_grid = [0.001, 10.0], iterations = 2, epochs = 1, batchsize = 32,
+        alpha1_grid = [0.25, 0.5], alpha2_grid = [0.0, 0.00001],
+        iterations = 2, epochs = 1, batchsize = 32,
     )
     scores = tune_alpha_weights(; options...)
     @test size(scores, 1) == 8
     @test scores == tune_alpha_weights(; options...)
     @test all(x -> 0 <= x <= 1, scores.accuracy)
+    @test sort(unique(scores.alpha1)) == [0.25, 0.5]
+    @test sort(unique(scores.alpha2)) == [0.0, 0.00001]
     @test_throws ArgumentError tune_alpha_weights(; nsimulations = 0)
     @test_throws ArgumentError tune_alpha_weights(; iterations = 1)
     @test_throws ArgumentError tune_alpha_weights(; epochs = 0)
-
-    scenario1 = scores[scores.scenario .== 1, :]
-    score(a, b) = only(scenario1.accuracy[(scenario1.alpha1 .== a) .& (scenario1.alpha2 .== b)])
-    @test score(0.001, 0.001) != score(0.001, 10.0)
-    @test score(0.001, 0.001) != score(10.0, 0.001)
+    @test_throws ArgumentError tune_alpha_weights(; alpha1_grid = Float64[])
+    @test_throws ArgumentError tune_alpha_weights(; alpha2_grid = [-1.0])
 
     for scenario in 1:2
         Random.seed!(314159 + scenario - 1)
         generator = DiscreteDataGenerator(params; scenario = scenario)
         data = generate(generator)
         method = JointOTBetweenBasesWithPredictors(
-            alpha1 = 0.001, alpha2 = 10.0, reg = 0.0, iterations = 2,
+            alpha1 = 0.25, alpha2 = 0.00001, reg = 0.0, iterations = 2,
             epochs = 1, batchsize = 32
         )
         training_seeds = rand(MersenneTwister(314159 + scenario - 1), UInt64, 1)
         Random.seed!(training_seeds[1])
         expected = accuracy(otrecod(data, method))
         row = only(eachrow(scores[
-            (scores.scenario .== scenario) .& (scores.alpha1 .== 0.001) .&
-                (scores.alpha2 .== 10.0), :
+            (scores.scenario .== scenario) .& (scores.alpha1 .== 0.25) .&
+                (scores.alpha2 .== 0.00001), :
         ]))
         @test [row.accuracy_yb, row.accuracy_za, row.accuracy] ≈ collect(expected)
     end
